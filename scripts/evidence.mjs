@@ -81,5 +81,5 @@ export function aggregateCandidates(swaps) {
   }
   return {candidate_pools: pools, candidate_usdc: capital, transactions: evidence.length, max_usdc: max,
     same_tx_roundtrips_excluded: roundtrips, examples: evidence.slice(0, 5),
-    rule: 'Aggregate BUY per transaction; exclude same-transaction BUY+SELL; 5000 USDC multiples ±8%. Not verified new users.'};
+    rule: 'Aggregate BUY per transaction; exclude same-transaction BUY+SELL; 5000 USDC multiples ±8%. candidate_pools counts amount-size units, not mining positions or users. Participation has no minimum amount; this filter is not total mining capital.'};
 }

@@ -267,7 +267,7 @@ export async function collect() {
       direct_transfer: { dory: null, txs: null }, pending_burn: { dory: null, txs: null }, other: { dory: null, txs: null } } },
     x9c_dead_burn: { total_dory: null, transactions: null, total_7d: null, transactions_7d: null, absorption_24h_pct: null },
     pool_candidates: { candidate_pools: null, candidate_usdc: null, transactions: null, max_usdc: null,
-      rule: "BUY near 5000 USDC integer multiples ±8%; raw candidates, not verified new users" },
+      rule: "BUY near 5000 USDC integer multiples ±8%; candidate_pools counts amount-size units, not mining positions or users. Participation has no minimum amount; this filter is not total mining capital." },
     ohlcv: [], sources: {}, errors: [],
     notes: ["Zero Address DORY Transfer and X9C Mint→dEaD are separate metrics.",
       "Zero Address Transfer alone does not prove an equal reduction in totalSupply; no supply reconciliation is inferred.",

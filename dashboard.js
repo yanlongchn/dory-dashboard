@@ -12,7 +12,7 @@ const sourceNames={market:'官方池行情',pool_identity:'池币种与精度',c
 function tableRow(values){const tr=document.createElement('tr');tr.replaceChildren(...values.map(value=>{const td=document.createElement('td');td.textContent=value;return td}));return tr}
 function evidencePanels(d){
  const rows=Object.entries(sourceNames).map(([key,label])=>{const s=d.sources?.[key];return tableRow([label,s?.status==='ok'?'采集完成':s?.status==='partial'?'部分覆盖':s?.status==='failed'?'采集失败':'未核验',s?.error||s?.reason||(s?.collected_at?asOf(s.collected_at):s?.evidence||'等待来源')])});$('sourceRows').replaceChildren(...rows);
- const pending=['活跃矿池本金与存量矿工产出：缺少可核验的全网统计来源。','新增钱包、复投、跨交易套利：5000U金额筛选仍为候选。','Pending Burn自动/嵌套结算：仅显式直接调用单列，未完成全量归因。'];
+ const pending=['实际日产DORY与全网卖压：缺少活跃本金及96次结算价格、产出和实际卖出记录。','新增参与、新钱包、复投、跨交易套利：5000U筛选只反映金额特征，不是开矿门槛或全量矿池数。','Pending Burn自动/嵌套结算：仅显式直接调用单列，未完成全量归因。','规则实现：96次结算的取价、舍入、200%额度消耗及社区/SVIP各级比例尚未链上核验。'];
  const old=history.find(h=>h.date===(new Date(Date.parse((d.date_bj||bjDate())+'T00:00:00+08:00')-7*86400000).toLocaleDateString('en-CA',{timeZone:'Asia/Shanghai'})));
  const delta=known(old?.holders?.count)&&old.holders?.source===d.holders?.source&&known(d.holders?.count)?d.holders.count-old.holders.count:null;
  $('holdersDelta7').textContent=known(delta)?signed(delta,0,' 地址'):'无同源7日前基线';
@@ -51,12 +51,12 @@ function renderSnapshot(d){snapshot=d;const m=d.market||{}, p=d.pool||{}, s=d.su
  $('x9burn').textContent=known(x.total_dory)?fmt(x.total_dory)+' DORY':'未验证';$('x9mintTx').textContent=known(x.transactions)?fmt(x.transactions,0)+' 笔':'未验证';
  $('zero7').textContent=fmt(z.total_7d);$('zbExplicit').textContent=fmt(z.categories?.explicit_pending_call?.dory);
  $('x9burn7').textContent=known(x.total_7d)?fmt(x.total_7d)+' DORY':'未验证';$('x9Absorption').textContent=known(x.absorption_24h_pct)?fmt(x.absorption_24h_pct,2)+'%':s.minted_24h===0?'新增发行为0，无分母':'未验证';
- $('pools').textContent=known(c.candidate_pools)?fmt(c.candidate_pools,0)+' 池候选':'未验证';$('poolTxs').textContent=known(c.transactions)?fmt(c.transactions,0)+' 笔':'未验证';$('poolCapital').textContent=money(c.candidate_usdc);$('poolMax').textContent=money(c.max_usdc);
+ $('pools').textContent=known(c.candidate_pools)?fmt(c.candidate_pools,0)+' 份金额单位':'未验证';$('poolTxs').textContent=known(c.transactions)?fmt(c.transactions,0)+' 笔':'未验证';$('poolCapital').textContent=money(c.candidate_usdc);$('poolMax').textContent=money(c.max_usdc);
  $('holders').textContent=fmt(d.holders?.count,0);$('holdersAsOf').textContent=d.holders?.as_of?asOf(d.holders.as_of):'未验证';
  $('poolRoundtrip').textContent=known(c.same_tx_roundtrips_excluded)?fmt(c.same_tx_roundtrips_excluded,0)+' 笔':'未验证';
  $('tbReserve').textContent=money(p.usdc_reserve);$('tbReservePrev').textContent=money(p.baseline_24h?.usdc_reserve);$('tbSupply7').textContent=signed(s.change_7d);$('tbZero7').textContent=fmt(z.total_7d);$('tbX97').textContent=fmt(x.total_7d);$('tbHolders').textContent=fmt(d.holders?.count,0);
- $('tbUsdcNet').textContent=signed(p.swap_net_usdc,0,' U');$('tbZero').textContent=fmt(z.total_dory);$('tbX9').textContent=fmt(x.total_dory);$('tbPools').textContent=fmt(c.candidate_pools,0);$('tbSupplyDelta').textContent=signed(s.change_24h);
- const values=[m.price_usd,m.volume_24h,m.liquidity_usd,p.swap_net_usdc,z.total_dory,x.total_dory,c.candidate_pools,s.change_24h,p.usdc_reserve,s.change_7d,z.total_7d,x.total_7d,d.holders?.count]; document.querySelectorAll('#metricRows tr').forEach((row,i)=>{row.cells[3].textContent=known(values[i])?i===6?'金额候选':i===12?'索引快照':'已取得（快照）':'未验证'});
+ $('tbUsdcNet').textContent=signed(p.swap_net_usdc,0,' U');$('tbZero').textContent=fmt(z.total_dory);$('tbX9').textContent=fmt(x.total_dory);$('tbPools').textContent=known(c.candidate_pools)?fmt(c.candidate_pools,0)+' 份':'未验证';$('tbSupplyDelta').textContent=signed(s.change_24h);
+ const values=[m.price_usd,m.volume_24h,m.liquidity_usd,p.swap_net_usdc,z.total_dory,x.total_dory,c.candidate_pools,s.change_24h,p.usdc_reserve,s.change_7d,z.total_7d,x.total_7d,d.holders?.count]; document.querySelectorAll('#metricRows tr').forEach((row,i)=>{row.cells[3].textContent=known(values[i])?i===6?'金额筛选':i===12?'索引快照':'已取得（快照）':'未验证'});
  const inconsistent=d.sources?.chain_consistency?.status==='failed'||d.sources?.supply_event_reconciliation?.status==='failed';
  const timestamp=Date.parse(d.generated_at), stale=!Number.isFinite(timestamp)||timestamp>Date.now()+300000||Date.now()-timestamp>36*3600000||inconsistent;
  setSource('srcChain','每日快照：'+(!d.generated_at?'未采集':stale?inconsistent?'证据不一致':'已过期':d.status==='ok'?'采集完成':'部分指标未验证'),stale||d.status==='not_collected'?'err':d.status==='ok'?'ok':'busy');
@@ -69,7 +69,7 @@ function renderSnapshot(d){snapshot=d;const m=d.market||{}, p=d.pool||{}, s=d.su
  const absorption=x.absorption_24h_pct;setLight('lX9','tX9',!stale&&known(absorption)?absorption>=100?'green':absorption<20?'red':'yellow':'',known(absorption)?fmt(absorption,1)+'% / 链上新增发行':s.minted_24h===0?'新增发行为0，无分母':'新增发行分母未验证');const r=ratio(m.buy_usdc,m.sell_usdc);
  setLight('lTrade','tTrade',!stale&&r!==null?r>1.1?'red':r<.9?'green':'yellow':'',r===Infinity?'仅SELL，无BUY':r===null?'金额未验证':'金额 SELL/BUY '+fmt(r,2)+'×');
  const date=d.date_bj||bjDate(d.generated_at||Date.now()), prev=history.filter(h=>h.date<date).at(-1);
- $('prevUsdcNet').textContent=prev?signed(prev.pool?.swap_net_usdc,0,' U'):'无历史基线';$('prevZero').textContent=prev?fmt(prev.zero_burn?.total_dory):'无历史基线';$('prevX9').textContent=prev?fmt(prev.x9c_dead_burn?.total_dory):'无历史基线';$('prevPools').textContent=prev?fmt(prev.pool_candidates?.candidate_pools,0):'无历史基线';
+ $('prevUsdcNet').textContent=prev?signed(prev.pool?.swap_net_usdc,0,' U'):'无历史基线';$('prevZero').textContent=prev?fmt(prev.zero_burn?.total_dory):'无历史基线';$('prevX9').textContent=prev?fmt(prev.x9c_dead_burn?.total_dory):'无历史基线';$('prevPools').textContent=known(prev?.pool_candidates?.candidate_pools)?fmt(prev.pool_candidates.candidate_pools,0)+' 份':'无历史基线';
  setLight('lPool','tPool','','新钱包/复投/套利未验证');
  if(stale)for(const [id,tid] of [['lPool','tPool'],['lUsdc','tUsdc'],['lSupply','tSupply'],['lPrice','tPrice'],['lX9','tX9'],['lTrade','tTrade']])setLight(id,tid,'',inconsistent?'证据不一致':'快照已过期');
  const stress=[known(p.usdc_change_24h)?p.usdc_change_24h<0:null,known(s.change_24h)?s.change_24h>0:null,r===null?null:r>1.1].filter(v=>v===true).length;
