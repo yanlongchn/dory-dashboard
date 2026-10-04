@@ -1,7 +1,9 @@
 import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
 const newNode=()=>({textContent:'',className:'',style:{},replaceChildren(...items){this.children=items}});
 const ids=[...fs.readFileSync('index.html','utf8').matchAll(/id="([^"]+)"/g)].map(x=>x[1]);
+assert.equal(new Set(ids).size,ids.length,'duplicate element IDs');
 const nodes=new Map(ids.map(id=>[id,newNode()]));
+nodes.get('supplyDelta').className='big';
 const document={getElementById(id){assert.ok(nodes.has(id),'missing element '+id);return nodes.get(id)},createElement(){return newNode()},querySelectorAll(){return[]}};
 const context=vm.createContext({document,window:{addEventListener(){}},Intl,Date,Number,Array,Math,AbortSignal,console,fetch:async()=>{throw Error('offline')},devicePixelRatio:1});
 vm.runInContext(fs.readFileSync('dashboard.js','utf8').replace('deepScan();',''),context);
@@ -17,4 +19,10 @@ run(fresh);assert.equal(nodes.get('systemState').textContent,'资金 / 供应承
 vm.runInContext("history=[{date:'2026-09-27',generated_at:'2026-09-27T05:00:00Z',holders:{count:30,source:'same'}}]",context);run(fresh);assert.equal(nodes.get('holdersDelta7').textContent,'+10 地址');
 run({...fresh,sources:{chain_consistency:{status:'failed'}}});for(const id of ['lUsdc','lSupply','lPrice','lX9','lTrade'])assert.equal(nodes.get(id).className,'dot ',id+' consistency');
 run({...fresh,generated_at:'invalid'});assert.equal(nodes.get('lSupply').className,'dot ');
+assert.equal(nodes.get('supplyDelta').className,'big down','value color must retain the headline typography');
+assert.ok(nodes.get('reportDate').textContent.startsWith('2026 / 10 / 04'));
+const todayPrice=nodes.get('price').textContent;
+vm.runInContext("showHistoryDay('2026-09-27')",context);
+assert.ok(nodes.get('historySummary').textContent.startsWith('2026-09-27'));
+assert.equal(nodes.get('price').textContent,todayPrice,'history selection must not replace today values');
 console.log('PASS: new metrics render; live pressure evidence cannot be hidden; exact-source weekly baseline required; inconsistent blocks and malformed timestamps close risk colors.');
