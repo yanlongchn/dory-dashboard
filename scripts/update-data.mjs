@@ -133,13 +133,14 @@ function makeClient() {
   const rpcProviders = [...new Set([RPC, 'https://arbitrum-one-rpc.publicnode.com', 'https://arbitrum.drpc.org', 'https://arbitrum-one.public.blastapi.io'])];
   let preferred = RPC;
   let logsPreferred = RPC;
+  let logQueue = Promise.resolve();
   async function verifyChain(url) {
     if (!verifiedChains.has(url)) {
       if (BigInt(await rpcAt(url, 'eth_chainId', [])) !== 42161n) throw Error('RPC chain mismatch');
       verifiedChains.add(url);
     }
   }
-  async function rpc(method, params = []) {
+  async function rpcUnqueued(method, params = []) {
     let last;
     for (const url of [...new Set(method === 'eth_getLogs' ? [logsPreferred, RPC, 'https://arbitrum.drpc.org'] : [preferred, ...rpcProviders])]) {
       try { await verifyChain(url); const value = await rpcAt(url, method, params);
@@ -149,6 +150,15 @@ function makeClient() {
       }
     }
     throw last;
+  }
+  async function rpc(method, params = []) {
+    if (method !== 'eth_getLogs') return rpcUnqueued(method, params);
+    const previous = logQueue;
+    let release;
+    logQueue = new Promise(resolve => { release = resolve; });
+    await previous;
+    try { return await rpcUnqueued(method, params); }
+    finally { await sleep(250); release(); }
   }
   async function pinnedCall(contract, data, block) {
     const providers = [...new Set(contract === LENS ? ['https://arbitrum-one-rpc.publicnode.com', 'https://arbitrum-one.public.blastapi.io', RPC] :
@@ -470,7 +480,7 @@ export async function collect() {
         transactions_7d: hashes.length, verification: 'original TicketMinted + matching ERC721 mint + exact payer→dEaD transfer; splits excluded' });
     }),
     component('mint_emissions', async () => {
-      const logs = (await getLogs(rpc, DORY, window.start7, window.latest, [TRANSFER, ZERO_TOPIC], {maxStep: 100000}))
+      const logs = (await getLogs(rpc, DORY, window.start7, window.latest, [TRANSFER, ZERO_TOPIC], {maxStep: 8000}))
         .filter(l => l.topics?.[2]?.toLowerCase() !== ZERO_TOPIC);
       result.supply.minted_7d = logs.reduce((sum, l) => sum + tokenAmount(l), 0);
       result.supply.minted_24h = logs.filter(l => Number(BigInt(l.blockNumber)) >= window.start).reduce((sum, l) => sum + tokenAmount(l), 0);
