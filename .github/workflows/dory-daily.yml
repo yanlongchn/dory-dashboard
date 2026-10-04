@@ -41,6 +41,7 @@ jobs:
       - name: Collect DORY data
         env:
           ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
+          DORY_PROGRESS: "1"
         run: node scripts/update-data.mjs
       - name: Commit daily snapshot
         run: |

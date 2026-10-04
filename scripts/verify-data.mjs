@@ -52,6 +52,16 @@ test("adaptive log splitting covers every requested block without gaps or duplic
   const logs = await getLogs(rpc, PM, 10, 18, [], { maxStep: 8, minStep: 1 });
   assert.deepEqual(logs.map(x => x.blockNumber), [10, 11, 12, 13, 14, 15, 16, 17, 18]); assert.ok(rejected > 0);
 });
+test('a documented provider block cap is remembered instead of repeatedly exceeded', async () => {
+  let rejected = 0;
+  const rpc = async (_, [f]) => {
+    const from = Number(BigInt(f.fromBlock)), to = Number(BigInt(f.toBlock));
+    if (to - from + 1 > 3) { rejected++; const e = Error('ranges over 3 blocks'); e.rangeRetryable = true; e.maxBlockRange = 3; throw e; }
+    return Array.from({length:to-from+1}, (_,i)=>({blockNumber:from+i}));
+  };
+  const logs = await getLogs(rpc, PM, 1, 20, [], {maxStep:12,minStep:1});
+  assert.equal(rejected,1); assert.deepEqual(logs.map(l=>l.blockNumber),Array.from({length:20},(_,i)=>i+1));
+});
 test("failed source requests produce null evidence rather than successful zeroes", async () => {
   const originalFetch = globalThis.fetch, originalLimit = process.env.DORY_MAX_REQUESTS;
   process.env.DORY_MAX_REQUESTS = "1";

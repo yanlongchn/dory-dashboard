@@ -93,7 +93,11 @@ function makeClient() {
         const r = await fetch(url, { ...options,
           signal: AbortSignal.timeout(Math.max(1, Math.min(timeout, deadline - Date.now()))) });
         if (!r.ok) {
-          const e = new Error(`${label}: HTTP ${r.status}`);
+          const payload = await r.json().catch(() => null);
+          const detail = String(payload?.error?.message || '').replace(/https?:\/\/\S+/g, '[source URL]').slice(0, 200);
+          const e = new Error(`${label}: HTTP ${r.status}${detail ? '; ' + detail : ''}`);
+          const limit = detail.match(/ranges over (\d+) blocks|up to (?:a )?(\d+) block|0\s*-\s*(\d+) blocks/i);
+          if (limit) e.maxBlockRange = Number(limit[1] || limit[2] || limit[3]);
           e.retryable = r.status === 429 || r.status >= 500;
           e.rangeRetryable = e.retryable;
           throw e;
@@ -126,8 +130,9 @@ function makeClient() {
     }
   }
   const archiveEvidence = new Map(), verifiedChains = new Set();
-  const rpcProviders = [...new Set([RPC, 'https://arbitrum-one-rpc.publicnode.com', 'https://arbitrum-one.public.blastapi.io'])];
+  const rpcProviders = [...new Set([RPC, 'https://arbitrum-one-rpc.publicnode.com', 'https://arbitrum.drpc.org', 'https://arbitrum-one.public.blastapi.io'])];
   let preferred = RPC;
+  let logsPreferred = RPC;
   async function verifyChain(url) {
     if (!verifiedChains.has(url)) {
       if (BigInt(await rpcAt(url, 'eth_chainId', [])) !== 42161n) throw Error('RPC chain mismatch');
@@ -136,8 +141,9 @@ function makeClient() {
   }
   async function rpc(method, params = []) {
     let last;
-    for (const url of [...new Set(method === 'eth_getLogs' ? [RPC, ...rpcProviders] : [preferred, ...rpcProviders])]) {
-      try { await verifyChain(url); const value = await rpcAt(url, method, params); preferred = url; return value; }
+    for (const url of [...new Set(method === 'eth_getLogs' ? [logsPreferred, RPC, 'https://arbitrum.drpc.org'] : [preferred, ...rpcProviders])]) {
+      try { await verifyChain(url); const value = await rpcAt(url, method, params);
+        if (method === 'eth_getLogs') logsPreferred = url; else preferred = url; return value; }
       catch (e) { last = e; if (/budget exhausted/.test(e.message)) throw e;
         if (!/HTTP|timeout|fetch failed|temporar|rate limit|too many requests|missing trie|state .*not available|not supported|chain mismatch/i.test(e.message)) throw e;
       }
@@ -189,7 +195,8 @@ function makeClient() {
       pinned_reads: [...archiveEvidence.values()] }) };
 }
 export async function getLogs(rpc, address, from, to, topics, options = {}) {
-  const out = [], maximum = options.maxStep || 8000, minimum = options.minStep || 128;
+  const out = [], minimum = options.minStep || 128;
+  let maximum = options.maxStep || 8000;
   let cursor = from, step = maximum;
   while (cursor <= to) {
     const end = Math.min(to, cursor + step - 1);
@@ -199,7 +206,8 @@ export async function getLogs(rpc, address, from, to, topics, options = {}) {
       out.push(...logs); cursor = end + 1; step = Math.min(maximum, step * 2);
     } catch (e) {
       if (!e.rangeRetryable || step <= minimum) throw e;
-      step = Math.max(minimum, Math.floor(step / 2));
+      if (Number.isSafeInteger(e.maxBlockRange) && e.maxBlockRange > 0) maximum = Math.min(maximum, e.maxBlockRange);
+      step = Math.min(maximum, Math.max(minimum, Math.floor(step / 2)));
     }
   }
   return out;
