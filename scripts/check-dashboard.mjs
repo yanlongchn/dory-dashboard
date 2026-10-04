@@ -1,0 +1,13 @@
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const ids=[...fs.readFileSync('index.html','utf8').matchAll(/id="([^"]+)"/g)].map(x=>x[1]);
+const nodes=new Map(ids.map(id=>[id,{textContent:'',className:'',style:{},replaceChildren(...items){this.children=items}}]));
+const document={getElementById(id){assert.ok(nodes.has(id),'missing element '+id);return nodes.get(id)},createElement(){return{}},querySelectorAll(){return[]}};
+const context=vm.createContext({document,window:{addEventListener(){}},Intl,Date,Number,Array,Math,AbortSignal,console,fetch:async()=>{throw Error('offline')},devicePixelRatio:1});
+vm.runInContext(fs.readFileSync('dashboard.js','utf8').replace('deepScan();',''),context);
+const run=(data)=>vm.runInContext('renderSnapshot('+JSON.stringify(data)+')',context);
+run({status:'partial',generated_at:new Date().toISOString(),market:{price_usd:null,volume_24h:null,buy_usdc:null,sell_usdc:null},pool:{swap_net_usdc:null},supply:{total_supply:null,change_24h:null},zero_burn:{total_dory:null},x9c_dead_burn:{total_dory:null},pool_candidates:{candidate_pools:null}});
+for(const id of ['price','volume','buyAmt','sellAmt','supply','zeroBurn','x9burn','pools'])assert.equal(nodes.get(id).textContent,'未验证',id);
+assert.equal(nodes.get('systemState').textContent,'证据不足');for(const id of ['lTrade','lSupply','lX9','lUsdc'])assert.equal(nodes.get(id).className,'dot ',id);
+run({status:'partial',generated_at:'2020-01-01T00:00:00Z',market:{price_usd:1,change_24h_pct:10,buy_usdc:10000,sell_usdc:0},pool:{swap_net_usdc:10000},supply:{total_supply:1,change_24h:-1},zero_burn:{total_dory:0},x9c_dead_burn:{total_dory:0,transactions:0},pool_candidates:{candidate_pools:0}});
+for(const id of ['lPool','lUsdc','lSupply','lPrice','lX9','lTrade'])assert.equal(nodes.get(id).className,'dot ',id+' stale');
+assert.equal(nodes.get('zeroBurn').textContent,'0.00');assert.equal(nodes.get('systemState').textContent,'证据不足');console.log('PASS: null is not zero; real zero retained; stale snapshots cannot turn risk lamps green; missing economics cannot classify expansion.');

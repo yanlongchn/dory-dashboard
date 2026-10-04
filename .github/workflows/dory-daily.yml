@@ -1,0 +1,74 @@
+name: DORY daily data and Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "data/**"
+      - "README.md"
+      - "DORY_PROJECT_CONTEXT.md"
+  schedule:
+    # 08:00 Asia/Shanghai = 00:00 UTC
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "dory-dashboard"
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate scripts and display safety
+        run: |
+          node --check dashboard.js
+          node --check scripts/update-data.mjs
+          node scripts/check-dashboard.mjs
+          node scripts/verify-data.mjs
+      - name: Collect DORY data
+        env:
+          ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
+        run: node scripts/update-data.mjs
+      - name: Commit daily snapshot
+        run: |
+          git config user.name "dory-dashboard-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/latest.json data/history.json
+          git diff --cached --quiet || git commit -m "data: daily DORY snapshot"
+          git push
+
+  deploy:
+    needs: collect
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: Pull latest snapshot commit
+        run: git pull --ff-only
+      - name: Prepare static site
+        run: |
+          mkdir -p _site/data
+          cp index.html dashboard.js .nojekyll _site/
+          cp data/latest.json data/history.json _site/data/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: "_site"
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

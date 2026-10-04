@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DORY 每日监控 Dashboard</title>
+<style>
+:root{--bg:#f2f6fb;--card:#fff;--ink:#10233f;--muted:#6d7f93;--blue:#0b5aa6;--blue2:#1576c7;--line:#d9e5f0;--green:#07965c;--red:#e13d4d;--yellow:#e4aa0b;--gray:#95a2b0;--shadow:0 2px 9px #173e6411}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;color:var(--ink)}
+a{color:#176bad;text-decoration:none}.header{background:linear-gradient(105deg,#074b90,#0a69ba);color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;box-shadow:0 3px 14px #0a4e8d33;position:sticky;top:0;z-index:20}.header h1{margin:0;font-size:28px}.sub{opacity:.9;font-size:12px;margin-top:5px}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn{border:1px solid #ffffff70;background:#ffffff17;color:#fff;border-radius:8px;padding:8px 11px;cursor:pointer;font-weight:650}.btn:hover{background:#ffffff25}.status{background:#edf2f7;color:#344a60;border:1px solid #c8d4df;border-radius:10px;padding:8px 14px;text-align:center;min-width:140px}.status b{font-size:18px}.wrap{max-width:1560px;margin:auto;padding:12px}.sourcebar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.pill{background:#fff;border:1px solid var(--line);border-radius:18px;padding:5px 9px;font-size:11px;color:#526b82}.pill.ok{border-color:#b9dfc9;color:#14714a;background:#f2fbf6}.pill.busy{border-color:#f0d99a;color:#8b6500;background:#fffaf0}.pill.err{border-color:#efb7bd;color:#a52a37;background:#fff5f6}.grid{display:grid;gap:10px}.kpis{grid-template-columns:repeat(5,1fr)}.kpis2{grid-template-columns:repeat(5,1fr)}.two{grid-template-columns:1.8fr 1fr}.card{background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}.ct{background:#ecf5fc;color:#14538f;font-weight:800;padding:8px 11px;border-bottom:1px solid var(--line);font-size:13px}.cb{padding:11px}.big{font-size:25px;font-weight:850;margin:2px 0 7px}.small{font-size:11px;color:var(--muted);line-height:1.55}.tiny{font-size:10px;color:#8795a5}.up{color:var(--green)}.down{color:var(--red)}.warn{color:var(--yellow)}.muted{color:var(--muted)}.row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:12px}.row strong{text-align:right}.divider{height:1px;background:#edf2f7;margin:7px 0}.lights{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.light{text-align:center;background:#f8fbfe;border:1px solid #e6edf4;border-radius:8px;padding:9px 4px}.dot{width:22px;height:22px;border-radius:50%;margin:3px auto 6px;background:#9aa7b4;box-shadow:0 0 10px #0001}.dot.green{background:#20b66b}.dot.red{background:#ee4352}.dot.yellow{background:#efbb19}.light b{font-size:11px}.light div:last-child{font-size:11px;margin-top:4px;color:#53677c}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:7px 6px;border-bottom:1px solid #e8eef5;text-align:right}th:first-child,td:first-child{text-align:left}th{background:#f5f9fd;color:#46647e;position:sticky;top:0}.chartcard{margin-top:10px}.charthead{display:flex;justify-content:space-between;align-items:center;gap:8px}.badge{font-size:10px;border:1px solid #b9cee2;border-radius:20px;padding:4px 8px;color:#47657f;background:#fff}.chartwrap{height:470px;padding:8px;position:relative}.chartwrap canvas{width:100%;height:100%}.chartControls{display:flex;gap:5px;flex-wrap:wrap}.cbtn{border:1px solid #c8d8e7;background:#fff;border-radius:6px;padding:4px 7px;font-size:10px;color:#496780;cursor:pointer}.cbtn.active{background:#155f9e;color:#fff;border-color:#155f9e}.risks{margin:0;padding-left:20px}.risks li{margin:7px 0;line-height:1.48;font-size:12px}.foot{font-size:10px;color:#718397;margin:10px 2px 4px;line-height:1.5}.progress{height:5px;background:#e7eef5;border-radius:5px;overflow:hidden;margin-top:7px}.progress>div{height:100%;width:0;background:linear-gradient(90deg,#1c75bd,#23a96a);transition:width .2s}.stateline{font-size:11px;margin-top:6px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px}.sectionNote{padding:7px 10px;background:#fff8e6;border:1px solid #f0d691;border-radius:8px;font-size:11px;color:#75570a;margin-bottom:10px}
+@media(max-width:1050px){.kpis,.kpis2{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.lights{grid-template-columns:repeat(3,1fr)}}@media(max-width:620px){.kpis,.kpis2{grid-template-columns:1fr}.header{align-items:flex-start;flex-direction:column;position:relative}.chartwrap{height:360px}}
+
+.trendgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.trendbox{background:#f8fbfe;border:1px solid #e3edf6;border-radius:9px;padding:10px}
+.trendbox .n{font-size:20px;font-weight:800;margin:5px 0}
+.timeline{position:relative;padding-left:20px}.timeline:before{content:"";position:absolute;left:6px;top:4px;bottom:4px;width:2px;background:#dbe7f2}
+.event{position:relative;margin:0 0 13px}.event:before{content:"";position:absolute;left:-18px;top:5px;width:9px;height:9px;border-radius:50%;background:#7f9bb5}
+.event.red:before{background:#e43d4e}.event.green:before{background:#07965c}.event.yellow:before{background:#e6a900}
+.spark{height:54px;width:100%}.delta{font-size:11px}.tabs{display:flex;gap:6px;flex-wrap:wrap}.tab{border:1px solid #c8d9e8;background:white;border-radius:18px;padding:5px 9px;font-size:11px;cursor:pointer}.tab.active{background:#155d9d;color:white;border-color:#155d9d}
+@media(max-width:900px){.trendgrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:550px){.trendgrid{grid-template-columns:1fr}}
+</style></head>
+<body>
+<div class="header"><div><h1>DORY 每日监控 Dashboard</h1><div class="sub">Arbitrum · Uniswap v4 官方池 · K线自 2025-09-09 起 · “未验证”优先于猜测</div></div><div class="actions"><button class="btn" onclick="loadMarket()">刷新行情</button><button class="btn" id="chainBtn" onclick="deepScan()">刷新每日快照</button><div class="status"><div>系统状态</div><b id="systemState">证据不足</b><div id="asof" class="tiny">等待刷新</div></div></div></div>
+<div class="wrap">
+ <div class="sourcebar"><span class="pill" id="srcMarket">行情：等待</span><span class="pill" id="srcRpc">Arbitrum RPC：等待</span><span class="pill" id="srcChain">每日快照：等待</span><span class="pill">持币地址：未验证</span></div>
+ <div class="sectionNote">判断核心：新增资金是否覆盖存量卖压、官方池USDC是否持续流出、真实净供应是否恶化。X9C→dEaD 与 Zero Address Burn 永久分列。</div>
+ <div class="grid kpis">
+  <div class="card"><div class="ct">DORY 现价（USD）</div><div class="cb"><div class="big" id="price">—</div><div class="row"><span>24h</span><strong id="chg24">—</strong></div><div class="row"><span>7日</span><strong id="chg7">—</strong></div></div></div>
+  <div class="card"><div class="ct">24h 成交结构</div><div class="cb"><div class="big" id="volume">—</div><div class="row"><span>BUY</span><strong id="buys">—</strong></div><div class="row"><span>SELL</span><strong id="sells">—</strong></div><div class="row"><span>链上BUY金额</span><strong id="buyAmt">未验证</strong></div><div class="row"><span>链上SELL金额</span><strong id="sellAmt">未验证</strong></div></div></div>
+  <div class="card"><div class="ct">官方池流动性</div><div class="cb"><div class="big" id="reserveUsd">—</div><div class="row"><span>24h Swap净USDC</span><strong id="usdcNet">未验证</strong></div><div class="row"><span>24h Swap净DORY</span><strong id="doryNet">未验证</strong></div><div class="small">净流入仅基于Swap事件，不包含LP增减；绝不反推绝对两侧储备。</div></div></div>
+  <div class="card"><div class="ct">DORY 链上供应</div><div class="cb"><div class="big" id="supply">未验证</div><div class="row"><span>24h链上变化</span><strong id="supplyDelta">未验证</strong></div><div class="small">直接调用 totalSupply() 同口径比较，不采用浏览器页面UI倍数推算。</div></div></div>
+  <div class="card"><div class="ct">持币地址</div><div class="cb"><div class="big" id="holders">未验证</div><div class="row"><span>最近核验</span><strong id="holdersAsOf">未验证</strong></div><div class="small">精确实时Holder数依赖Arbiscan索引；Standalone网页不跨域抓页面，避免伪实时。</div><div style="margin-top:5px"><a target="_blank" href="https://arbiscan.io/token/0x33b49f2264e85bB124d2730DC180182717D436Ae">打开 Arbiscan</a></div></div></div>
+ </div>
+ <div class="grid kpis2" style="margin-top:10px">
+  <div class="card"><div class="ct">Zero Address Burn（Transfer口径）</div><div class="cb"><div class="big" id="zeroBurn">未验证</div><div class="row"><span>卖出同笔</span><strong id="zbSell">—</strong></div><div class="row"><span>买入同笔</span><strong id="zbBuy">—</strong></div><div class="row"><span>直接Transfer</span><strong id="zbDirect">—</strong></div><div class="row"><span>其他/未知</span><strong id="zbOther">—</strong></div></div></div>
+  <div class="card"><div class="ct">X9C → dEaD</div><div class="cb"><div class="big" id="x9burn">未验证</div><div class="row"><span>已验证Mint交易</span><strong id="x9mintTx">—</strong></div><div class="small">仅同笔存在X9C Mint事件 + DORY→dEaD才计入；不把dEaD总余额当日销毁。</div></div></div>
+  <div class="card"><div class="ct">5000U 矿池候选</div><div class="cb"><div class="big" id="pools">未验证</div><div class="row"><span>候选BUY交易</span><strong id="poolTxs">—</strong></div><div class="row"><span>候选资金</span><strong id="poolCapital">—</strong></div><div class="row"><span>最大单笔</span><strong id="poolMax">—</strong></div><div class="small">为“原始候选”，尚未完成新钱包/复投/套利全量剔除时不称新增用户。</div></div></div>
+  <div class="card"><div class="ct">矿工理论卖压</div><div class="cb"><div class="big" id="minerPressure">未验证</div><div class="row"><span>单池理论日产出</span><strong>42.5U</strong></div><div class="row"><span>+30%奖励情景</span><strong>55.25U</strong></div><div class="small">按用户提供机制估算单池情景；存量活跃矿池数/本金未验证，不计算全网卖压。</div></div></div>
+  <div class="card"><div class="ct">交易费用估算</div><div class="cb"><div class="big" id="feeRange">—</div><div class="row"><span>官方池基础费</span><strong>未验证</strong></div><div class="small">3%–5%按用户提供机制估算；不称为X9已实现收入。</div></div></div>
+ </div>
+ <div class="card" style="margin-top:10px"><div class="ct">六项关键指标红黄绿灯</div><div class="cb lights">
+  <div class="light"><div class="dot" id="lPool"></div><b>新增矿池趋势</b><div id="tPool">未验证/基线</div></div><div class="light"><div class="dot" id="lUsdc"></div><b>USDC池变化</b><div id="tUsdc">未验证</div></div><div class="light"><div class="dot" id="lSupply"></div><b>净供应增长</b><div id="tSupply">未验证</div></div><div class="light"><div class="dot" id="lPrice"></div><b>价格趋势</b><div id="tPrice">等待行情</div></div><div class="light"><div class="dot" id="lX9"></div><b>X9C消化率</b><div id="tX9">未验证</div></div><div class="light"><div class="dot" id="lTrade"></div><b>买卖失衡</b><div id="tTrade">等待行情</div></div>
+ </div><div class="cb" style="padding-top:0"><div class="progress"><div id="progressBar"></div></div><div class="stateline muted" id="scanStatus">加载每日快照；采集失败或无法核验的指标保持“未验证”。</div></div></div>
+ <div class="grid two" style="margin-top:10px">
+  <div class="card"><div class="ct">每日核心快照</div><div class="cb" style="max-height:285px;overflow:auto"><table><thead><tr><th>指标</th><th>当前</th><th>前日/基线</th><th>验证状态</th></tr></thead><tbody id="metricRows">
+   <tr><td>DORY价格</td><td id="tbPrice">—</td><td id="tb24">—</td><td>行情API</td></tr><tr><td>24h成交额</td><td id="tbVol">—</td><td>—</td><td>行情API</td></tr><tr><td>官方池流动性</td><td id="tbLiq">—</td><td>—</td><td>行情API</td></tr><tr><td>Swap净USDC</td><td id="tbUsdcNet">未验证</td><td id="prevUsdcNet">—</td><td>PoolManager事件</td></tr><tr><td>Zero Transfer（Burn口径）</td><td id="tbZero">未验证</td><td id="prevZero">—</td><td>DORY Transfer</td></tr><tr><td>X9C→dEaD</td><td id="tbX9">未验证</td><td id="prevX9">—</td><td>X9C同笔核验</td></tr><tr><td>5000U候选池</td><td id="tbPools">未验证</td><td id="prevPools">—</td><td>Swap整数倍筛选</td></tr><tr><td>totalSupply变化</td><td id="tbSupplyDelta">未验证</td><td>—</td><td>eth_call历史块</td></tr>
+  </tbody></table></div></div>
+  <div class="card"><div class="ct">今日风险 / 异常</div><div class="cb"><ol class="risks" id="riskList"><li>等待行情刷新。</li><li>链上高级指标尚未运行。</li><li>所有无法可靠取得的数据保持“未验证”。</li></ol><div class="divider"></div><div class="small"><b>每日快照：</b>北京时间08:00由GitHub Actions采集，历史快照统一保存在仓库。同日重跑覆盖当日记录。</div></div></div>
+ </div>
+ <div class="card chartcard"><div class="ct charthead"><span>DORY 价格日K图 · 2025-09-09 起</span><div class="chartControls"><button class="cbtn active" data-range="all" onclick="setRange('all',this)">全部</button><button class="cbtn" data-range="180" onclick="setRange(180,this)">180日</button><button class="cbtn" data-range="90" onclick="setRange(90,this)">90日</button><button class="cbtn" data-range="30" onclick="setRange(30,this)">30日</button><span class="badge" id="chartMeta">真实OHLCV</span></div></div><div class="chartwrap"><canvas id="chart"></canvas></div><div class="cb small" id="chartNote">只使用官方池真实OHLCV；异常极端针保留在统计，但可视轴采用分位裁剪避免主体走势被压扁。</div></div>
+ 
+<div class="card" style="margin-top:12px">
+  <div class="ct">数据可信度与审计口径</div>
+  <div class="cb">
+    <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:10px">
+      <div><b>行情 / K线</b><div class="small">GeckoTerminal 官方 DORY/USDC v4 池。日K起点固定 2025-09-09。</div></div>
+      <div><b>真实供应 Burn</b><div class="small">Zero Transfer 单列；供应变化另读 totalSupply，不推定每笔等额减少。</div></div>
+      <div><b>X9C 消化</b><div class="small">仅 X9 Charter 相关交易中 payer→dEaD 的 DORY；dEaD余额增量不能直接替代。</div></div>
+      <div><b>5000U候选</b><div class="small">5000U整数倍 BUY 只是原始候选；新钱包、复投、套利未拆清前不称“新增用户”。</div></div>
+    </div>
+    <div class="small" style="margin-top:10px">
+      快速核验：
+      <a target="_blank" rel="noopener" href="https://www.geckoterminal.com/arbitrum/pools/0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb">GeckoTerminal官方池</a> ·
+      <a target="_blank" rel="noopener" href="https://arbiscan.io/token/0x33b49f2264e85bB124d2730DC180182717D436Ae">Arbiscan DORY</a> ·
+      <a target="_blank" rel="noopener" href="https://arbiscan.io/address/0xecdDa172D2E8aa8efF55500fD28Da828CFfbc5B0">X9 Charter</a>
+    </div>
+  </div>
+</div>
+<div class="foot">正式标识：DORY 0x33b49f2264e85bB124d2730DC180182717D436Ae ｜ Pool ID 0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb ｜ PoolManager 0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32 ｜ X9C 0xecdDa172D2E8aa8efF55500fD28Da828CFfbc5B0。每日采集结果由GitHub Actions保存；手动行情刷新失败时保留已有快照及时间，不使用虚构数据替代。</div>
+</div>
+<script src="./dashboard.js"></script>
+</body></html>
