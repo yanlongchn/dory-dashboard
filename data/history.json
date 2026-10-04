@@ -4,40 +4,40 @@
     {
       "date": "2026-10-04",
       "schema_version": 1,
-      "generated_at": "2026-10-04T05:25:44.229Z",
+      "generated_at": "2026-10-04T05:26:52.661Z",
       "date_bj": "2026-10-04",
       "status": "partial",
       "blocks": {
-        "from": 511209908,
-        "to": 511520627,
-        "from_ts": "2026-10-03T05:25:09.000Z",
-        "to_ts": "2026-10-04T05:25:09.000Z",
-        "requested_from_ts": "2026-10-03T05:25:09.000Z"
+        "from": 511210146,
+        "to": 511520864,
+        "from_ts": "2026-10-03T05:26:18.000Z",
+        "to_ts": "2026-10-04T05:26:18.000Z",
+        "requested_from_ts": "2026-10-03T05:26:18.000Z"
       },
       "market": {
-        "price_usd": 111.446104358855,
+        "price_usd": 113.722825268802,
         "price_usdc": 103.2052132585,
-        "change_24h_pct": 14.193,
-        "change_7d_pct": 199.9851613917292,
-        "volume_24h": 2768673.94533958,
-        "liquidity_usd": 3562515.8222,
-        "buys": 1121,
-        "sells": 1381,
-        "buyers": 443,
-        "sellers": 520,
-        "buy_usdc": 1448424.6156920027,
-        "sell_usdc": 1320579.2455659986,
-        "sell_buy_amount_ratio": 0.9117348816493812
+        "change_24h_pct": 14.241,
+        "change_7d_pct": 206.11352714792633,
+        "volume_24h": 2766863.22163221,
+        "liquidity_usd": 3562608.0825,
+        "buys": 1124,
+        "sells": 1380,
+        "buyers": 445,
+        "sellers": 521,
+        "buy_usdc": 1448641.2451920027,
+        "sell_usdc": 1320627.1777349985,
+        "sell_buy_amount_ratio": 0.9116316286852393
       },
       "pool": {
-        "liquidity_usd": 3562515.8222,
+        "liquidity_usd": 3562608.0825,
         "usdc_reserve": null,
         "dory_reserve": null,
-        "swap_net_usdc": 127845.37012600039,
-        "swap_net_dory": -945.0279067761334
+        "swap_net_usdc": 128014.06745700038,
+        "swap_net_dory": -946.5025280865517
       },
       "supply": {
-        "total_supply": 628727.4594089665,
+        "total_supply": 628720.235473294,
         "change_24h": null
       },
       "holders": {
@@ -45,8 +45,8 @@
         "status": "unverified"
       },
       "zero_burn": {
-        "total_dory": 13950.26384796838,
-        "transactions": 1254,
+        "total_dory": 13963.223489112623,
+        "transactions": 1255,
         "categories": {
           "sell_swap": {
             "dory": 1628.6752886017516,
@@ -61,8 +61,8 @@
             "txs": 0
           },
           "other": {
-            "dory": 12321.588559366626,
-            "txs": 787
+            "dory": 12334.54820051087,
+            "txs": 788
           },
           "pending_burn": {
             "dory": null,
@@ -91,41 +91,41 @@
         },
         "market": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:25:10.382Z"
+          "collected_at": "2026-10-04T05:26:19.658Z"
         },
         "chain_window": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:25:12.075Z"
+          "collected_at": "2026-10-04T05:26:21.313Z"
         },
         "ohlcv": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:25:12.382Z"
+          "collected_at": "2026-10-04T05:26:21.514Z"
         },
         "swaps": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:25:17.745Z"
+          "collected_at": "2026-10-04T05:26:26.289Z"
         },
         "supply": {
           "status": "failed",
-          "error": "eth_call: missing trie node fd7790dd7fb7cb72d09cc06cf767f9e10bab49f948038b7b597074df714f8ff9 (path ) state 0xfd7790dd7fb7cb72d09cc06cf767f9e10bab49f948038b7b597074df714f8ff9 is not available, not found"
+          "error": "eth_call: historical state 8dd883d980519acea544013d7a0d6d35d38dcaa240e86e8f5370908bab18c57b is not available"
         },
         "x9c_mint": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:25:21.103Z"
+          "collected_at": "2026-10-04T05:26:29.523Z"
         },
         "zero_burn_categories": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:25:44.229Z"
+          "collected_at": "2026-10-04T05:26:52.661Z"
         },
         "zero_burn": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:25:44.229Z"
+          "collected_at": "2026-10-04T05:26:52.661Z"
         }
       },
       "errors": [
         {
           "source": "supply",
-          "message": "eth_call: missing trie node fd7790dd7fb7cb72d09cc06cf767f9e10bab49f948038b7b597074df714f8ff9 (path ) state 0xfd7790dd7fb7cb72d09cc06cf767f9e10bab49f948038b7b597074df714f8ff9 is not available, not found"
+          "message": "eth_call: historical state 8dd883d980519acea544013d7a0d6d35d38dcaa240e86e8f5370908bab18c57b is not available"
         }
       ],
       "notes": [
@@ -136,7 +136,7 @@
         "7d change compares the latest daily close with a close at least seven days earlier."
       ],
       "diagnostics": {
-        "requests": 960,
+        "requests": 979,
         "max_requests": 1200
       }
     }
