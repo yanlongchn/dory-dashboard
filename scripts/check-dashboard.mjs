@@ -1,7 +1,8 @@
 import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const newNode=()=>({textContent:'',className:'',style:{},replaceChildren(...items){this.children=items}});
 const ids=[...fs.readFileSync('index.html','utf8').matchAll(/id="([^"]+)"/g)].map(x=>x[1]);
-const nodes=new Map(ids.map(id=>[id,{textContent:'',className:'',style:{},replaceChildren(...items){this.children=items}}]));
-const document={getElementById(id){assert.ok(nodes.has(id),'missing element '+id);return nodes.get(id)},createElement(){return{}},querySelectorAll(){return[]}};
+const nodes=new Map(ids.map(id=>[id,newNode()]));
+const document={getElementById(id){assert.ok(nodes.has(id),'missing element '+id);return nodes.get(id)},createElement(){return newNode()},querySelectorAll(){return[]}};
 const context=vm.createContext({document,window:{addEventListener(){}},Intl,Date,Number,Array,Math,AbortSignal,console,fetch:async()=>{throw Error('offline')},devicePixelRatio:1});
 vm.runInContext(fs.readFileSync('dashboard.js','utf8').replace('deepScan();',''),context);
 const run=(data)=>vm.runInContext('renderSnapshot('+JSON.stringify(data)+')',context);
@@ -11,3 +12,9 @@ assert.equal(nodes.get('systemState').textContent,'证据不足');for(const id o
 run({status:'partial',generated_at:'2020-01-01T00:00:00Z',market:{price_usd:1,change_24h_pct:10,buy_usdc:10000,sell_usdc:0},pool:{swap_net_usdc:10000},supply:{total_supply:1,change_24h:-1},zero_burn:{total_dory:0},x9c_dead_burn:{total_dory:0,transactions:0},pool_candidates:{candidate_pools:0}});
 for(const id of ['lPool','lUsdc','lSupply','lPrice','lX9','lTrade'])assert.equal(nodes.get(id).className,'dot ',id+' stale');
 assert.equal(nodes.get('zeroBurn').textContent,'0.00');assert.equal(nodes.get('systemState').textContent,'证据不足');console.log('PASS: null is not zero; real zero retained; stale snapshots cannot turn risk lamps green; missing economics cannot classify expansion.');
+const fresh={status:'ok',generated_at:new Date().toISOString(),date_bj:'2026-10-04',market:{price_usd:2,change_24h_pct:4,buy_usdc:100,sell_usdc:130},pool:{usdc_reserve:1000,usdc_change_24h:-50,dory_reserve:10,key:{fee:10000}},supply:{total_supply:100,change_24h:2,change_7d:4,minted_24h:10},holders:{count:40,source:'same',as_of:new Date().toISOString()},zero_burn:{total_dory:0,total_7d:0},x9c_dead_burn:{total_dory:0,total_7d:0,transactions:0,absorption_24h_pct:0},pool_candidates:{candidate_pools:0,same_tx_roundtrips_excluded:2}};
+run(fresh);assert.equal(nodes.get('systemState').textContent,'资金 / 供应承压');assert.equal(nodes.get('lUsdc').className,'dot red');assert.equal(nodes.get('lSupply').className,'dot red');assert.equal(nodes.get('lX9').className,'dot red');assert.equal(nodes.get('poolFee').textContent,'1.00%');assert.equal(nodes.get('holdersDelta7').textContent,'无同源7日前基线');
+vm.runInContext("history=[{date:'2026-09-27',generated_at:'2026-09-27T05:00:00Z',holders:{count:30,source:'same'}}]",context);run(fresh);assert.equal(nodes.get('holdersDelta7').textContent,'+10 地址');
+run({...fresh,sources:{chain_consistency:{status:'failed'}}});for(const id of ['lUsdc','lSupply','lPrice','lX9','lTrade'])assert.equal(nodes.get(id).className,'dot ',id+' consistency');
+run({...fresh,generated_at:'invalid'});assert.equal(nodes.get('lSupply').className,'dot ');
+console.log('PASS: new metrics render; live pressure evidence cannot be hidden; exact-source weekly baseline required; inconsistent blocks and malformed timestamps close risk colors.');

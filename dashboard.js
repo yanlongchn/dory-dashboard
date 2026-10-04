@@ -7,6 +7,22 @@ const fmt=(n,d=2)=>known(n)?n.toLocaleString('zh-CN',{maximumFractionDigits:d,mi
 const money=n=>known(n)?'$'+n.toLocaleString('en-US',{maximumFractionDigits:0}):'未验证';
 const signed=(n,d=2,suffix='')=>known(n)?(n>0?'+':'')+fmt(n,d)+suffix:'未验证';
 let candlesAll=[], chartRange='all', marketState={}, chainState={}, history=[], snapshot=null;
+const sourceNames={market:'官方池行情',pool_identity:'池币种与精度',chain_window:'24h / 7日区块窗口',holders:'持币地址索引',pool_key:'初始化参数与Pool ID',pool_reserves:'当前两侧本金',pool_reserves_24h:'24h本金变化',ohlcv:'真实日K',ohlcv_history:'日K历史覆盖',swaps:'24h买卖资金',supply:'当前供应',supply_24h:'24h历史供应',supply_7d:'7日历史供应',zero_burn:'24h / 7日Zero Transfer',zero_burn_categories:'24h销毁分类',x9c_mint:'24h / 7日原始X9C认购',mint_emissions:'24h / 7日新增发行',supply_event_reconciliation:'供应与事件窗口对账',chain_consistency:'采集区块一致性'};
+function tableRow(values){const tr=document.createElement('tr');tr.replaceChildren(...values.map(value=>{const td=document.createElement('td');td.textContent=value;return td}));return tr}
+function evidencePanels(d){
+ const rows=Object.entries(sourceNames).map(([key,label])=>{const s=d.sources?.[key];return tableRow([label,s?.status==='ok'?'采集完成':s?.status==='partial'?'部分覆盖':s?.status==='failed'?'采集失败':'未核验',s?.error||s?.reason||(s?.collected_at?asOf(s.collected_at):s?.evidence||'等待来源')])});$('sourceRows').replaceChildren(...rows);
+ const pending=['活跃矿池本金与存量矿工产出：缺少可核验的全网统计来源。','新增钱包、复投、跨交易套利：5000U金额筛选仍为候选。','Pending Burn自动/嵌套结算：仅显式直接调用单列，未完成全量归因。'];
+ const old=history.find(h=>h.date===(new Date(Date.parse((d.date_bj||bjDate())+'T00:00:00+08:00')-7*86400000).toLocaleDateString('en-CA',{timeZone:'Asia/Shanghai'})));
+ const delta=known(old?.holders?.count)&&old.holders?.source===d.holders?.source&&known(d.holders?.count)?d.holders.count-old.holders.count:null;
+ $('holdersDelta7').textContent=known(delta)?signed(delta,0,' 地址'):'无同源7日前基线';
+ if(!known(delta))pending.push('持币地址7日变化：尚未累积同源7日前快照。');
+ if(!known(d.pool?.usdc_reserve))pending.push('官方池两侧本金：当前读取失败或hook存在自定义记账。');
+ if(!known(d.supply?.change_7d))pending.push('7日供应：缺少相同区块哈希的归档状态。');
+ if(d.ohlcv_coverage&&!d.ohlcv_coverage.complete)pending.push('日K目标2025-09-09：实际最早'+d.ohlcv_coverage.actual_from.slice(0,10)+'；'+d.ohlcv_coverage.reason+'。');
+ $('pendingEvidence').replaceChildren(...pending.map(text=>{const li=document.createElement('li');li.textContent=text;return li}));
+ const recent=history.slice(-7);$('historyRows').replaceChildren(...recent.map(h=>tableRow([h.date,asOf(h.generated_at),money(h.pool?.usdc_reserve),signed(h.supply?.change_24h),fmt(h.zero_burn?.total_dory),fmt(h.x9c_dead_burn?.total_dory),fmt(h.holders?.count,0)])));
+ $('historyNote').textContent=recent.length<2?'当前仅有'+recent.length+'个日期；每日更新后形成趋势，同日重跑覆盖当日。':'展示真实每日记录；不同采集时刻的滚动24h窗口不能直接累加为7日。';
+}
 function pctClass(el,v){el.className=known(v)?v>0?'up':v<0?'down':'muted':'muted'}
 function setSource(id,text,state=''){const e=$(id);e.textContent=text;e.className='pill '+state}
 function setLight(id,textId,state,text){$(id).className='dot '+(state||'');$(textId).textContent=text}
@@ -26,48 +42,64 @@ function renderSnapshot(d){snapshot=d;const m=d.market||{}, p=d.pool||{}, s=d.su
  renderMarket(m);chainState={buyAmt:m.buy_usdc,sellAmt:m.sell_usdc,usdcPoolNet:p.swap_net_usdc,doryPoolNet:p.swap_net_dory,supply:s.total_supply,supplyDelta:s.change_24h,zeroTotal:z.total_dory,x9burn:x.total_dory,poolCount:c.candidate_pools};
  $('buyAmt').textContent=money(m.buy_usdc);$('sellAmt').textContent=money(m.sell_usdc);$('usdcNet').textContent=signed(p.swap_net_usdc,0,' U');$('doryNet').textContent=signed(p.swap_net_dory,2,' DORY');
  $('supply').textContent=fmt(s.total_supply);$('supplyDelta').textContent=signed(s.change_24h,2,' DORY');pctClass($('supplyDelta'),known(s.change_24h)?-s.change_24h:null);
+ $('supplyDelta7').textContent=signed(s.change_7d,2,' DORY');$('minted24').textContent=known(s.minted_24h)?fmt(s.minted_24h)+' DORY':'未验证';
+ $('reserveUsdc').textContent=money(p.usdc_reserve);$('reserveDory').textContent=fmt(p.dory_reserve);$('reserveDelta').textContent=signed(p.usdc_change_24h,0,' U');
+ $('poolFee').textContent=known(p.key?.fee)?fmt(p.key.fee/10000,2)+'%':'未验证';
  $('zeroBurn').textContent=fmt(z.total_dory);for(const [id,key] of [['zbSell','sell_swap'],['zbBuy','buy_swap'],['zbDirect','direct_transfer'],['zbOther','other']])$(id).textContent=fmt(z.categories?.[key]?.dory);
  $('x9burn').textContent=known(x.total_dory)?fmt(x.total_dory)+' DORY':'未验证';$('x9mintTx').textContent=known(x.transactions)?fmt(x.transactions,0)+' 笔':'未验证';
+ $('zero7').textContent=fmt(z.total_7d);$('zbExplicit').textContent=fmt(z.categories?.explicit_pending_call?.dory);
+ $('x9burn7').textContent=known(x.total_7d)?fmt(x.total_7d)+' DORY':'未验证';$('x9Absorption').textContent=known(x.absorption_24h_pct)?fmt(x.absorption_24h_pct,2)+'%':s.minted_24h===0?'新增发行为0，无分母':'未验证';
  $('pools').textContent=known(c.candidate_pools)?fmt(c.candidate_pools,0)+' 池候选':'未验证';$('poolTxs').textContent=known(c.transactions)?fmt(c.transactions,0)+' 笔':'未验证';$('poolCapital').textContent=money(c.candidate_usdc);$('poolMax').textContent=money(c.max_usdc);
  $('holders').textContent=fmt(d.holders?.count,0);$('holdersAsOf').textContent=d.holders?.as_of?asOf(d.holders.as_of):'未验证';
+ $('poolRoundtrip').textContent=known(c.same_tx_roundtrips_excluded)?fmt(c.same_tx_roundtrips_excluded,0)+' 笔':'未验证';
+ $('tbReserve').textContent=money(p.usdc_reserve);$('tbReservePrev').textContent=money(p.baseline_24h?.usdc_reserve);$('tbSupply7').textContent=signed(s.change_7d);$('tbZero7').textContent=fmt(z.total_7d);$('tbX97').textContent=fmt(x.total_7d);$('tbHolders').textContent=fmt(d.holders?.count,0);
  $('tbUsdcNet').textContent=signed(p.swap_net_usdc,0,' U');$('tbZero').textContent=fmt(z.total_dory);$('tbX9').textContent=fmt(x.total_dory);$('tbPools').textContent=fmt(c.candidate_pools,0);$('tbSupplyDelta').textContent=signed(s.change_24h);
- const values=[m.price_usd,m.volume_24h,m.liquidity_usd,p.swap_net_usdc,z.total_dory,x.total_dory,c.candidate_pools,s.change_24h]; document.querySelectorAll('#metricRows tr').forEach((row,i)=>{row.cells[3].textContent=known(values[i])?'已取得（快照）':'未验证'});
- const stale=!d.generated_at||Date.now()-Date.parse(d.generated_at)>36*3600000;
- setSource('srcChain','每日快照：'+(!d.generated_at?'未采集':stale?'已过期':d.status==='ok'?'采集完成':'部分指标未验证'),stale||d.status==='not_collected'?'err':d.status==='ok'?'ok':'busy');
+ const values=[m.price_usd,m.volume_24h,m.liquidity_usd,p.swap_net_usdc,z.total_dory,x.total_dory,c.candidate_pools,s.change_24h,p.usdc_reserve,s.change_7d,z.total_7d,x.total_7d,d.holders?.count]; document.querySelectorAll('#metricRows tr').forEach((row,i)=>{row.cells[3].textContent=known(values[i])?i===6?'金额候选':i===12?'索引快照':'已取得（快照）':'未验证'});
+ const inconsistent=d.sources?.chain_consistency?.status==='failed'||d.sources?.supply_event_reconciliation?.status==='failed';
+ const timestamp=Date.parse(d.generated_at), stale=!Number.isFinite(timestamp)||timestamp>Date.now()+300000||Date.now()-timestamp>36*3600000||inconsistent;
+ setSource('srcChain','每日快照：'+(!d.generated_at?'未采集':stale?inconsistent?'证据不一致':'已过期':d.status==='ok'?'采集完成':'部分指标未验证'),stale||d.status==='not_collected'?'err':d.status==='ok'?'ok':'busy');
  setSource('srcMarket','行情快照：'+(known(m.price_usd)?'已取得':'未验证'),known(m.price_usd)&&!stale?'ok':'busy');setSource('srcRpc','链上采集：'+(known(s.total_supply)?'供应已取得':'未验证'),known(s.total_supply)&&!stale?'ok':'busy');
- $('asof').textContent='快照 '+asOf(d.generated_at);$('scanStatus').textContent='快照 '+asOf(d.generated_at)+'；'+(d.blocks?.from&&d.blocks?.to?'滚动24h区块 '+d.blocks.from+'–'+d.blocks.to+'；':'')+(stale?'当前快照已过期，风险灯保持灰色。':'未核验指标保持灰色。');
- setLight('lUsdc','tUsdc','','绝对储备未验证；Swap净额见上方');
+ setSource('srcHolders','持币地址：'+(known(d.holders?.count)?'索引快照':'未验证'),known(d.holders?.count)&&!stale?'ok':'busy');
+ const coverage=values.filter(known).length;$('coverageSummary').textContent='核心表格 '+coverage+' / '+values.length+' 项已取得（含候选与索引）；经营结构仍需补证。';$('progressBar').style.width=Math.round(coverage/values.length*100)+'%';
+ $('asof').textContent='快照 '+asOf(d.generated_at);$('scanStatus').textContent='快照 '+asOf(d.generated_at)+'；'+(d.blocks?.from&&d.blocks?.to?'滚动24h区块 '+d.blocks.from+'–'+d.blocks.to+'；':'')+(stale?inconsistent?'区块或供应事件对账未通过，观察灯保持灰色。':'当前快照已过期，观察灯保持灰色。':'未核验指标保持灰色。');
+ setLight('lUsdc','tUsdc',!stale&&known(p.usdc_change_24h)?p.usdc_change_24h>0?'green':p.usdc_change_24h<0?'red':'yellow':'',known(p.usdc_change_24h)?signed(p.usdc_change_24h,0,' U / 24h本金'):'本金变化未验证');
  setLight('lSupply','tSupply',!stale&&known(s.change_24h)?s.change_24h<0?'green':s.change_24h>0?'red':'yellow':'',signed(s.change_24h,1,' DORY'));
- setLight('lX9','tX9','','消化率分母未验证');const r=ratio(m.buy_usdc,m.sell_usdc);
+ const absorption=x.absorption_24h_pct;setLight('lX9','tX9',!stale&&known(absorption)?absorption>=100?'green':absorption<20?'red':'yellow':'',known(absorption)?fmt(absorption,1)+'% / 链上新增发行':s.minted_24h===0?'新增发行为0，无分母':'新增发行分母未验证');const r=ratio(m.buy_usdc,m.sell_usdc);
  setLight('lTrade','tTrade',!stale&&r!==null?r>1.1?'red':r<.9?'green':'yellow':'',r===Infinity?'仅SELL，无BUY':r===null?'金额未验证':'金额 SELL/BUY '+fmt(r,2)+'×');
  const date=d.date_bj||bjDate(d.generated_at||Date.now()), prev=history.filter(h=>h.date<date).at(-1);
  $('prevUsdcNet').textContent=prev?signed(prev.pool?.swap_net_usdc,0,' U'):'无历史基线';$('prevZero').textContent=prev?fmt(prev.zero_burn?.total_dory):'无历史基线';$('prevX9').textContent=prev?fmt(prev.x9c_dead_burn?.total_dory):'无历史基线';$('prevPools').textContent=prev?fmt(prev.pool_candidates?.candidate_pools,0):'无历史基线';
  setLight('lPool','tPool','','新钱包/复投/套利未验证');
- if(stale)for(const [id,tid] of [['lPool','tPool'],['lUsdc','tUsdc'],['lSupply','tSupply'],['lPrice','tPrice'],['lX9','tX9'],['lTrade','tTrade']])setLight(id,tid,'','快照已过期');
- $('systemState').textContent='证据不足';$('systemState').className='muted';
- const risks=[];if(stale)risks.push('当前快照已过期，请检查每日采集工作流。');
+ if(stale)for(const [id,tid] of [['lPool','tPool'],['lUsdc','tUsdc'],['lSupply','tSupply'],['lPrice','tPrice'],['lX9','tX9'],['lTrade','tTrade']])setLight(id,tid,'',inconsistent?'证据不一致':'快照已过期');
+ const stress=[known(p.usdc_change_24h)?p.usdc_change_24h<0:null,known(s.change_24h)?s.change_24h>0:null,r===null?null:r>1.1].filter(v=>v===true).length;
+ $('systemState').textContent=!stale&&stress>=2?'资金 / 供应承压':!stale&&known(p.usdc_change_24h)&&known(s.change_24h)?'结构仍待核验':'证据不足';$('systemState').className=!stale&&stress>=2?'down':'muted';
+ const risks=[];if(stale)risks.push(inconsistent?'区块或供应事件对账未通过，请核对来源表。':'当前快照已过期，请检查每日采集工作流。');
  if(known(m.sell_usdc)&&known(m.buy_usdc))risks.push('官方池24h BUY '+money(m.buy_usdc)+' / SELL '+money(m.sell_usdc)+'；Swap净额不含LP增减。');
- risks.push('存量活跃矿池、官方池绝对储备、新钱包/复投/套利未核验，系统状态保持“证据不足”。');
+ if(known(p.usdc_change_24h)&&known(s.change_24h))risks.push('官方池USDC本金24h '+signed(p.usdc_change_24h,0,' U')+'；净供应 '+signed(s.change_24h,2,' DORY')+'。');
+ risks.push('活跃矿池本金、新钱包/复投/跨交易套利仍缺少证据，不能据此认定扩张或安全。');
  const errors=d.errors||[];if(errors.length)risks.push('部分采集失败：'+errors.map(e=>typeof e==='string'?e:e.component||e.source||e.message||'未验证').join('；'));
  if(known(z.total_dory))risks.push('Zero Transfer '+fmt(z.total_dory)+' DORY；与X9C→dEaD '+fmt(x.total_dory)+'永久分列。');
  $('riskList').replaceChildren(...risks.slice(0,3).map(text=>{const li=document.createElement('li');li.textContent=text;return li}));
+ evidencePanels(d);
  useCandles(d.ohlcv);
 }
 function useCandles(input){const rows=Array.isArray(input)?input:input?.candles||input?.ohlcv_list||[]; if(!Array.isArray(rows))return;
- candlesAll=rows.map(x=>Array.isArray(x)?{t:x[0]*1000,o:x[1],h:x[2],l:x[3],c:x[4],v:x[5]}:x).filter(x=>[x.t,x.o,x.h,x.l,x.c,x.v].every(known)&&x.t>=Date.parse('2025-09-09T00:00:00Z')).sort((a,b)=>a.t-b.t);
+ const valid=rows.map(x=>Array.isArray(x)?{t:x[0]*1000,o:x[1],h:x[2],l:x[3],c:x[4],v:x[5]}:x).filter(x=>[x.t,x.o,x.h,x.l,x.c,x.v].every(known)&&x.t>=Date.parse('2025-09-09T00:00:00Z')&&x.l>=0&&x.h>=Math.max(x.o,x.c)&&x.l<=Math.min(x.o,x.c)&&x.v>=0).sort((a,b)=>a.t-b.t);
+ candlesAll=[...new Map([...candlesAll,...valid].map(c=>[c.t,c])).values()].sort((a,b)=>a.t-b.t);
  if(candlesAll.length)drawChart();else{$('chartMeta').textContent='OHLCV 未取得';$('chartNote').textContent='未取得官方池真实OHLCV，保留空白，不生成替代K线。'}
 }
 async function deepScan(){const b=$('chainBtn');b.disabled=true;try{const [d,h]=await Promise.all([getJSON(DATA_LATEST),getJSON(DATA_HISTORY)]);history=(h.snapshots||[]).sort((a,b)=>a.date.localeCompare(b.date));renderSnapshot(d)}catch(e){setSource('srcChain','每日快照：加载失败','err');$('scanStatus').textContent='快照加载失败：'+e.message+'；已有结果及时间保留。'}finally{b.disabled=false}}
 async function loadMarket(){setSource('srcMarket','行情：刷新中','busy');try{
  const pool=await getJSON(API+'?include=base_token,quote_token');const rel=pool.data.relationships;
  const base=rel.base_token.data.id.toLowerCase(),quote=rel.quote_token.data.id.toLowerCase();
- if(!(base==='arbitrum_'+DORY&&quote==='arbitrum_'+USDC))throw new Error('官方池DORY/USDC关系未核验');
+ if(pool.data.id.toLowerCase()!=='arbitrum_'+POOL||pool.data.attributes.address.toLowerCase()!==POOL||rel.dex?.data?.id!=='uniswap-v4-arbitrum'||
+   ![base,quote].includes('arbitrum_'+DORY)||![base,quote].includes('arbitrum_'+USDC))throw new Error('官方池DORY/USDC关系未核验');
+ for(const [address,decimals] of [[DORY,18],[USDC,6]]){const t=pool.included?.find(t=>t.id.toLowerCase()==='arbitrum_'+address);if(t?.attributes?.address?.toLowerCase()!==address||t?.attributes?.decimals!==decimals)throw Error('行情Token精度未核验')}
  const token=base==='arbitrum_'+DORY?'base':'quote',a=pool.data.attributes,tx=a.transactions?.h24||{};
  const number=x=>x===null||x===undefined||x===''?null:Number.isFinite(Number(x))?Number(x):null;
- renderMarket({...marketState,price_usd:number(token==='base'?a.base_token_price_usd:a.quote_token_price_usd),volume_24h:number(a.volume_usd?.h24),liquidity_usd:number(a.reserve_in_usd),change_24h_pct:number(a.price_change_percentage?.h24),change_7d_pct:null,buys:number(tx.buys),sells:number(tx.sells)});
+ renderMarket({...marketState,price_usd:number(token==='base'?a.base_token_price_usd:a.quote_token_price_usd),volume_24h:number(a.volume_usd?.h24),liquidity_usd:number(a.reserve_in_usd),change_24h_pct:token==='base'?number(a.price_change_percentage?.h24):null,change_7d_pct:null,buys:number(token==='base'?tx.buys:tx.sells),sells:number(token==='base'?tx.sells:tx.buys)});
  setSource('srcMarket','行情：手动刷新 '+asOf(new Date().toISOString()),'ok');
- try{const o=await getJSON(API+'/ohlcv/day?aggregate=1&limit=1000&token='+token);useCandles(o.data.attributes.ohlcv_list);const last=candlesAll.at(-1);const seven=last&&candlesAll.find(x=>x.t>=last.t-7*86400000);if(seven&&last.t-seven.t>=6*86400000)setPct('chg7',(last.c/seven.c-1)*100)}catch(e){$('chartNote').textContent='K线刷新失败：'+e.message+'；保留快照K线。'}
+ try{const o=await getJSON(API+'/ohlcv/day?aggregate=1&limit=1000&currency=usd&token='+DORY);useCandles(o.data.attributes.ohlcv_list);const last=candlesAll.at(-1);const seven=last&&candlesAll.filter(x=>x.t<=last.t-7*86400000).at(-1);if(seven?.c>0)setPct('chg7',(last.c/seven.c-1)*100)}catch(e){$('chartNote').textContent='K线刷新失败：'+e.message+'；保留快照K线。'}
  }catch(e){setSource('srcMarket','行情：刷新失败；保留快照','err');$('scanStatus').textContent='行情接口失败：'+e.message+'；快照时间保留。'}}
 function setRange(r,el){chartRange=r;document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('active'));el.classList.add('active');drawChart()}
-function drawChart(){let c=candlesAll;if(chartRange!=='all')c=c.slice(-Number(chartRange));let cv=$('chart'),box=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;cv.width=box.width*dpr;cv.height=box.height*dpr;let x=cv.getContext('2d');x.scale(dpr,dpr);let W=box.width,H=box.height,L=58,R=18,T=22,B=52,VH=68,PH=H-T-B-VH-8;if(!c.length)return;let lows=c.map(z=>z.l).filter(Number.isFinite),highs=c.map(z=>z.h).filter(Number.isFinite),sorted=[...highs].sort((a,b)=>a-b),cap=sorted[Math.floor((sorted.length-1)*.995)]||Math.max(...highs),lo=Math.min(...lows),hi=Math.max(...highs.filter(v=>v<=cap));if(hi<=lo)hi=lo+1;let maxV=Math.max(...c.map(z=>z.v)),px=i=>L+(i+.5)*(W-L-R)/c.length,py=v=>T+(hi-Math.min(hi,Math.max(lo,v)))/(hi-lo)*PH;x.clearRect(0,0,W,H);x.strokeStyle='#e6edf4';x.lineWidth=1;x.fillStyle='#66798c';x.font='10px sans-serif';for(let j=0;j<=5;j++){let y=T+j*PH/5,val=hi-j*(hi-lo)/5;x.beginPath();x.moveTo(L,y);x.lineTo(W-R,y);x.stroke();x.fillText(fmt(val,1),4,y+3)}let cw=Math.max(1,Math.min(6,(W-L-R)/c.length*.6));c.forEach((z,i)=>{let xx=px(i),up=z.c>=z.o;x.strokeStyle=up?'#12a46a':'#e34a5d';x.fillStyle=x.strokeStyle;x.beginPath();x.moveTo(xx,py(z.h));x.lineTo(xx,py(z.l));x.stroke();let y=Math.min(py(z.o),py(z.c)),hh=Math.max(1,Math.abs(py(z.o)-py(z.c)));x.fillRect(xx-cw/2,y,cw,hh);let vh=(z.v/maxV)*VH;x.globalAlpha=.42;x.fillRect(xx-cw/2,T+PH+9+VH-vh,cw,vh);x.globalAlpha=1});let step=Math.max(1,Math.ceil(c.length/8));x.fillStyle='#66798c';for(let i=0;i<c.length;i+=step){let dt=new Date(c[i].t);x.fillText((dt.getMonth()+1)+'/'+dt.getDate(),px(i)-11,H-10)}let last=c.at(-1),maxC=c.reduce((a,b)=>b.h>a.h?b:a),minC=c.reduce((a,b)=>b.l<a.l?b:a);$('chartMeta').textContent='最新 '+fmt(last.c,3)+' · 高 '+fmt(maxC.h,2)+' · 低 '+fmt(minC.l,2)+' · '+c.length+'根';$('chartNote').textContent='范围：'+new Date(c[0].t).toLocaleDateString('zh-CN')+' 至 '+new Date(last.t).toLocaleDateString('zh-CN')+'；当日UTC日K未收盘。最高/最低来自官方池OHLCV；纵轴对极端上影采用99.5%分位可视裁剪，原始极值仍计入上方标签。'}
+function drawChart(){let c=candlesAll;if(chartRange!=='all')c=c.slice(-Number(chartRange));let cv=$('chart'),box=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;cv.width=box.width*dpr;cv.height=box.height*dpr;let x=cv.getContext('2d');x.scale(dpr,dpr);let W=box.width,H=box.height,L=58,R=18,T=22,B=52,VH=68,PH=H-T-B-VH-8;if(!c.length)return;let lows=c.map(z=>z.l).filter(Number.isFinite),highs=c.map(z=>z.h).filter(Number.isFinite),sorted=[...highs].sort((a,b)=>a-b),cap=sorted[Math.floor((sorted.length-1)*.995)]||Math.max(...highs),lo=Math.min(...lows),hi=Math.max(...highs.filter(v=>v<=cap));if(hi<=lo)hi=lo+1;let maxV=Math.max(...c.map(z=>z.v)),px=i=>L+(i+.5)*(W-L-R)/c.length,py=v=>T+(hi-Math.min(hi,Math.max(lo,v)))/(hi-lo)*PH;x.clearRect(0,0,W,H);x.strokeStyle='#e6edf4';x.lineWidth=1;x.fillStyle='#66798c';x.font='10px sans-serif';for(let j=0;j<=5;j++){let y=T+j*PH/5,val=hi-j*(hi-lo)/5;x.beginPath();x.moveTo(L,y);x.lineTo(W-R,y);x.stroke();x.fillText(fmt(val,1),4,y+3)}let cw=Math.max(1,Math.min(6,(W-L-R)/c.length*.6));c.forEach((z,i)=>{let xx=px(i),up=z.c>=z.o;x.strokeStyle=up?'#12a46a':'#e34a5d';x.fillStyle=x.strokeStyle;x.beginPath();x.moveTo(xx,py(z.h));x.lineTo(xx,py(z.l));x.stroke();let y=Math.min(py(z.o),py(z.c)),hh=Math.max(1,Math.abs(py(z.o)-py(z.c)));x.fillRect(xx-cw/2,y,cw,hh);let vh=maxV>0?(z.v/maxV)*VH:0;x.globalAlpha=.42;x.fillRect(xx-cw/2,T+PH+9+VH-vh,cw,vh);x.globalAlpha=1});let step=Math.max(1,Math.ceil(c.length/8));x.fillStyle='#66798c';for(let i=0;i<c.length;i+=step){let dt=new Date(c[i].t);x.fillText((dt.getMonth()+1)+'/'+dt.getDate(),px(i)-11,H-10)}let last=c.at(-1),maxC=c.reduce((a,b)=>b.h>a.h?b:a),minC=c.reduce((a,b)=>b.l<a.l?b:a);$('chartMeta').textContent='最新 '+fmt(last.c,3)+' · 高 '+fmt(maxC.h,2)+' · 低 '+fmt(minC.l,2)+' · '+c.length+'根';$('chartNote').textContent='范围：'+new Date(c[0].t).toLocaleDateString('zh-CN')+' 至 '+new Date(last.t).toLocaleDateString('zh-CN')+'；当日UTC日K未收盘。最高/最低来自官方池OHLCV；纵轴对极端上影采用99.5%分位可视裁剪，原始极值仍计入上方标签。'}
 window.addEventListener('resize',()=>{if(candlesAll.length)drawChart()});deepScan();
