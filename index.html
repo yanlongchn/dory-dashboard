@@ -19,7 +19,7 @@ a{color:#176bad;text-decoration:none}.header{background:linear-gradient(105deg,#
 @media(max-width:900px){.trendgrid{grid-template-columns:repeat(2,1fr)}}@media(max-width:550px){.trendgrid{grid-template-columns:1fr}}
 </style></head>
 <body>
-<div class="header"><div><h1>DORY 每日监控 Dashboard</h1><div class="sub">Arbitrum · Uniswap v4 官方池 · K线自 2025-09-09 起 · “未验证”优先于猜测</div></div><div class="actions"><button class="btn" onclick="loadMarket()">刷新行情</button><button class="btn" id="chainBtn" onclick="deepScan()">刷新每日快照</button><div class="status"><div>系统状态</div><b id="systemState">证据不足</b><div id="asof" class="tiny">等待刷新</div></div></div></div>
+<div class="header"><div><h1>DORY 每日监控 Dashboard</h1><div class="sub">Arbitrum · Uniswap v4 官方池 · 日K目标起点 2025-09-09 · 实际覆盖见图下 · “未验证”优先于猜测</div></div><div class="actions"><button class="btn" onclick="loadMarket()">刷新行情</button><button class="btn" id="chainBtn" onclick="deepScan()">刷新每日快照</button><div class="status"><div>系统状态</div><b id="systemState">证据不足</b><div id="asof" class="tiny">等待刷新</div></div></div></div>
 <div class="wrap">
  <div class="sourcebar"><span class="pill" id="srcMarket">行情：等待</span><span class="pill" id="srcRpc">Arbitrum RPC：等待</span><span class="pill" id="srcChain">每日快照：等待</span><span class="pill">持币地址：未验证</span></div>
  <div class="sectionNote">判断核心：新增资金是否覆盖存量卖压、官方池USDC是否持续流出、真实净供应是否恶化。X9C→dEaD 与 Zero Address Burn 永久分列。</div>
@@ -46,13 +46,13 @@ a{color:#176bad;text-decoration:none}.header{background:linear-gradient(105deg,#
   </tbody></table></div></div>
   <div class="card"><div class="ct">今日风险 / 异常</div><div class="cb"><ol class="risks" id="riskList"><li>等待行情刷新。</li><li>链上高级指标尚未运行。</li><li>所有无法可靠取得的数据保持“未验证”。</li></ol><div class="divider"></div><div class="small"><b>每日快照：</b>北京时间08:00由GitHub Actions采集，历史快照统一保存在仓库。同日重跑覆盖当日记录。</div></div></div>
  </div>
- <div class="card chartcard"><div class="ct charthead"><span>DORY 价格日K图 · 2025-09-09 起</span><div class="chartControls"><button class="cbtn active" data-range="all" onclick="setRange('all',this)">全部</button><button class="cbtn" data-range="180" onclick="setRange(180,this)">180日</button><button class="cbtn" data-range="90" onclick="setRange(90,this)">90日</button><button class="cbtn" data-range="30" onclick="setRange(30,this)">30日</button><span class="badge" id="chartMeta">真实OHLCV</span></div></div><div class="chartwrap"><canvas id="chart"></canvas></div><div class="cb small" id="chartNote">只使用官方池真实OHLCV；异常极端针保留在统计，但可视轴采用分位裁剪避免主体走势被压扁。</div></div>
+ <div class="card chartcard"><div class="ct charthead"><span>DORY 价格日K图 · 实际覆盖范围见图下</span><div class="chartControls"><button class="cbtn active" data-range="all" onclick="setRange('all',this)">全部</button><button class="cbtn" data-range="180" onclick="setRange(180,this)">180日</button><button class="cbtn" data-range="90" onclick="setRange(90,this)">90日</button><button class="cbtn" data-range="30" onclick="setRange(30,this)">30日</button><span class="badge" id="chartMeta">真实OHLCV</span></div></div><div class="chartwrap"><canvas id="chart"></canvas></div><div class="cb small" id="chartNote">只使用官方池真实OHLCV；异常极端针保留在统计，但可视轴采用分位裁剪避免主体走势被压扁。</div></div>
  
 <div class="card" style="margin-top:12px">
   <div class="ct">数据可信度与审计口径</div>
   <div class="cb">
     <div class="grid" style="grid-template-columns:repeat(4,1fr);gap:10px">
-      <div><b>行情 / K线</b><div class="small">GeckoTerminal 官方 DORY/USDC v4 池。日K起点固定 2025-09-09。</div></div>
+      <div><b>行情 / K线</b><div class="small">GeckoTerminal 官方 DORY/USDC v4 池。日K目标起点为2025-09-09；此前未取得的历史不补数，实际覆盖以图下为准。</div></div>
       <div><b>真实供应 Burn</b><div class="small">Zero Transfer 单列；供应变化另读 totalSupply，不推定每笔等额减少。</div></div>
       <div><b>X9C 消化</b><div class="small">仅 X9 Charter 相关交易中 payer→dEaD 的 DORY；dEaD余额增量不能直接替代。</div></div>
       <div><b>5000U候选</b><div class="small">5000U整数倍 BUY 只是原始候选；新钱包、复投、套利未拆清前不称“新增用户”。</div></div>
