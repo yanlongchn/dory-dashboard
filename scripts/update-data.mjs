@@ -90,7 +90,8 @@ function makeClient() {
       if (Date.now() >= deadline || requests >= maxRequests) throw new Error("Collection request/time budget exhausted");
       requests++;
       try {
-        const r = await fetch(url, { ...options,
+        const r = await fetch(url, { ...options, cache: 'no-store',
+          headers: {'user-agent': 'DoryDashboard/1.0', 'cache-control': 'no-store', ...options.headers},
           signal: AbortSignal.timeout(Math.max(1, Math.min(timeout, deadline - Date.now()))) });
         if (!r.ok) {
           const payload = await r.json().catch(() => null);
@@ -130,9 +131,9 @@ function makeClient() {
     }
   }
   const archiveEvidence = new Map(), verifiedChains = new Set();
-  const rpcProviders = [...new Set([RPC, 'https://arbitrum-one-rpc.publicnode.com', 'https://arbitrum.drpc.org', 'https://arbitrum-one.public.blastapi.io'])];
+  const rpcProviders = [...new Set([RPC, 'https://arbitrum.gateway.tenderly.co', 'https://arbitrum-one-rpc.publicnode.com', 'https://arbitrum.drpc.org', 'https://arbitrum-one.public.blastapi.io'])];
   let preferred = RPC;
-  let logsPreferred = RPC;
+  let logsPreferred = process.env.DORY_RPC_URL || process.env.ARBITRUM_RPC_URL ? RPC : 'https://arbitrum.gateway.tenderly.co';
   let logQueue = Promise.resolve();
   async function verifyChain(url) {
     if (!verifiedChains.has(url)) {
@@ -142,14 +143,15 @@ function makeClient() {
   }
   async function rpcUnqueued(method, params = []) {
     let last;
-    for (const url of [...new Set(method === 'eth_getLogs' ? [logsPreferred, RPC, 'https://arbitrum.drpc.org'] : [preferred, ...rpcProviders])]) {
+    const failures = [];
+    for (const url of [...new Set(method === 'eth_getLogs' ? [logsPreferred, RPC, 'https://arbitrum.gateway.tenderly.co', 'https://arbitrum.drpc.org'] : [preferred, ...rpcProviders])]) {
       try { await verifyChain(url); const value = await rpcAt(url, method, params);
         if (method === 'eth_getLogs') logsPreferred = url; else preferred = url; return value; }
-      catch (e) { last = e; if (/budget exhausted/.test(e.message)) throw e;
+      catch (e) { last = e; failures.push((url === RPC ? 'configured RPC' : new URL(url).hostname) + ': ' + e.message); if (/budget exhausted/.test(e.message)) throw e;
         if (!/HTTP|timeout|fetch failed|temporar|rate limit|too many requests|missing trie|state .*not available|not supported|chain mismatch/i.test(e.message)) throw e;
       }
     }
-    throw last;
+    last.message = failures.join('; '); throw last;
   }
   async function rpc(method, params = []) {
     if (method !== 'eth_getLogs') return rpcUnqueued(method, params);
