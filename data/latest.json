@@ -1,39 +1,39 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-10-04T04:34:33.034Z",
+  "generated_at": "2026-10-04T05:25:44.229Z",
   "date_bj": "2026-10-04",
   "status": "partial",
   "blocks": {
-    "from": 511198954,
-    "to": 511509732,
-    "from_ts": "2026-10-03T04:33:46.000Z",
-    "to_ts": "2026-10-04T04:33:46.000Z",
-    "requested_from_ts": "2026-10-03T04:33:46.000Z"
+    "from": 511209908,
+    "to": 511520627,
+    "from_ts": "2026-10-03T05:25:09.000Z",
+    "to_ts": "2026-10-04T05:25:09.000Z",
+    "requested_from_ts": "2026-10-03T05:25:09.000Z"
   },
   "market": {
-    "price_usd": 113.014696569878,
+    "price_usd": 111.446104358855,
     "price_usdc": 103.2052132585,
-    "change_24h_pct": 13.776,
-    "change_7d_pct": 204.20742102376056,
-    "volume_24h": 2722067.80262359,
-    "liquidity_usd": 3536461.1795,
-    "buys": 1123,
-    "sells": 1401,
-    "buyers": 446,
-    "sellers": 537,
-    "buy_usdc": 1421910.1930490017,
-    "sell_usdc": 1300432.0399889993,
-    "sell_buy_amount_ratio": 0.9145669299975149
+    "change_24h_pct": 14.193,
+    "change_7d_pct": 199.9851613917292,
+    "volume_24h": 2768673.94533958,
+    "liquidity_usd": 3562515.8222,
+    "buys": 1121,
+    "sells": 1381,
+    "buyers": 443,
+    "sellers": 520,
+    "buy_usdc": 1448424.6156920027,
+    "sell_usdc": 1320579.2455659986,
+    "sell_buy_amount_ratio": 0.9117348816493812
   },
   "pool": {
-    "liquidity_usd": 3536461.1795,
+    "liquidity_usd": 3562515.8222,
     "usdc_reserve": null,
     "dory_reserve": null,
-    "swap_net_usdc": 121478.1530600004,
-    "swap_net_dory": -891.6777188442511
+    "swap_net_usdc": 127845.37012600039,
+    "swap_net_dory": -945.0279067761334
   },
   "supply": {
-    "total_supply": null,
+    "total_supply": 628727.4594089665,
     "change_24h": null
   },
   "holders": {
@@ -41,26 +41,26 @@
     "status": "unverified"
   },
   "zero_burn": {
-    "total_dory": 14109.579711132134,
-    "transactions": 1258,
+    "total_dory": 13950.26384796838,
+    "transactions": 1254,
     "categories": {
       "sell_swap": {
-        "dory": null,
-        "txs": null
+        "dory": 1628.6752886017516,
+        "txs": 467
       },
       "buy_swap": {
-        "dory": null,
-        "txs": null
+        "dory": 0,
+        "txs": 0
       },
       "direct_transfer": {
-        "dory": null,
-        "txs": null
-      },
-      "pending_burn": {
-        "dory": null,
-        "txs": null
+        "dory": 0,
+        "txs": 0
       },
       "other": {
+        "dory": 12321.588559366626,
+        "txs": 787
+      },
+      "pending_burn": {
         "dory": null,
         "txs": null
       }
@@ -1538,9 +1538,9 @@
       "t": 1791072000000,
       "o": 114.216725461687,
       "h": 114.216725461687,
-      "l": 110.332268244395,
-      "c": 113.014696569878,
-      "v": 276037.08955569443
+      "l": 110.248164625889,
+      "c": 111.446104358855,
+      "v": 366870.56589211
     }
   ],
   "sources": {
@@ -1553,45 +1553,41 @@
     },
     "market": {
       "status": "ok",
-      "collected_at": "2026-10-04T04:33:47.035Z"
+      "collected_at": "2026-10-04T05:25:10.382Z"
     },
     "chain_window": {
       "status": "ok",
-      "collected_at": "2026-10-04T04:33:53.261Z"
+      "collected_at": "2026-10-04T05:25:12.075Z"
     },
     "ohlcv": {
       "status": "ok",
-      "collected_at": "2026-10-04T04:33:54.304Z"
+      "collected_at": "2026-10-04T05:25:12.382Z"
     },
     "swaps": {
       "status": "ok",
-      "collected_at": "2026-10-04T04:34:08.161Z"
+      "collected_at": "2026-10-04T05:25:17.745Z"
     },
     "supply": {
       "status": "failed",
-      "error": "eth_call: historical state 5450b8b681d00608cd6842044e0b3f8bd7db3b908ee15df2e25744efdb0574ff is not available"
+      "error": "eth_call: missing trie node fd7790dd7fb7cb72d09cc06cf767f9e10bab49f948038b7b597074df714f8ff9 (path ) state 0xfd7790dd7fb7cb72d09cc06cf767f9e10bab49f948038b7b597074df714f8ff9 is not available, not found"
     },
     "x9c_mint": {
       "status": "ok",
-      "collected_at": "2026-10-04T04:34:21.944Z"
+      "collected_at": "2026-10-04T05:25:21.103Z"
     },
     "zero_burn_categories": {
-      "status": "failed",
-      "error": "Collection request/time budget exhausted"
+      "status": "ok",
+      "collected_at": "2026-10-04T05:25:44.229Z"
     },
     "zero_burn": {
       "status": "ok",
-      "collected_at": "2026-10-04T04:34:33.034Z"
+      "collected_at": "2026-10-04T05:25:44.229Z"
     }
   },
   "errors": [
     {
       "source": "supply",
-      "message": "eth_call: historical state 5450b8b681d00608cd6842044e0b3f8bd7db3b908ee15df2e25744efdb0574ff is not available"
-    },
-    {
-      "source": "zero_burn_categories",
-      "message": "Collection request/time budget exhausted"
+      "message": "eth_call: missing trie node fd7790dd7fb7cb72d09cc06cf767f9e10bab49f948038b7b597074df714f8ff9 (path ) state 0xfd7790dd7fb7cb72d09cc06cf767f9e10bab49f948038b7b597074df714f8ff9 is not available, not found"
     }
   ],
   "notes": [
@@ -1602,7 +1598,7 @@
     "7d change compares the latest daily close with a close at least seven days earlier."
   ],
   "diagnostics": {
-    "requests": 250,
-    "max_requests": 250
+    "requests": 960,
+    "max_requests": 1200
   }
 }
