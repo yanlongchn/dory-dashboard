@@ -4,43 +4,43 @@
     {
       "date": "2026-10-04",
       "schema_version": 2,
-      "generated_at": "2026-10-04T05:58:11.061Z",
+      "generated_at": "2026-10-04T06:03:37.679Z",
       "date_bj": "2026-10-04",
       "status": "partial",
       "blocks": {
-        "from": 511216415,
-        "to": 511527250,
-        "from_ts": "2026-10-03T05:56:13.000Z",
-        "to_ts": "2026-10-04T05:56:13.000Z",
-        "requested_from_ts": "2026-10-03T05:56:13.000Z",
-        "hash": "0xd1a82f0ae32f379f7e02e1cd28857216766672d905119a1ebdba9ed739114361",
-        "from_7d": 509303688,
-        "baseline_24h": 511216414,
-        "baseline_7d": 509303687,
-        "baseline_24h_ts": "2026-10-03T05:56:12.000Z",
-        "baseline_7d_ts": "2026-09-27T05:56:12.000Z"
+        "from": 511217560,
+        "to": 511528405,
+        "from_ts": "2026-10-03T06:01:38.000Z",
+        "to_ts": "2026-10-04T06:01:38.000Z",
+        "requested_from_ts": "2026-10-03T06:01:38.000Z",
+        "hash": "0xb8478dd7680c09ad5433bc561e1caea76f061e1daaeb800d25eacde777b9c490",
+        "from_7d": 509304743,
+        "baseline_24h": 511217559,
+        "baseline_7d": 509304742,
+        "baseline_24h_ts": "2026-10-03T06:01:37.000Z",
+        "baseline_7d_ts": "2026-09-27T06:01:37.000Z"
       },
       "market": {
-        "price_usd": 111.90936971652,
+        "price_usd": 114.152170881227,
         "price_usdc": 103.2052132585,
-        "change_24h_pct": 12.686,
-        "change_7d_pct": 207.36263998882146,
-        "volume_24h": 2577320.04791814,
-        "liquidity_usd": 3564100.5762,
-        "buys": 1130,
-        "sells": 1380,
-        "buyers": 442,
-        "sellers": 518,
-        "buy_usdc": 1360061.8459810023,
-        "sell_usdc": 1224280.334042,
-        "sell_buy_amount_ratio": 0.9001651929724827
+        "change_24h_pct": 14.95,
+        "change_7d_pct": 207.26921862388332,
+        "volume_24h": 2579220.46791609,
+        "liquidity_usd": 3563241.7649,
+        "buys": 1134,
+        "sells": 1385,
+        "buyers": 443,
+        "sellers": 520,
+        "buy_usdc": 1360717.9250290024,
+        "sell_usdc": 1217900.36865,
+        "sell_buy_amount_ratio": 0.8950424964998104
       },
       "pool": {
-        "liquidity_usd": 3564100.5762,
-        "usdc_reserve": 1667909.029987,
-        "dory_reserve": 18070.212382884572,
-        "swap_net_usdc": 135781.51193900048,
-        "swap_net_dory": -1035.9119072112142,
+        "liquidity_usd": 3563241.7649,
+        "usdc_reserve": 1667761.736638,
+        "dory_reserve": 18072.226872231895,
+        "swap_net_usdc": 142817.5563790004,
+        "swap_net_dory": -1106.8177006833637,
         "key": {
           "currency0": "0x33b49f2264e85bb124d2730dc180182717d436ae",
           "currency1": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
@@ -52,53 +52,53 @@
           "block": 377333322
         },
         "core_principal": {
-          "dory_reserve": 18070.212382884572,
-          "usdc_reserve": 1667909.029987,
+          "dory_reserve": 18072.226872231895,
+          "usdc_reserve": 1667761.736638,
           "has_custom_accounting": false,
           "hook_stats_status": 1,
           "semantics": "fee-excluded core liquidity principal; excludes fees, donations and hook-held assets",
-          "block": 511527250,
-          "block_hash": "0xd1a82f0ae32f379f7e02e1cd28857216766672d905119a1ebdba9ed739114361",
-          "lens_l1_block": 26117035,
+          "block": 511528405,
+          "block_hash": "0xb8478dd7680c09ad5433bc561e1caea76f061e1daaeb800d25eacde777b9c490",
+          "lens_l1_block": 26117062,
           "lens": "0x0000001b173c3bbf3984d417d8614e3eed34865b"
         },
-        "usdc_change_24h": 113186.93626799993,
-        "dory_change_24h": -822.909151964901,
+        "usdc_change_24h": 120259.54752900009,
+        "dory_change_24h": -892.8323312721623,
         "baseline_24h": {
-          "dory_reserve": 18893.121534849473,
-          "usdc_reserve": 1554722.093719,
+          "dory_reserve": 18965.059203504057,
+          "usdc_reserve": 1547502.189109,
           "has_custom_accounting": false,
           "hook_stats_status": 1,
           "semantics": "fee-excluded core liquidity principal; excludes fees, donations and hook-held assets",
-          "block": 511216414,
-          "block_hash": "0x2a7010e593d2d4b0170f14ff05b945254892f479b81a3055196bde95452dd36a",
-          "lens_l1_block": 26109855,
+          "block": 511217559,
+          "block_hash": "0x2d28082ca7216b963d82ab48f97a95e1a1dd33717e78eb016a3ebbbe37331fdb",
+          "lens_l1_block": 26109883,
           "lens": "0x0000001b173c3bbf3984d417d8614e3eed34865b"
         }
       },
       "supply": {
-        "total_supply": 628629.2767576483,
-        "change_24h": -4142.164147638713,
-        "change_7d": -3094.0918624715,
+        "total_supply": 628626.3535914404,
+        "change_24h": -4214.6797352762815,
+        "change_7d": -3219.8547274347225,
         "minted_24h": null,
         "minted_7d": null,
-        "baseline_24h": 632771.440905287,
-        "baseline_7d": 631723.3686201199
+        "baseline_24h": 632841.0333267166,
+        "baseline_7d": 631846.2083188752
       },
       "holders": {
-        "count": 38242,
+        "count": 38243,
         "status": "indexed",
-        "as_of": "2026-10-04T05:56:18.686Z",
+        "as_of": "2026-10-04T06:01:41.355Z",
         "source": "https://arbitrum.blockscout.com/api/v2/tokens/0x33b49f2264e85bb124d2730dc180182717d436ae",
         "timing": "retrieval time; indexer does not expose an exact indexed block or update timestamp"
       },
       "zero_burn": {
-        "total_dory": 13166.741440930236,
-        "transactions": 1261,
+        "total_dory": 13118.192990768632,
+        "transactions": 1260,
         "categories": {
           "sell_swap": {
-            "dory": 1590.235450072502,
-            "txs": 470
+            "dory": 1536.5017345564977,
+            "txs": 469
           },
           "buy_swap": {
             "dory": 0,
@@ -113,7 +113,7 @@
             "txs": 0
           },
           "other": {
-            "dory": 11576.505990857735,
+            "dory": 11581.69125621213,
             "txs": 791
           },
           "pending_burn": {
@@ -121,7 +121,7 @@
             "txs": null
           }
         },
-        "total_7d": 171450.1946976818,
+        "total_7d": 171456.5232479608,
         "transactions_7d": 9547
       },
       "x9c_dead_burn": {
@@ -177,27 +177,27 @@
         },
         "market": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:56:14.453Z"
+          "collected_at": "2026-10-04T06:01:39.774Z"
         },
         "chain_window": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:56:18.208Z"
+          "collected_at": "2026-10-04T06:01:41.017Z"
         },
         "holders": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:56:18.686Z"
+          "collected_at": "2026-10-04T06:01:41.355Z"
         },
         "pool_key": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:56:18.829Z"
+          "collected_at": "2026-10-04T06:01:41.653Z"
         },
         "pool_reserves": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:56:19.248Z"
+          "collected_at": "2026-10-04T06:01:41.757Z"
         },
         "pool_reserves_24h": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:56:19.744Z"
+          "collected_at": "2026-10-04T06:01:41.916Z"
         },
         "ohlcv_history": {
           "status": "partial",
@@ -205,39 +205,39 @@
         },
         "ohlcv": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:56:20.294Z"
+          "collected_at": "2026-10-04T06:01:42.228Z"
         },
         "swaps": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:56:23.745Z"
+          "collected_at": "2026-10-04T06:01:53.323Z"
         },
         "supply_24h": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:56:24.248Z"
+          "collected_at": "2026-10-04T06:01:53.492Z"
         },
         "supply_7d": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:56:24.296Z"
+          "collected_at": "2026-10-04T06:01:53.501Z"
         },
         "supply": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:56:24.296Z"
+          "collected_at": "2026-10-04T06:01:53.501Z"
         },
         "x9c_mint": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:57:17.991Z"
+          "collected_at": "2026-10-04T06:02:21.954Z"
+        },
+        "zero_burn_categories": {
+          "status": "ok",
+          "collected_at": "2026-10-04T06:03:28.927Z"
+        },
+        "zero_burn": {
+          "status": "ok",
+          "collected_at": "2026-10-04T06:03:28.927Z"
         },
         "mint_emissions": {
           "status": "failed",
           "error": "Arbitrum RPC: HTTP 400; ranges over 10000 blocks are not supported on free plan"
-        },
-        "zero_burn_categories": {
-          "status": "ok",
-          "collected_at": "2026-10-04T05:58:10.996Z"
-        },
-        "zero_burn": {
-          "status": "ok",
-          "collected_at": "2026-10-04T05:58:10.996Z"
         },
         "supply_event_reconciliation": {
           "status": "failed",
@@ -245,7 +245,7 @@
         },
         "chain_consistency": {
           "status": "ok",
-          "collected_at": "2026-10-04T05:58:11.061Z"
+          "collected_at": "2026-10-04T06:03:37.679Z"
         }
       },
       "errors": [
@@ -275,29 +275,29 @@
         "reason": "更早历史需要数据商授权（HTTP 401/403）"
       },
       "diagnostics": {
-        "requests": 1320,
+        "requests": 1025,
         "max_requests": 2400,
         "rpc_provider": "arbitrum-one-rpc.publicnode.com",
         "pinned_reads": [
           {
             "provider": "arbitrum-one-rpc.publicnode.com",
-            "block": 511527250,
-            "hash": "0xd1a82f0ae32f379f7e02e1cd28857216766672d905119a1ebdba9ed739114361"
+            "block": 511528405,
+            "hash": "0xb8478dd7680c09ad5433bc561e1caea76f061e1daaeb800d25eacde777b9c490"
           },
           {
             "provider": "arbitrum-one.public.blastapi.io",
-            "block": 511216414,
-            "hash": "0x2a7010e593d2d4b0170f14ff05b945254892f479b81a3055196bde95452dd36a"
+            "block": 511217559,
+            "hash": "0x2d28082ca7216b963d82ab48f97a95e1a1dd33717e78eb016a3ebbbe37331fdb"
           },
           {
             "provider": "configured RPC",
-            "block": 511527250,
-            "hash": "0xd1a82f0ae32f379f7e02e1cd28857216766672d905119a1ebdba9ed739114361"
+            "block": 511528405,
+            "hash": "0xb8478dd7680c09ad5433bc561e1caea76f061e1daaeb800d25eacde777b9c490"
           },
           {
             "provider": "arbitrum-one.public.blastapi.io",
-            "block": 509303687,
-            "hash": "0x43e0ab2db3fc55a9a1b1b82563d608f8251f2a0c38b1774a8d48d371655a0bd1"
+            "block": 509304742,
+            "hash": "0x538c48169cb904680c9d61ef0f1d0bb4a10d0ef9a8e5fe1d72715f495be5f323"
           }
         ]
       }
