@@ -545,6 +545,7 @@ function writeAtomic(filename, value) {
   fs.writeFileSync(temporary, JSON.stringify(value, null, 2) + "\n"); fs.renameSync(temporary, filename);
 }
 export function saveResult(result, directory = DATA) {
+  if (result.pool_candidates) result.pool_candidates = {...result.pool_candidates, examples: []};
   fs.mkdirSync(directory, { recursive: true });
   const historyPath = path.join(directory, "history.json");
   const history = fs.existsSync(historyPath) ? JSON.parse(fs.readFileSync(historyPath, "utf8")) : { schema_version: 1, snapshots: [] };
@@ -553,6 +554,9 @@ export function saveResult(result, directory = DATA) {
   const { ohlcv, ...daily } = result; // Keep the candle series once in latest.json, rather than duplicating it every day.
   history.snapshots = history.snapshots.filter(row => row.date !== date); history.snapshots.push({ date, ...daily });
   history.snapshots.sort((a, b) => a.date.localeCompare(b.date));
+  // Older snapshots may retain per-transaction examples. Keep their metrics/timestamps,
+  // but remove example identifiers from every subsequently published history file.
+  for (const row of history.snapshots) if (row.pool_candidates) row.pool_candidates.examples = [];
   writeAtomic(historyPath, history); writeAtomic(path.join(directory, "latest.json"), result); return date;
 }
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {

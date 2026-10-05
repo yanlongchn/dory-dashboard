@@ -87,3 +87,16 @@ test("Beijing dates cross UTC midnight and same local day replaces its earlier s
     assert.equal(history.snapshots[0].status, "ok"); assert.equal(history.snapshots[0].ohlcv, undefined);
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
+test('publishing clears legacy candidate identifiers while retaining older dates, timestamps and statistics',()=>{
+  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'dory-public-history-'));
+  try {
+    const old={date:'2026-10-04',generated_at:'2026-10-04T06:00:00Z',pool_candidates:{candidate_usdc:5000,examples:[{hash:'old-candidate',usdc:5000}]}};
+    fs.writeFileSync(path.join(directory,'history.json'),JSON.stringify({schema_version:1,snapshots:[old]}));
+    saveResult({generated_at:'2026-10-05T06:00:00Z',pool_candidates:{candidate_usdc:10000,examples:[{hash:'new-candidate',usdc:10000}]},ohlcv:[]},directory);
+    const history=JSON.parse(fs.readFileSync(path.join(directory,'history.json'),'utf8'));
+    assert.deepEqual(history.snapshots[0],{...old,pool_candidates:{candidate_usdc:5000,examples:[]}});
+    const latest=JSON.parse(fs.readFileSync(path.join(directory,'latest.json'),'utf8'));
+    assert.equal(latest.pool_candidates.candidate_usdc,10000);assert.deepEqual(latest.pool_candidates.examples,[]);
+    assert.ok(!JSON.stringify(history).includes('new-candidate'));
+  } finally {fs.rmSync(directory,{recursive:true,force:true});}
+});

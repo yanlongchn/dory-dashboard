@@ -45,5 +45,5 @@ test('ERC721 mints created by a split never count as original subscription burns
 });
 test('5000U amount-size units aggregate whole transactions and exclude simultaneous BUY/SELL', () => {
   const m=new Map([['split-buy',{buy_usdc:5000,sell_usdc:0}],['round-trip',{buy_usdc:10000,sell_usdc:9990}],['ordinary',{buy_usdc:6000,sell_usdc:0}]]);
-  const r=aggregateCandidates(m);assert.equal(r.candidate_pools,1);assert.equal(r.transactions,1);assert.equal(r.same_tx_roundtrips_excluded,1);assert.equal(r.candidate_usdc,5000);
+  const r=aggregateCandidates(m);assert.equal(r.candidate_pools,1);assert.equal(r.transactions,1);assert.equal(r.same_tx_roundtrips_excluded,1);assert.equal(r.candidate_usdc,5000);assert.deepEqual(r.examples,[],'candidate identifiers are never published');
 });

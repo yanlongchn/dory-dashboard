@@ -85,7 +85,7 @@
         "baseline_24h": 628179.3214732001,
         "baseline_7d": 638901.6797594617,
         "event_discrepancy_24h": 4.874323167314287e-12,
-        "event_discrepancy_7d": -3.930836101062596e-9
+        "event_discrepancy_7d": -3.930836101062596e-09
       },
       "holders": {
         "count": 38282,
@@ -140,33 +140,7 @@
         "transactions": 18,
         "max_usdc": 118597.95,
         "same_tx_roundtrips_excluded": 1,
-        "examples": [
-          {
-            "hash": "0x9967a9281c477302aa65ee27416c01a6e6c4304603a03b931014247e8f7e5cd8",
-            "usdc": 5061.175965,
-            "units": 1
-          },
-          {
-            "hash": "0x05758d09280b7236112166c53e5fff19999226226835ac025cd8325a29798312",
-            "usdc": 4660,
-            "units": 1
-          },
-          {
-            "hash": "0x09da339a0e7ce3439cf4d58083c4e0561ea76e15d0932a9244c6edcfa048691d",
-            "usdc": 10000,
-            "units": 2
-          },
-          {
-            "hash": "0x9618f08f9aa5088ceffd2a51475e84b8ca52505841eb2b541af2e8fde60f146e",
-            "usdc": 16011,
-            "units": 3
-          },
-          {
-            "hash": "0x10b24901e8532486b54e393d63e41daffaae63a16fe67da98ff76c9d9f42261b",
-            "usdc": 10050,
-            "units": 2
-          }
-        ],
+        "examples": [],
         "rule": "Aggregate BUY per transaction; exclude same-transaction BUY+SELL; 5000 USDC multiples ±8%. Not verified new users."
       },
       "sources": {
@@ -461,33 +435,7 @@
         "transactions": 15,
         "max_usdc": 54915,
         "same_tx_roundtrips_excluded": 0,
-        "examples": [
-          {
-            "hash": "0xd7a765e871bed30320f6799607a71b41a805f7cfb25de9e380be98275198ca49",
-            "usdc": 52061.54,
-            "units": 10
-          },
-          {
-            "hash": "0x563268a7d728e6350a63e34bbb3c9bcadb39c34765b026b50126e535c050c146",
-            "usdc": 9999,
-            "units": 2
-          },
-          {
-            "hash": "0x5149bb606bde9df4bbd636827598635bfef4dcc55432c25ec12a8c886fb0644f",
-            "usdc": 20904.369,
-            "units": 4
-          },
-          {
-            "hash": "0x123c89bf8f0a617154700e69d45c76c4c888e666fbf33ee91f6a7c8a0af48bea",
-            "usdc": 10000,
-            "units": 2
-          },
-          {
-            "hash": "0xb3805edb18169b015a3c5a8e7d9e18c2520c963f28a3dcddb3543b19f74089c0",
-            "usdc": 23600.9574,
-            "units": 5
-          }
-        ],
+        "examples": [],
         "rule": "Aggregate BUY per transaction; exclude same-transaction BUY+SELL; 5000 USDC multiples ±8%. candidate_pools counts amount-size units, not mining positions or users. Participation has no minimum amount; this filter is not total mining capital."
       },
       "sources": {
