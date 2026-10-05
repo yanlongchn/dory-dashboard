@@ -53,3 +53,16 @@ test('invalid inputs and below-course thresholds cannot turn into a statement of
   assert.equal(below.below_course_threshold,true);assert.equal(below.eligibility,'unverified');
   assert.equal(monitoring.rules.course.atlas.personal_ratio,null);assert.equal(monitoring.rules.course.nft.address,null);
 });
+test('705B overlay requires source completeness and reconciled windows; balance is independently sourced',()=>{
+  const data=snapshot(), model=()=>monitoring.build(data,now).distribution;
+  assert.equal(model().day.status,'unverified');assert.equal(model().balance_dory,null);
+  data.sources.distribution_705b={status:'ok'};data.sources.distribution_705b_balance={status:'ok'};
+  const stats={incoming_dory:1,matched_pairs:1,matched_transactions:1,matched_wallets:1,
+    matched_zero_dory:4.5,matched_receiver_dory:.5,matched_total_dory:5,unmatched_incoming_dory:.5};
+  data.distribution_705b={address:'0x0135f06fbb34cad4a4c0a321efe964b38d2c705b',balance_dory:2,day:stats,week:stats};
+  assert.equal(model().day.status,'ok');assert.equal(model().day.zero_share_pct,56.25);assert.equal(model().balance_dory,2);
+  data.sources.distribution_705b.status='failed';assert.equal(model().day.status,'unverified');assert.equal(model().balance_dory,2);
+  data.sources.distribution_705b.status='ok';stats.matched_zero_dory=9;assert.equal(model().day.status,'unverified');
+  stats.matched_zero_dory=4.5;data.sources.chain_consistency.status='failed';assert.equal(model().balance_dory,null);
+  assert.equal(monitoring.rules.course.nft.address,null,'receiver identity does not verify NFT contract identity');
+});

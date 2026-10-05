@@ -52,3 +52,8 @@ assert.equal(nodes.get('scenarioDays').textContent,'47.06天（算术）');asser
 nodes.get('scenarioRemaining').value='0';vm.runInContext('renderScenario()',context);assert.ok(nodes.get('scenarioNote').textContent.includes('不能视为仍可领取'));
 nodes.get('scenarioPrincipal').value='';vm.runInContext('renderScenario()',context);assert.equal(nodes.get('scenarioTotal').textContent,'输入待修正');
 console.log('PASS: shared-quota scenario remains arithmetic; zero quota and invalid inputs cannot imply obtainable rewards; business gaps and course tiers render.');
+
+assert.equal(nodes.get('receiverRows').children.length,2);
+assert.equal(nodes.get('receiverBalance').textContent,'未验证 DORY');
+assert.ok(nodes.get('receiverRows').children.every(row=>row.children.slice(1).every(cell=>cell.textContent==='未验证')));
+console.log('PASS: old or incomplete snapshots cannot synthesize 705B totals, balance or matched wallet counts.');

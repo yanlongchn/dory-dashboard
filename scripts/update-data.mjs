@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { LENS, INITIALIZE, INIT_BLOCK, TICKET_MINTED, poolKey, decodeReserves, indexedHolders, x9ReceiptBurn, aggregateCandidates } from './evidence.mjs';
+import { LENS, INITIALIZE, INIT_BLOCK, TICKET_MINTED, RECEIVER_705B, distributionWatch, poolKey, decodeReserves, indexedHolders, x9ReceiptBurn, aggregateCandidates } from './evidence.mjs';
 import monitoring from '../monitoring.js';
 
 const DATA = path.join(path.resolve(process.cwd()), "data");
@@ -267,6 +267,7 @@ export async function collect() {
       sell_swap: { dory: null, txs: null }, buy_swap: { dory: null, txs: null },
       direct_transfer: { dory: null, txs: null }, pending_burn: { dory: null, txs: null }, other: { dory: null, txs: null } } },
     x9c_dead_burn: { total_dory: null, transactions: null, total_7d: null, transactions_7d: null, absorption_24h_pct: null },
+    distribution_705b: {address: RECEIVER_705B, balance_dory: null, day: null, week: null},
     pool_candidates: { candidate_pools: null, candidate_usdc: null, transactions: null, max_usdc: null,
       rule: "BUY near 5000 USDC integer multiples ±8%; candidate_pools counts amount-size units, not mining positions or users. Participation has no minimum amount; this filter is not total mining capital." },
     ohlcv: [], sources: {}, errors: [],
@@ -419,6 +420,7 @@ export async function collect() {
     return byTx;
   });
   else result.sources.swaps = { status: "unverified", reason: "Verified pool identity and chain window are required" };
+  let zeroLogs7 = null;
   if (window) await Promise.all([
     component("supply", async () => {
       const now = await pinnedCall(DORY, '0x18160ddd', window.latestBlock);
@@ -439,6 +441,7 @@ export async function collect() {
     component("zero_burn", async () => {
       const all = await getLogs(rpc, DORY, window.start7, window.latest, [TRANSFER, null, ZERO_TOPIC], {maxStep: 100000});
       result.zero_burn.total_7d = all.reduce((sum, log) => sum + tokenAmount(log), 0);
+      zeroLogs7 = all;
       result.zero_burn.transactions_7d = new Set(all.map(l => l.transactionHash)).size;
       const logs = all.filter(l => Number(BigInt(l.blockNumber)) >= window.start);
       const byTx = new Map();
@@ -491,6 +494,22 @@ export async function collect() {
   ]);
   else for (const name of ["supply", "zero_burn", "zero_burn_categories", "x9c_mint"])
     result.sources[name] = { status: "unverified", reason: "Chain window or DORY decimals could not be verified" };
+  if (window) await Promise.all([
+    component('distribution_705b', async () => {
+      if (!zeroLogs7 || result.sources.zero_burn?.status !== 'ok') throw Error('Complete Zero Transfer window required for distribution matching');
+      const target = '0x' + RECEIVER_705B.slice(2).padStart(64, '0');
+      const incoming = await getLogs(rpc, DORY, window.start7, window.latest, [TRANSFER, null, target], {maxStep: 100000});
+      const week = distributionWatch(zeroLogs7, incoming, window.start7, window.latest);
+      const inDay = logs => logs.filter(log => Number(BigInt(log.blockNumber)) >= window.start);
+      const day = distributionWatch(inDay(zeroLogs7), inDay(incoming), window.start, window.latest);
+      Object.assign(result.distribution_705b, {day, week, block: window.latest, block_hash: window.latestBlock.hash,
+        semantics: 'DORY Transfer inflows; one Zero and one 705B leg in the same transaction from the same sender, 90/10 with integer rounding. Overlay only; not mining/NFT attribution or full Pending detection.'});
+    }),
+    component('distribution_705b_balance', async () => {
+      const data = '0x70a08231' + RECEIVER_705B.slice(2).padStart(64, '0');
+      result.distribution_705b.balance_dory = Number(BigInt(await pinnedCall(DORY, data, window.latestBlock))) / 1e18;
+    })
+  ]);
   if (result.supply.minted_24h > 0 && result.x9c_dead_burn.total_dory !== null)
     result.x9c_dead_burn.absorption_24h_pct = result.x9c_dead_burn.total_dory / result.supply.minted_24h * 100;
   await component('supply_event_reconciliation', async () => {
@@ -507,12 +526,12 @@ export async function collect() {
     if (after.hash !== window.latestBlock.hash) {
       result.market.buy_usdc = result.market.sell_usdc = result.market.sell_buy_amount_ratio = null;
       result.pool = {liquidity_usd: result.pool.liquidity_usd}; result.supply = {}; result.zero_burn = {};
-      result.x9c_dead_burn = {}; result.pool_candidates = {};
+      result.x9c_dead_burn = {}; result.pool_candidates = {}; result.distribution_705b = {};
       throw Error('Chain snapshot reorganized during collection; onchain values discarded');
     }
   });
   const core = ["market", "pool_identity", "chain_window", "swaps", "supply", 'supply_24h', 'supply_7d', 'holders', 'pool_key',
-    'pool_reserves', 'pool_reserves_24h', "zero_burn", "zero_burn_categories", "x9c_mint", 'mint_emissions', 'supply_event_reconciliation', 'chain_consistency'];
+    'pool_reserves', 'pool_reserves_24h', "zero_burn", "zero_burn_categories", "x9c_mint", 'mint_emissions', 'supply_event_reconciliation', 'chain_consistency', 'distribution_705b', 'distribution_705b_balance'];
   const complete = core.every(name => result.sources[name]?.status === "ok");
   const hasEvidence = ["market", "supply", "zero_burn", "x9c_mint"].some(name => result.sources[name]?.status === "ok");
   result.status = complete ? "ok" : hasEvidence ? "partial" : "evidence_insufficient";

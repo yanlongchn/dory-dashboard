@@ -8,11 +8,11 @@ const money=n=>known(n)?'$'+n.toLocaleString('en-US',{maximumFractionDigits:0}):
 const signed=(n,d=2,suffix='')=>known(n)?(n>0?'+':'')+fmt(n,d)+suffix:'未验证';
 let chartGeometry=null, chartHoverIndex=null, chartSelectedIndex=null;
 let candlesAll=[], chartRange='all', marketState={}, chainState={}, history=[], snapshot=null;
-const sourceNames={market:'官方池行情',pool_identity:'池币种与精度',chain_window:'24h / 7日区块窗口',holders:'持币地址索引',pool_key:'初始化参数与Pool ID',pool_reserves:'当前两侧本金',pool_reserves_24h:'24h本金变化',ohlcv:'真实日K',ohlcv_history:'日K历史覆盖',swaps:'24h买卖资金',supply:'当前供应',supply_24h:'24h历史供应',supply_7d:'7日历史供应',zero_burn:'24h / 7日Zero Transfer',zero_burn_categories:'24h销毁分类',x9c_mint:'24h / 7日原始X9C认购',mint_emissions:'24h / 7日新增发行',supply_event_reconciliation:'供应与事件窗口对账',chain_consistency:'采集区块一致性'};
+const sourceNames={market:'官方池行情',pool_identity:'池币种与精度',chain_window:'24h / 7日区块窗口',holders:'持币地址索引',pool_key:'初始化参数与Pool ID',pool_reserves:'当前两侧本金',pool_reserves_24h:'24h本金变化',ohlcv:'真实日K',ohlcv_history:'日K历史覆盖',swaps:'24h买卖资金',supply:'当前供应',supply_24h:'24h历史供应',supply_7d:'7日历史供应',zero_burn:'24h / 7日Zero Transfer',zero_burn_categories:'24h销毁分类',x9c_mint:'24h / 7日原始X9C认购',mint_emissions:'24h / 7日新增发行',supply_event_reconciliation:'供应与事件窗口对账',chain_consistency:'采集区块一致性',distribution_705b:'705B流入与同笔分流',distribution_705b_balance:'705B快照DORY余额'};
 function tableRow(values){const tr=document.createElement('tr');tr.replaceChildren(...values.map(value=>{const td=document.createElement('td');td.textContent=value;return td}));return tr}
 function evidencePanels(d){
  const rows=Object.entries(sourceNames).map(([key,label])=>{const s=d.sources?.[key];return tableRow([label,s?.status==='ok'?'采集完成':s?.status==='partial'?'部分覆盖':s?.status==='failed'?'采集失败':'未核验',s?.error||s?.reason||(s?.collected_at?asOf(s.collected_at):s?.evidence||'等待来源')])});$('sourceRows').replaceChildren(...rows);
- const pending=['实际日产DORY与全网卖压：缺少有效本金及96次结算价格、产出和实际卖出记录。','新增参与、新钱包、复投、跨交易套利：5000U筛选只反映金额特征，不是开矿门槛或全量矿池数。','奖励规则：直推、小区档位及级差已有课堂口述，正式分配、共用额度和新协议资格仍待核验。','NFT与应用：705B完整地址、10%基数、会议销毁 / 直播质押 / 打赏记录仍缺；详见机制证据跟踪。'];
+ const pending=['实际日产DORY与全网卖压：缺少有效本金及96次结算价格、产出和实际卖出记录。','新增参与、新钱包、复投、跨交易套利：5000U筛选只反映金额特征，不是开矿门槛或全量矿池数。','奖励规则：直推、小区档位及级差已有课堂口述，正式分配、共用额度和新协议资格仍待核验。','NFT与应用：705B完整收款地址已确认；NFT身份、10%分红基数及会议 / 直播 / 打赏链路仍待核验。'];
  const old=history.find(h=>h.date===(new Date(Date.parse((d.date_bj||bjDate())+'T00:00:00+08:00')-7*86400000).toLocaleDateString('en-CA',{timeZone:'Asia/Shanghai'})));
  const delta=known(old?.holders?.count)&&old.holders?.source===d.holders?.source&&known(d.holders?.count)?d.holders.count-old.holders.count:null;
  $('holdersDelta7').textContent=known(delta)?signed(delta,0,' 地址'):'无同源7日前基线';
@@ -43,6 +43,10 @@ function renderMonitoring(d){
  $('monitorUnknownNote').textContent=known(model.flow.unknown_burn_24h)?'其他 / 未知 '+fmt(model.flow.unknown_burn_24h)+' DORY':'等待完整销毁分类';
  $('monitorFlowRows').replaceChildren(...[['24h',day],['7日',week]].map(([label,w])=>tableRow([label,w.status==='ok'?fmt(w.minted):'未验证',w.status==='ok'?fmt(w.zero_transfer):'未验证',w.status==='ok'?signed(w.supply_change):'未验证',w.status==='ok'?known(w.zero_cover_pct)?fmt(w.zero_cover_pct,1)+'%':'新增发行0，无分母':'未验证',w.status==='ok'?'Mint − Zero 与供应变化一致':w.status==='inconsistent'?'对账不一致，暂停解释':'窗口证据未齐'])));
  $('monitorX9').textContent='X9C原始认购 → dEaD：'+fmt(model.flow.x9c_dead_24h)+' DORY / 24h。此转出不从totalSupply对账中扣除，也不代表705B分红或平台全部应用销毁。';
+ const watch=model.distribution;
+ $('receiverBalance').textContent=fmt(watch.balance_dory)+' DORY';
+ $('receiverStatus').textContent=(model.fresh?'当前快照':'历史快照')+' · '+(watch.day.status==='ok'&&watch.week.status==='ok'?'完整窗口分流统计已采集':'等待完整窗口分流证据');
+ $('receiverRows').replaceChildren(...[['24h',watch.day],['7日',watch.week]].map(([label,w])=>tableRow([label,...(w.status==='ok'?[fmt(w.incoming_dory),fmt(w.matched_pairs,0),fmt(w.matched_wallets,0),fmt(w.matched_zero_dory),fmt(w.matched_receiver_dory),known(w.zero_share_pct)?fmt(w.zero_share_pct,1)+'%':'无Zero分母',fmt(w.unmatched_incoming_dory)]:Array(7).fill('未验证'))])));
  $('mechanismRows').replaceChildren(...model.required_evidence.map(item=>tableRow([item.title,'待补证',item.need,item.impact])));
  $('mechanismCount').textContent=model.required_evidence.length+'项经营依据待补齐 · 与链上采集完成分别展示';
  $('courseRows').replaceChildren(...DoryMonitoring.rules.course.levels.map(tier=>tableRow(['V'+tier.level,fmt(tier.small_area_usd,0)+' U',fmt(tier.rate*100,0)+'%'])));
@@ -98,7 +102,7 @@ function renderSnapshot(d){snapshot=d;const m=d.market||{}, p=d.pool||{}, s=d.su
  const risks=[];if(stale)risks.push(inconsistent?'区块或供应事件对账未通过，请核对来源表。':'当前快照已过期，请检查每日采集工作流。');
  if(known(m.sell_usdc)&&known(m.buy_usdc))risks.push('官方池24h BUY '+money(m.buy_usdc)+' / SELL '+money(m.sell_usdc)+'；Swap净额不含LP增减。');
  if(known(p.usdc_change_24h)&&known(s.change_24h))risks.push('官方池USDC本金24h '+signed(p.usdc_change_24h,0,' U')+'；净供应 '+signed(s.change_24h,2,' DORY')+'。');
- const monitor=DoryMonitoring.build(d);if(known(monitor.flow.unknown_burn_pct)&&monitor.flow.unknown_burn_pct>0)risks.push('Zero Transfer中 '+fmt(monitor.flow.unknown_burn_pct,1)+'%仍归其他 / 未知，不能归因为应用消费或Pending自动结算。');
+ const monitor=DoryMonitoring.build(d);if(known(monitor.flow.unknown_burn_pct)&&monitor.flow.unknown_burn_pct>0)risks.push('Zero Transfer中 '+fmt(monitor.flow.unknown_burn_pct,1)+'%仍归其他 / 未知，不能整体归因为应用消费或Pending自动结算；同笔90% / 10%分流模式另列观察。');
  risks.push('新协议资格与静态 / 动态共用200%额度需正式规则及流水；活跃本金、实际产币与卖压不补数。');
  const errors=d.errors||[];if(errors.length)risks.unshift('部分采集失败：'+errors.map(e=>typeof e==='string'?e:e.component||e.source||e.message||'未验证').join('；'));
  $('riskList').replaceChildren(...risks.slice(0,4).map(text=>{const li=document.createElement('li');li.textContent=text;return li}));

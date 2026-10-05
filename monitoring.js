@@ -3,7 +3,7 @@
   const finite = value => typeof value === 'number' && Number.isFinite(value);
   const sourceOK = (snapshot, name) => snapshot.sources?.[name]?.status === 'ok';
   const rules = {
-    version: '2026-10-05-course-v1',
+    version: '2026-10-05-chain-watch-v2',
     confirmed: {daily_rate: 0.0085, settlements_per_day: 96, minutes_per_settlement: 15, quota_multiple: 2},
     course: {
       source: '用户提供的2026-10-05课堂录音；重点片段二次转写复核，尚未独立链上核验',
@@ -22,7 +22,7 @@
         factors: ['本人矿机规模', '追加后的存续时间', '小区增长'],
         note: '25%出现在探讨语境，不作为已生效门槛或资格判定'},
       nft: {address: null, dividend_base: null, claimed_rate: 0.1, status: 'unverified',
-        note: '录音仅给705B尾号及10%口述；未确认与X9 Charter的对应关系，未来平台分红另列'},
+        note: '705B完整收款地址已由Transfer记录确认；NFT身份、10%分红基数及与X9 Charter的对应关系仍未确认'},
       applications: ['会议付费销毁', '直播质押', '打赏转账', '持仓准入', '信号与内容置顶']
     }
   };
@@ -33,10 +33,10 @@
     {id: 'shared_quota', title: '静态 / 动态共用200%额度', basis: '录音61:48–63:09；直推10%扣本人额度', need: '六项奖励、NFT分红是否扣额度；超额截断及满额结束流水', impact: '不能把日奖励视为持续无限产出'},
     {id: 'active_principal', title: '有效本金与96次计价', basis: '日率0.0085及96次已由用户确认', need: '未到顶本金、逐次价格、计产币数、领取及实际卖出记录', impact: '全网日产币与矿工卖压保持未知'},
     {id: 'community', title: '小区、等级与级差', basis: '录音63:11–66:34；按小区计产、存在级差', need: '小区定义、有效业绩、平级 / 多分支扣减及奖励资格', impact: '70%不能统一叠加本人基础计产'},
-    {id: 'nft_dividends', title: 'NFT分红来源与权益', basis: '录音61:03–61:44；705B相关10%口述', need: '完整地址、10%基数、合约对应、个人份额与来源到账链路', impact: 'X9C认购不能代替NFT收入或股权证明'},
+    {id: 'nft_dividends', title: 'NFT分红来源与权益', basis: '705B完整收款地址已确认；NFT关联仍为课堂口述', need: 'NFT合约对应、10%分红基数、个人份额与来源到账链路', impact: '705B流入不能代替NFT收入或股权证明'},
     {id: 'applications', title: '实际应用付费与消耗', basis: '会议、质押、打赏、准入各有不同用途', need: '付费订单与链上记录；活跃用户统计周期及去重方法', impact: '不能把全部转账或质押计作销毁 / 平台收入'},
     {id: 'permissions', title: '权限与LP控制凭证', basis: '录音44:47–45:44称双向权限放弃', need: 'LP NFT合约与tokenId、持有人、全组件权限及升级路径', impact: '代币或单个LP头寸信息不足以证明全协议安全'},
-    {id: 'pending', title: 'Pending自动 / 嵌套结算', basis: '当前仅直接调用可单列', need: 'Pending产生、触发、清零与最终销毁的逐笔链路', impact: '其他 / 未知销毁不归因为应用或自动结算'},
+    {id: 'pending', title: 'Pending触发与全量归因', basis: '已有样本前后Pending归零及90% / 10%分流；直接调用可单列', need: '实现合约、触发条件、舍入规则、更多前后状态及全量逐笔链路', impact: '样本清零不证明所有自动结算；分流模式不直接改写销毁用途'},
     {id: 'cash_exit', title: '领取、卖出与实际到账', basis: '计产 / 领取 / 卖出分列', need: '完整费用、接收方、成交价格、滑点与稳定币到账', impact: '名义计产不能当作现金回本或保本承诺'}
   ];
 
@@ -72,10 +72,33 @@
       flow: {day, week, x9c_dead_24h: x9,
         unknown_burn_24h: attributionOK ? other : null,
         unknown_burn_pct: attributionOK && day.zero_transfer > 0 ? other / day.zero_transfer * 100 : null},
+      distribution: distribution(snapshot, day, week),
       required_evidence: requiredEvidence.map(item => ({...item, status: 'unverified', value: null})),
       boundaries: ['Mint是实际新增发行，不自动等于矿工基础产出', 'X9C→dEaD不从totalSupply对账中扣除',
         '其他销毁不自动归为应用付费', '课堂规则与链上采集状态分别展示', '实际卖压、NFT收入及新协议资格均不补造']
     };
+  }
+
+  const receiver705b = '0x0135f06fbb34cad4a4c0a321efe964b38d2c705b';
+  function distribution(snapshot, day, week) {
+    const data = snapshot.distribution_705b;
+    const identityOK = data?.address === receiver705b && sourceOK(snapshot, 'chain_consistency');
+    const windowValue = (value, flow) => {
+      const numbers = ['incoming_dory','matched_zero_dory','matched_receiver_dory','matched_total_dory','unmatched_incoming_dory'];
+      const counts = ['matched_pairs','matched_transactions','matched_wallets'];
+      if (!identityOK || !sourceOK(snapshot, 'distribution_705b') || flow.status !== 'ok' || !value ||
+          !numbers.every(key => finite(value[key]) && value[key] >= 0) ||
+          !counts.every(key => Number.isSafeInteger(value[key]) && value[key] >= 0) ||
+          value.matched_wallets > value.matched_pairs || value.matched_transactions > value.matched_pairs ||
+          value.matched_zero_dory > flow.zero_transfer + 1e-6 ||
+          Math.abs(value.matched_total_dory - value.matched_zero_dory - value.matched_receiver_dory) > 1e-6 ||
+          Math.abs(value.incoming_dory - value.matched_receiver_dory - value.unmatched_incoming_dory) > 1e-6)
+        return {status: 'unverified'};
+      return {...value, status: 'ok', zero_share_pct: flow.zero_transfer > 0 ? value.matched_zero_dory / flow.zero_transfer * 100 : null};
+    };
+    return {address: receiver705b,
+      balance_dory: identityOK && sourceOK(snapshot, 'distribution_705b_balance') && finite(data.balance_dory) && data.balance_dory >= 0 ? data.balance_dory : null,
+      day: windowValue(data?.day, day), week: windowValue(data?.week, week)};
   }
 
   function scenario({principal, remaining, smallArea, level}) {

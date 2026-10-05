@@ -1,4 +1,5 @@
 export const DORY = '0x33b49f2264e85bb124d2730dc180182717d436ae';
+export const RECEIVER_705B = '0x0135f06fbb34cad4a4c0a321efe964b38d2c705b';
 export const USDC = '0xaf88d065e77c8cc2239327c5edb3a432268e5831';
 export const POOL = '0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb';
 export const PM = '0x360e68faccca8ca495c1b759fd9eee466db9fb32';
@@ -9,6 +10,48 @@ export const TICKET_MINTED = '0x198510318e8a0a0f84388126ae30950196f55711a4151dfa
 export const INIT_BLOCK = 377333322;
 const TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const ZERO = '0x' + '0'.repeat(64), DEAD = '0x' + '0'.repeat(60) + 'dead';
+// An observable transfer pattern, not a decoded Pending/mining/NFT function.
+export function distributionWatch(zeroLogs, receiverLogs, firstBlock, lastBlock) {
+  const receiver = '0x' + RECEIVER_705B.slice(2).padStart(64, '0');
+  const seen = new Map(), groups = new Map();
+  let incoming = 0n;
+  for (const [logs, target, kind] of [[zeroLogs, ZERO, 'zero'], [receiverLogs, receiver, 'receiver']]) {
+    for (const log of logs) {
+      if (log.removed || log.address?.toLowerCase() !== DORY || log.topics?.length !== 3 ||
+          log.topics[0]?.toLowerCase() !== TRANSFER || log.topics[2]?.toLowerCase() !== target ||
+          !/^0x0{24}[0-9a-f]{40}$/i.test(log.topics[1] || '') ||
+          !/^0x[0-9a-f]{64}$/i.test(log.transactionHash || '') || !/^0x[0-9a-f]{64}$/i.test(log.blockHash || '') ||
+          !/^0x[0-9a-f]+$/i.test(log.logIndex || '') || !/^0x[0-9a-f]+$/i.test(log.blockNumber || ''))
+        throw Error('Incomplete distribution Transfer identity');
+      const block = Number(BigInt(log.blockNumber)), amount = words(log.data, 1)[0];
+      if (block < firstBlock || block > lastBlock) throw Error('Distribution log outside requested window');
+      const id = log.transactionHash.toLowerCase() + ':' + BigInt(log.logIndex);
+      const fingerprint = [log.blockHash.toLowerCase(), block, log.topics[1].toLowerCase(), target, amount].join(':');
+      if (seen.has(id)) { if (seen.get(id) !== fingerprint) throw Error('Conflicting distribution log'); continue; }
+      seen.set(id, fingerprint);
+      if (kind === 'receiver') incoming += amount;
+      if (amount === 0n || log.topics[1].toLowerCase() === ZERO) continue;
+      const key = log.transactionHash.toLowerCase() + ':' + log.topics[1].toLowerCase();
+      const group = groups.get(key) || {zero: [], receiver: [], blockHash: log.blockHash.toLowerCase()};
+      if (group.blockHash !== log.blockHash.toLowerCase()) throw Error('Distribution transaction block mismatch');
+      group[kind].push(amount); groups.set(key, group);
+    }
+  }
+  let zero = 0n, received = 0n, pairs = 0;
+  const transactions = new Set(), wallets = new Set();
+  for (const [key, group] of groups) {
+    // Multiple transfers are ambiguous: do not force a match by summing unrelated legs.
+    if (group.zero.length !== 1 || group.receiver.length !== 1) continue;
+    const z = group.zero[0], r = group.receiver[0], remainder = z - 9n * r;
+    if (remainder < 0n || remainder > 9n) continue; // floor(total/10) in raw wei
+    zero += z; received += r; pairs++;
+    transactions.add(key.slice(0, 66)); wallets.add(key.slice(67));
+  }
+  const number = amount => Number(amount) / 1e18;
+  return {incoming_dory: number(incoming), matched_pairs: pairs, matched_transactions: transactions.size,
+    matched_wallets: wallets.size, matched_zero_dory: number(zero), matched_receiver_dory: number(received),
+    matched_total_dory: number(zero + received), unmatched_incoming_dory: number(incoming - received)};
+}
 export function words(data, count) {
   if (!new RegExp('^0x[0-9a-f]{' + count * 64 + '}$', 'i').test(data || '')) throw Error('Incomplete ABI response');
   return Array.from({length: count}, (_, i) => BigInt('0x' + data.slice(2 + i * 64, 66 + i * 64)));

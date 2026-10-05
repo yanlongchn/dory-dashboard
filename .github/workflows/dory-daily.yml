@@ -40,6 +40,7 @@ jobs:
           node scripts/verify-data.mjs
           node scripts/verify-evidence.mjs
           node scripts/verify-monitoring.mjs
+          node scripts/verify-distribution.mjs
       - name: Collect DORY data
         env:
           ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
