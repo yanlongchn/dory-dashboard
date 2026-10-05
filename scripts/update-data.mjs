@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LENS, INITIALIZE, INIT_BLOCK, TICKET_MINTED, poolKey, decodeReserves, indexedHolders, x9ReceiptBurn, aggregateCandidates } from './evidence.mjs';
+import monitoring from '../monitoring.js';
 
 const DATA = path.join(path.resolve(process.cwd()), "data");
 const RPC = process.env.DORY_RPC_URL || process.env.ARBITRUM_RPC_URL || "https://arb1.arbitrum.io/rpc";
@@ -516,6 +517,8 @@ export async function collect() {
   const hasEvidence = ["market", "supply", "zero_burn", "x9c_mint"].some(name => result.sources[name]?.status === "ok");
   result.status = complete ? "ok" : hasEvidence ? "partial" : "evidence_insufficient";
   result.generated_at = new Date().toISOString(); result.date_bj = beijingDay(new Date(result.generated_at));
+  result.monitoring = monitoring.build(result);
+  result.notes.push('Business monitoring retains unverified values for eligibility, shared quota, active principal, NFT dividends and application usage. Rules version: ' + monitoring.rules.version);
   result.diagnostics = client.diagnostics(); return result;
 }
 function writeAtomic(filename, value) {

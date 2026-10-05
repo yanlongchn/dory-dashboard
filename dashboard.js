@@ -12,7 +12,7 @@ const sourceNames={market:'官方池行情',pool_identity:'池币种与精度',c
 function tableRow(values){const tr=document.createElement('tr');tr.replaceChildren(...values.map(value=>{const td=document.createElement('td');td.textContent=value;return td}));return tr}
 function evidencePanels(d){
  const rows=Object.entries(sourceNames).map(([key,label])=>{const s=d.sources?.[key];return tableRow([label,s?.status==='ok'?'采集完成':s?.status==='partial'?'部分覆盖':s?.status==='failed'?'采集失败':'未核验',s?.error||s?.reason||(s?.collected_at?asOf(s.collected_at):s?.evidence||'等待来源')])});$('sourceRows').replaceChildren(...rows);
- const pending=['实际日产DORY与全网卖压：缺少活跃本金及96次结算价格、产出和实际卖出记录。','新增参与、新钱包、复投、跨交易套利：5000U筛选只反映金额特征，不是开矿门槛或全量矿池数。','Pending Burn自动/嵌套结算：仅显式直接调用单列，未完成全量归因。','规则实现：96次结算的取价、舍入、200%额度消耗及社区/SVIP各级比例尚未链上核验。'];
+ const pending=['实际日产DORY与全网卖压：缺少有效本金及96次结算价格、产出和实际卖出记录。','新增参与、新钱包、复投、跨交易套利：5000U筛选只反映金额特征，不是开矿门槛或全量矿池数。','奖励规则：直推、小区档位及级差已有课堂口述，正式分配、共用额度和新协议资格仍待核验。','NFT与应用：705B完整地址、10%基数、会议销毁 / 直播质押 / 打赏记录仍缺；详见机制证据跟踪。'];
  const old=history.find(h=>h.date===(new Date(Date.parse((d.date_bj||bjDate())+'T00:00:00+08:00')-7*86400000).toLocaleDateString('en-CA',{timeZone:'Asia/Shanghai'})));
  const delta=known(old?.holders?.count)&&old.holders?.source===d.holders?.source&&known(d.holders?.count)?d.holders.count-old.holders.count:null;
  $('holdersDelta7').textContent=known(delta)?signed(delta,0,' 地址'):'无同源7日前基线';
@@ -34,6 +34,27 @@ function asOf(ts){return ts?new Date(ts).toLocaleString('zh-CN',{timeZone:'Asia/
 async function getJSON(url){const r=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(20000)});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 function ratio(buy,sell){return known(buy)&&known(sell)?buy>0?sell/buy:sell>0?Infinity:null:null}
 function sourceKnown(name){return snapshot?.sources?.[name]?.status==='ok'}
+function renderMonitoring(d){
+ const model=DoryMonitoring.build(d),day=model.flow.day,week=model.flow.week,usable=day.status==='ok';
+ $('monitorStatus').textContent=model.chain_flow_status==='ok'?'链上流量对账通过 · 经营证据仍待补齐':model.chain_flow_status==='stale'?'历史快照 · 等待新采集':'流量证据未齐 · 不作机制判断';
+ $('monitorMint').textContent=usable?fmt(day.minted)+' DORY':'未验证';$('monitorZero').textContent=usable?fmt(day.zero_transfer)+' DORY':'未验证';
+ $('monitorNet').textContent=usable?signed(day.supply_change,2,' DORY'):'未验证';
+ $('monitorUnknown').textContent=known(model.flow.unknown_burn_pct)?fmt(model.flow.unknown_burn_pct,1)+'%':model.flow.unknown_burn_24h===0&&day.zero_transfer===0?'无销毁分母':'未验证';
+ $('monitorUnknownNote').textContent=known(model.flow.unknown_burn_24h)?'其他 / 未知 '+fmt(model.flow.unknown_burn_24h)+' DORY':'等待完整销毁分类';
+ $('monitorFlowRows').replaceChildren(...[['24h',day],['7日',week]].map(([label,w])=>tableRow([label,w.status==='ok'?fmt(w.minted):'未验证',w.status==='ok'?fmt(w.zero_transfer):'未验证',w.status==='ok'?signed(w.supply_change):'未验证',w.status==='ok'?known(w.zero_cover_pct)?fmt(w.zero_cover_pct,1)+'%':'新增发行0，无分母':'未验证',w.status==='ok'?'Mint − Zero 与供应变化一致':w.status==='inconsistent'?'对账不一致，暂停解释':'窗口证据未齐'])));
+ $('monitorX9').textContent='X9C原始认购 → dEaD：'+fmt(model.flow.x9c_dead_24h)+' DORY / 24h。此转出不从totalSupply对账中扣除，也不代表705B分红或平台全部应用销毁。';
+ $('mechanismRows').replaceChildren(...model.required_evidence.map(item=>tableRow([item.title,'待补证',item.need,item.impact])));
+ $('mechanismCount').textContent=model.required_evidence.length+'项经营依据待补齐 · 与链上采集完成分别展示';
+ $('courseRows').replaceChildren(...DoryMonitoring.rules.course.levels.map(tier=>tableRow(['V'+tier.level,fmt(tier.small_area_usd,0)+' U',fmt(tier.rate*100,0)+'%'])));
+ renderScenario();
+}
+function renderScenario(){
+ const input=id=>{const value=$(id).value;return typeof value==='string'&&value.trim()!==''?Number(value):NaN};
+ const value=DoryMonitoring.scenario({principal:input('scenarioPrincipal'),remaining:input('scenarioRemaining'),smallArea:input('scenarioSmallArea'),level:input('scenarioLevel')});
+ for(const [id,key] of [['scenarioBase','base'],['scenarioBlock','settlement'],['scenarioCommunity','community'],['scenarioTotal','total']])$(id).textContent=value.valid?fmt(value[key],id==='scenarioBlock'?8:2)+' USD':'输入待修正';
+ $('scenarioDays').textContent=value.valid?fmt(value.arithmetic_days,2)+'天（算术）':'输入待修正';
+ $('scenarioNote').textContent=!value.valid?'本金需大于0，剩余额度须在0至2×本金之间，小区金额不得为负；请填写完整数值。':value.quota_finished?'剩余额度为0；口述产满即止。上方金额仅为公式值，不能视为仍可领取。':(value.below_course_threshold?'小区金额低于所选等级的课堂门槛。':'')+'仅演算课堂公式，不判断等级或新协议资格。社区项未扣级差；算术天数假设金额持续不变、共用额度、无追加 / 直推及其他奖励。实际计产、领取与现金到账均待核验。';
+}
 function renderMarket(m){marketState=m||{};const p=m?.price_usd;const price=known(p)?'$'+fmt(p,4):'未验证';$('price').textContent=price;$('tbPrice').textContent=price;
  $('volume').textContent=money(m?.volume_24h);$('tbVol').textContent=money(m?.volume_24h);$('reserveUsd').textContent=money(m?.liquidity_usd);$('tbLiq').textContent=money(m?.liquidity_usd);
  $('buys').textContent=known(m?.buys)?fmt(m.buys,0)+' 笔':'未验证';$('sells').textContent=known(m?.sells)?fmt(m.sells,0)+' 笔':'未验证';setPct('chg24',m?.change_24h_pct);setPct('chg7',m?.change_7d_pct);$('tb24').textContent=signed(m?.change_24h_pct,2,'%');
@@ -66,7 +87,7 @@ function renderSnapshot(d){snapshot=d;const m=d.market||{}, p=d.pool||{}, s=d.su
  $('asof').textContent='快照 '+asOf(d.generated_at);$('scanStatus').textContent='快照 '+asOf(d.generated_at)+'；'+(d.blocks?.from&&d.blocks?.to?'滚动24h区块 '+d.blocks.from+'–'+d.blocks.to+'；':'')+(stale?inconsistent?'区块或供应事件对账未通过，观察灯保持灰色。':'当前快照已过期，观察灯保持灰色。':'未核验指标保持灰色。');
  setLight('lUsdc','tUsdc',!stale&&known(p.usdc_change_24h)?p.usdc_change_24h>0?'green':p.usdc_change_24h<0?'red':'yellow':'',known(p.usdc_change_24h)?signed(p.usdc_change_24h,0,' U / 24h本金'):'本金变化未验证');
  setLight('lSupply','tSupply',!stale&&known(s.change_24h)?s.change_24h<0?'green':s.change_24h>0?'red':'yellow':'',signed(s.change_24h,1,' DORY'));
- const absorption=x.absorption_24h_pct;setLight('lX9','tX9',!stale&&known(absorption)?absorption>=100?'green':absorption<20?'red':'yellow':'',known(absorption)?fmt(absorption,1)+'% / 链上新增发行':s.minted_24h===0?'新增发行为0，无分母':'新增发行分母未验证');const r=ratio(m.buy_usdc,m.sell_usdc);
+ const absorption=x.absorption_24h_pct;setLight('lX9','tX9','',known(absorption)?fmt(absorption,1)+'% · 流通转出参考':s.minted_24h===0?'新增发行为0，无分母':'新增发行分母未验证');const r=ratio(m.buy_usdc,m.sell_usdc);
  setLight('lTrade','tTrade',!stale&&r!==null?r>1.1?'red':r<.9?'green':'yellow':'',r===Infinity?'仅SELL，无BUY':r===null?'金额未验证':'金额 SELL/BUY '+fmt(r,2)+'×');
  const date=d.date_bj||bjDate(d.generated_at||Date.now()), prev=history.filter(h=>h.date<date).at(-1);
  $('prevUsdcNet').textContent=prev?signed(prev.pool?.swap_net_usdc,0,' U'):'无历史基线';$('prevZero').textContent=prev?fmt(prev.zero_burn?.total_dory):'无历史基线';$('prevX9').textContent=prev?fmt(prev.x9c_dead_burn?.total_dory):'无历史基线';$('prevPools').textContent=known(prev?.pool_candidates?.candidate_pools)?fmt(prev.pool_candidates.candidate_pools,0)+' 份':'无历史基线';
@@ -77,12 +98,13 @@ function renderSnapshot(d){snapshot=d;const m=d.market||{}, p=d.pool||{}, s=d.su
  const risks=[];if(stale)risks.push(inconsistent?'区块或供应事件对账未通过，请核对来源表。':'当前快照已过期，请检查每日采集工作流。');
  if(known(m.sell_usdc)&&known(m.buy_usdc))risks.push('官方池24h BUY '+money(m.buy_usdc)+' / SELL '+money(m.sell_usdc)+'；Swap净额不含LP增减。');
  if(known(p.usdc_change_24h)&&known(s.change_24h))risks.push('官方池USDC本金24h '+signed(p.usdc_change_24h,0,' U')+'；净供应 '+signed(s.change_24h,2,' DORY')+'。');
- risks.push('活跃矿池本金、新钱包/复投/跨交易套利仍缺少证据，不能据此认定扩张或安全。');
- const errors=d.errors||[];if(errors.length)risks.push('部分采集失败：'+errors.map(e=>typeof e==='string'?e:e.component||e.source||e.message||'未验证').join('；'));
- if(known(z.total_dory))risks.push('Zero Transfer '+fmt(z.total_dory)+' DORY；与X9C→dEaD '+fmt(x.total_dory)+'永久分列。');
- $('riskList').replaceChildren(...risks.slice(0,3).map(text=>{const li=document.createElement('li');li.textContent=text;return li}));
+ const monitor=DoryMonitoring.build(d);if(known(monitor.flow.unknown_burn_pct)&&monitor.flow.unknown_burn_pct>0)risks.push('Zero Transfer中 '+fmt(monitor.flow.unknown_burn_pct,1)+'%仍归其他 / 未知，不能归因为应用消费或Pending自动结算。');
+ risks.push('新协议资格与静态 / 动态共用200%额度需正式规则及流水；活跃本金、实际产币与卖压不补数。');
+ const errors=d.errors||[];if(errors.length)risks.unshift('部分采集失败：'+errors.map(e=>typeof e==='string'?e:e.component||e.source||e.message||'未验证').join('；'));
+ $('riskList').replaceChildren(...risks.slice(0,4).map(text=>{const li=document.createElement('li');li.textContent=text;return li}));
  $('reportDate').textContent=(d.date_bj||bjDate(d.generated_at||Date.now())).replace(/-/g,' / ')+' · 每日数据观察';
  evidencePanels(d);
+ renderMonitoring(d);
  useCandles(d.ohlcv);
 }
 function useCandles(input){const rows=Array.isArray(input)?input:input?.candles||input?.ohlcv_list||[]; if(!Array.isArray(rows))return;
@@ -135,6 +157,7 @@ function initEditorial(){const cv=$('chart');
  cv.addEventListener?.('pointermove',e=>{if(e.pointerType!=='touch')point(e)});cv.addEventListener?.('click',point);cv.addEventListener?.('pointerleave',()=>{chartHoverIndex=null;$('chartTooltip').hidden=true;if(candlesAll.length)drawChart()});
  $('chartScrubber').addEventListener?.('input',e=>{chartSelectedIndex=Number(e.target.value);chartHoverIndex=chartSelectedIndex;drawChart()});$('chartScrubber').addEventListener?.('blur',()=>{chartHoverIndex=null;$('chartTooltip').hidden=true;if(candlesAll.length)drawChart()});
  $('historyDate').addEventListener?.('change',e=>showHistoryDay(e.target.value));
+ for(const id of ['scenarioPrincipal','scenarioRemaining','scenarioSmallArea','scenarioLevel'])$(id).addEventListener?.('input',e=>{if(id==='scenarioPrincipal'){$('scenarioRemaining').value=Number(e.target.value)*2}renderScenario()});
  if(typeof IntersectionObserver!=='undefined'){const sections=[...document.querySelectorAll('main>section[id]')],links=[...document.querySelectorAll('.nav a')];const observer=new IntersectionObserver(entries=>{const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];if(!visible)return;const id=visible.target.id;links.forEach(a=>{const active=a.getAttribute('href')==='#'+id||(id==='observations'&&a.getAttribute('href')==='#trend')||(id==='history'&&a.getAttribute('href')==='#metrics');a.classList.toggle('active',active);if(active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current')})},{rootMargin:'-75px 0px -60% 0px',threshold:0});sections.forEach(s=>observer.observe(s))}
 }
 window.addEventListener('resize',()=>{if(candlesAll.length)drawChart()});initEditorial();deepScan();

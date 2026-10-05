@@ -33,7 +33,7 @@ https://yanlongchn.github.io/dory-dashboard/
 - 第i次币数`q_i=(E*0.0085/96)/P_i`，`P_i`为当次结算价格（USD/DORY）；日产DORY为96次币数之和，不能用当前行情、日末价格或普通算术均价替代逐次价格。
 - 5000USD示例：日计产美元额度42.50USD，单次0.442708333…USD；实际日产币数缺少96次结算记录时保持未知，不当作实际卖压。
 - 社区/SVIP加速最高70%，替换早期约30%的机制表述；不是全体矿工统一奖励，不擅自叠加到基础日产出。六项收益为个人、邀请、社区、级别、合伙人、办公室；邀请不改变200%本金公式，Claim由钱包自行签名。
-- 报价源、链上舍入、额度消耗和奖励等级分配仍未核验；截图“总量只减不增”及权限陈述不替代totalSupply、Mint−Zero对账和全协议权限检查。
+- 报价源、链上舍入、额度消耗和奖励等级分配仍未核验；课程已有直推、小区档位和级差口述，须与正式规则及流水区分；截图“总量只减不增”及权限陈述不替代totalSupply、Mint−Zero对账和全协议权限检查。
 
 ## 每日更新与部署
 
@@ -51,10 +51,12 @@ https://yanlongchn.github.io/dory-dashboard/
 
 ```sh
 node --check dashboard.js
+node --check monitoring.js
 node --check scripts/update-data.mjs
 node scripts/check-dashboard.mjs
 node scripts/verify-data.mjs
 node scripts/verify-evidence.mjs
+node scripts/verify-monitoring.mjs
 node scripts/update-data.mjs
 python3 -m http.server 8080
 ```
@@ -63,8 +65,20 @@ python3 -m http.server 8080
 
 活跃矿池本金、复投/跨交易套利与Pending自动或嵌套结算缺少可靠证据时保持未验证。显式processPendingBurn仅在直接调用参数与Zero Transfer账户匹配时单列。采集完成不会自动判定结构安全。
 
-观察灯阈值：USDC本金与供应按增减方向；价格24h超过±3%；SELL/BUY超过1.1为红、低于0.9为绿；X9C/新增发行低于20%为红、至少100%为绿。无分母、无证据或过期保持灰色。本金减少、供应增加、SELL/BUY>1.1中至少两项出现时提示资金/供应承压，否则保留结构待核验。K线仅显示取得的真实官方池 OHLCV，实际覆盖范围与当日未收盘提示在图下展示。
+观察灯阈值：USDC本金与供应按增减方向；价格24h超过±3%；SELL/BUY超过1.1为红、低于0.9为绿；X9C/新增发行仅作中性流通转出参考，不以20%/100%阈值判定经营安全。无分母、无证据或过期保持灰色。本金减少、供应增加、SELL/BUY>1.1中至少两项出现时提示资金/供应承压，否则保留结构待核验。K线仅显示取得的真实官方池 OHLCV，实际覆盖范围与当日未收盘提示在图下展示。
 
 依据：[Uniswap v4储备口径](https://developers.uniswap.org/docs/protocols/v4/guides/reading-pool-reserves)、[X9C已验证源码](https://arbitrum.blockscout.com/address/0xecdda172d2e8aa8eff55500fd28da828cffbc5b0?tab=contract)、[Blockscout索引](https://arbitrum.blockscout.com/api/v2/tokens/0x33b49f2264e85bb124d2730dc180182717d436ae)。
 
 供应与事件对账分别读取真实totalSupply变化，再对照同窗口Mint与Zero Transfer净额（1e-6 DORY容差）；不以事件净额替代供应调用。对账不一致时记录差额、保留原始证据并关闭观察灯。日K按before_timestamp分页回溯并缓存已取得历史，数据商401/403权限边界明确显示，不能补造缺失K线。
+
+## 课程补充后的每日机制监控
+
+规则版本`2026-10-05-course-v1`，来源为用户提供的课程录音及重点片段二次转写。完整口径与边界见[每日监控规则](docs/monitoring-rules.md)。公开产物只发布必要规则摘要，不含录音、私密案例或本地路径。
+
+- 直推一次性10%、V1—V7小区档位、级差、静态/动态共用200%额度标注为课堂口述；不自动当成链上已验证规则。
+- 社区口述公式为小区金额×0.0085×等级比例，不能把70%统一加在个人基础日产上。“阿特拉斯”新协议的25%讨论意见不作为正式门槛。
+- 新`monitoring.js`供页面与采集器共用，每日快照保留`monitoring`规则版本、24h/7日Mint−Zero与独立供应变化对账、其他/未知销毁比例及九项经营证据缺口。经营状态独立于采集status；缺失值保持null。
+- NFT705B相关10%缺完整地址和分母；与X9 Charter对应、实际分红与未来平台权益分别待核。X9C→dEaD不抵扣totalSupply，也不冒充平台收入。
+- 会议付费销毁、直播质押、打赏转账、持仓准入各自追踪；不以未分类销毁或历史宣传用户数填充应用指标。
+- 奖励演算提供本金、剩余额度、小区、等级四项输入，展示课堂公式及额度算术天数；保留级差、资格、新协议和现金兑现限制。剩余额度0与无效输入明确提示。
+- 页面新增脚本与公开口径文档由Pages工作流一并发布；每日08:00任务继续，原13项核心表格与真实日K保留。
