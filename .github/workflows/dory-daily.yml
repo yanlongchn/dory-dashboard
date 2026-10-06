@@ -34,9 +34,11 @@ jobs:
         run: |
           node --check dashboard.js
           node --check monitoring.js
+          node --check theme.js
           node --check scripts/update-data.mjs
           node --check scripts/evidence.mjs
           node scripts/check-dashboard.mjs
+          node scripts/verify-theme.mjs
           node scripts/verify-data.mjs
           node scripts/verify-evidence.mjs
           node scripts/verify-monitoring.mjs
@@ -69,7 +71,7 @@ jobs:
       - name: Prepare static site
         run: |
           mkdir -p _site/data _site/docs
-          cp index.html dashboard.js monitoring.js .nojekyll _site/
+          cp index.html dashboard.js monitoring.js theme.js .nojekyll _site/
           cp docs/monitoring-rules.md _site/docs/
           cp data/latest.json data/history.json _site/data/
       - uses: actions/configure-pages@v5

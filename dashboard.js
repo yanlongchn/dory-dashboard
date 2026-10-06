@@ -118,7 +118,7 @@ function useCandles(input){const rows=Array.isArray(input)?input:input?.candles|
 }
 const flashIds=['price','volume','reserveUsdc','reserveDelta','supplyDelta'];
 function captureValues(){return new Map(flashIds.map(id=>[id,$(id).textContent]))}
-function highlightChanges(before){if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;for(const id of flashIds){const el=$(id);if(before.get(id)!==el.textContent&&before.get(id)!=='未验证')el.animate?.([{backgroundColor:'#e7ddc6'},{backgroundColor:'transparent'}],{duration:650,easing:'ease-out'})}}
+function highlightChanges(before){if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;for(const id of flashIds){const el=$(id);if(before.get(id)!==el.textContent&&before.get(id)!=='未验证')el.animate?.([{backgroundColor:themeColor('--flash','#e7ddc6')},{backgroundColor:'transparent'}],{duration:650,easing:'ease-out'})}}
 async function deepScan(){const b=$('chainBtn'),label=b.textContent,before=captureValues(),hadSnapshot=!!snapshot;b.disabled=true;b.textContent='加载中…';$('refreshNote').textContent='正在读取已采集的每日快照';try{const [d,h]=await Promise.all([getJSON(DATA_LATEST),getJSON(DATA_HISTORY)]);history=(h.snapshots||[]).sort((a,b)=>a.date.localeCompare(b.date));renderSnapshot(d);if(hadSnapshot)highlightChanges(before);$('refreshNote').textContent='快照已加载 · 采集时间见今日观察'}catch(e){setSource('srcChain','每日快照：加载失败','err');$('scanStatus').textContent='快照加载失败：'+e.message+'；已有结果及时间保留。';$('refreshNote').textContent='加载失败，保留已有快照'}finally{b.disabled=false;b.textContent=label}}
 async function loadMarket(){const b=$('marketBtn'),label=b.textContent,before=captureValues();if(b.disabled)return;b.disabled=true;b.textContent='刷新中…';$('refreshNote').textContent='正在读取官方池行情';setSource('srcMarket','行情：刷新中','busy');try{
  const pool=await getJSON(API+'?include=base_token,quote_token');const rel=pool.data.relationships;
@@ -136,19 +136,21 @@ async function loadMarket(){const b=$('marketBtn'),label=b.textContent,before=ca
 function visibleCandles(){return chartRange==='all'?candlesAll:candlesAll.slice(-Number(chartRange))}
 function candleDate(t){return new Intl.DateTimeFormat('zh-CN',{timeZone:'UTC',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(t))}
 function setRange(r,el){chartRange=r;chartHoverIndex=null;chartSelectedIndex=null;document.querySelectorAll('.cbtn').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-pressed','false')});el.classList.add('active');el.setAttribute('aria-pressed','true');drawChart();if(!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)$('chart').animate?.([{opacity:.45},{opacity:1}],{duration:220})}
+function themeColor(name,fallback){return window.getComputedStyle?.(document.documentElement).getPropertyValue(name).trim()||fallback}
 function drawChart(){
  const c=visibleCandles(),cv=$('chart'),box=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;if(!c.length||box.width<=0||box.height<=0)return;
  cv.width=box.width*dpr;cv.height=box.height*dpr;const x=cv.getContext('2d');x.scale(dpr,dpr);
+ const palette={grid:themeColor('--chart-grid','#e5e8df'),label:themeColor('--chart-label','#748078'),up:themeColor('--green','#168365'),down:themeColor('--red','#b84646'),guide:themeColor('--gold','#95723c')};
  const W=box.width,H=box.height,L=W<400?43:56,R=12,T=18,B=34,VH=H<300?43:58,PH=H-T-B-VH-12;
  const highs=c.map(z=>z.h),sorted=[...highs].sort((a,b)=>a-b),cap=sorted[Math.floor((sorted.length-1)*.995)]||Math.max(...highs),lo=Math.min(...c.map(z=>z.l));let hi=Math.max(...highs.filter(v=>v<=cap));if(hi<=lo)hi=lo+1;
  const maxV=Math.max(...c.map(z=>z.v)),px=i=>L+(i+.5)*(W-L-R)/c.length,py=v=>T+(hi-Math.min(hi,Math.max(lo,v)))/(hi-lo)*PH;
- chartGeometry={candles:c,W,H,L,R,T,PH,px,py};x.clearRect(0,0,W,H);x.strokeStyle='#e5e8df';x.lineWidth=1;x.fillStyle='#748078';x.font='10px sans-serif';
+ chartGeometry={candles:c,W,H,L,R,T,PH,px,py};x.clearRect(0,0,W,H);x.strokeStyle=palette.grid;x.lineWidth=1;x.fillStyle=palette.label;x.font='10px sans-serif';
  for(let j=0;j<=4;j++){const y=T+j*PH/4,val=hi-j*(hi-lo)/4;x.beginPath();x.moveTo(L,y);x.lineTo(W-R,y);x.stroke();x.fillText(fmt(val,1),2,y+3)}
- const cw=Math.max(1,Math.min(7,(W-L-R)/c.length*.6));c.forEach((z,i)=>{const xx=px(i),up=z.c>=z.o;x.strokeStyle=up?'#168365':'#b84646';x.fillStyle=x.strokeStyle;x.beginPath();x.moveTo(xx,py(z.h));x.lineTo(xx,py(z.l));x.stroke();const y=Math.min(py(z.o),py(z.c)),hh=Math.max(1,Math.abs(py(z.o)-py(z.c)));x.fillRect(xx-cw/2,y,cw,hh);const vh=maxV>0?(z.v/maxV)*VH:0;x.globalAlpha=.32;x.fillRect(xx-cw/2,T+PH+12+VH-vh,cw,vh);x.globalAlpha=1});
- const step=Math.max(1,Math.ceil(c.length/(W<500?4:8)));x.fillStyle='#748078';for(let i=0;i<c.length;i+=step){const dt=new Date(c[i].t);x.fillText((dt.getUTCMonth()+1)+'/'+dt.getUTCDate(),px(i)-11,H-6)}
+ const cw=Math.max(1,Math.min(7,(W-L-R)/c.length*.6));c.forEach((z,i)=>{const xx=px(i),up=z.c>=z.o;x.strokeStyle=up?palette.up:palette.down;x.fillStyle=x.strokeStyle;x.beginPath();x.moveTo(xx,py(z.h));x.lineTo(xx,py(z.l));x.stroke();const y=Math.min(py(z.o),py(z.c)),hh=Math.max(1,Math.abs(py(z.o)-py(z.c)));x.fillRect(xx-cw/2,y,cw,hh);const vh=maxV>0?(z.v/maxV)*VH:0;x.globalAlpha=.32;x.fillRect(xx-cw/2,T+PH+12+VH-vh,cw,vh);x.globalAlpha=1});
+ const step=Math.max(1,Math.ceil(c.length/(W<500?4:8)));x.fillStyle=palette.label;for(let i=0;i<c.length;i+=step){const dt=new Date(c[i].t);x.fillText((dt.getUTCMonth()+1)+'/'+dt.getUTCDate(),px(i)-11,H-6)}
  const last=c.at(-1),maxC=c.reduce((a,b)=>b.h>a.h?b:a),minC=c.reduce((a,b)=>b.l<a.l?b:a);$('chartMeta').textContent='最新 '+fmt(last.c,3)+' · 高 '+fmt(maxC.h,2)+' · 低 '+fmt(minC.l,2)+' · '+c.length+'根';$('chartNote').textContent='范围：'+candleDate(c[0].t)+' 至 '+candleDate(last.t)+'（UTC日K）；当日未收盘。纵轴对极端上影采用99.5%分位可视裁剪，原始极值保留在统计与逐日读数中。';
  const slider=$('chartScrubber');slider.disabled=false;slider.max=c.length-1;const selected=Math.min(chartSelectedIndex??c.length-1,c.length-1);slider.value=selected;renderCandleReading(selected,chartHoverIndex!==null);
- if(chartHoverIndex!==null){const z=c[chartHoverIndex];if(z){x.save();x.strokeStyle='#95723c';x.setLineDash([3,4]);x.beginPath();x.moveTo(px(chartHoverIndex),T);x.lineTo(px(chartHoverIndex),H-B);x.moveTo(L,py(z.c));x.lineTo(W-R,py(z.c));x.stroke();x.restore()}}
+ if(chartHoverIndex!==null){const z=c[chartHoverIndex];if(z){x.save();x.strokeStyle=palette.guide;x.setLineDash([3,4]);x.beginPath();x.moveTo(px(chartHoverIndex),T);x.lineTo(px(chartHoverIndex),H-B);x.moveTo(L,py(z.c));x.lineTo(W-R,py(z.c));x.stroke();x.restore()}}
 }
 function renderCandleReading(index,tooltip=false){const g=chartGeometry,z=g?.candles[index];if(!z)return;const text=candleDate(z.t)+' · 开 '+fmt(z.o,3)+' / 高 '+fmt(z.h,3)+' / 低 '+fmt(z.l,3)+' / 收 '+fmt(z.c,3)+' · 成交额 '+money(z.v);
  $('chartReadout').textContent=candleDate(z.t);$('chartAccessible').textContent=text;$('chartScrubber').setAttribute?.('aria-valuetext',text);
@@ -156,7 +158,9 @@ function renderCandleReading(index,tooltip=false){const g=chartGeometry,z=g?.can
 }
 function renderHistoryPicker(){const select=$('historyDate'),chosen=select.value;select.replaceChildren(...history.slice().reverse().map(h=>{const o=document.createElement('option');o.value=h.date;o.textContent=h.date;return o}));if(!history.length){select.disabled=true;$('historySummary').textContent='尚无每日留档；不生成替代记录。';return}select.disabled=false;select.value=history.some(h=>h.date===chosen)?chosen:history.at(-1).date;showHistoryDay(select.value)}
 function showHistoryDay(date){const d=history.find(h=>h.date===date);if(!d)return;$('historySummary').textContent=date+' · USDC本金 '+money(d.pool?.usdc_reserve)+'，24h净供应 '+signed(d.supply?.change_24h,2,' DORY')+'，Zero Transfer '+fmt(d.zero_burn?.total_dory)+' DORY。采集于 '+asOf(d.generated_at)+'；这里只切换每日留档，今日快照保持原值。';document.querySelectorAll('#historyRows tr').forEach(row=>row.classList.toggle('selected',row.cells[0].textContent===date))}
-function initEditorial(){const cv=$('chart');
+function initEditorial(){
+ if(typeof DoryTheme!=='undefined'){DoryTheme.syncButton();$('themeToggle').addEventListener?.('click',()=>DoryTheme.toggle());DoryTheme.subscribe(()=>{if(candlesAll.length)drawChart()})}
+ const cv=$('chart');
  const point=e=>{if(!chartGeometry)return;const g=chartGeometry,box=cv.getBoundingClientRect(),index=Math.max(0,Math.min(g.candles.length-1,Math.floor((e.clientX-box.left-g.L)/(g.W-g.L-g.R)*g.candles.length)));chartHoverIndex=index;chartSelectedIndex=index;drawChart()};
  cv.addEventListener?.('pointermove',e=>{if(e.pointerType!=='touch')point(e)});cv.addEventListener?.('click',point);cv.addEventListener?.('pointerleave',()=>{chartHoverIndex=null;$('chartTooltip').hidden=true;if(candlesAll.length)drawChart()});
  $('chartScrubber').addEventListener?.('input',e=>{chartSelectedIndex=Number(e.target.value);chartHoverIndex=chartSelectedIndex;drawChart()});$('chartScrubber').addEventListener?.('blur',()=>{chartHoverIndex=null;$('chartTooltip').hidden=true;if(candlesAll.length)drawChart()});
@@ -164,4 +168,5 @@ function initEditorial(){const cv=$('chart');
  for(const id of ['scenarioPrincipal','scenarioRemaining','scenarioSmallArea','scenarioLevel'])$(id).addEventListener?.('input',e=>{if(id==='scenarioPrincipal'){$('scenarioRemaining').value=Number(e.target.value)*2}renderScenario()});
  if(typeof IntersectionObserver!=='undefined'){const sections=[...document.querySelectorAll('main>section[id]')],links=[...document.querySelectorAll('.nav a')];const observer=new IntersectionObserver(entries=>{const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];if(!visible)return;const id=visible.target.id;links.forEach(a=>{const active=a.getAttribute('href')==='#'+id||(id==='observations'&&a.getAttribute('href')==='#trend')||(id==='history'&&a.getAttribute('href')==='#metrics');a.classList.toggle('active',active);if(active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current')})},{rootMargin:'-75px 0px -60% 0px',threshold:0});sections.forEach(s=>observer.observe(s))}
 }
+window.addEventListener('beforeprint',()=>{if(candlesAll.length)drawChart()});window.addEventListener('afterprint',()=>{if(candlesAll.length)drawChart()});
 window.addEventListener('resize',()=>{if(candlesAll.length)drawChart()});initEditorial();deepScan();
