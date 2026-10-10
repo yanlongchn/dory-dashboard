@@ -15,6 +15,17 @@ function historyMetric(d,key,value,decimals=2){
  if(source?.status==='failed')return /HTTP (401|402|403)|API authorization|API restricted/.test(source.error||'')?'未验证（接口受限）':'未验证（采集失败）';
  return fmt(value,decimals);
 }
+function holderCountDisplay(d){
+ const value=historyMetric(d,'holders',d.holders?.count,0);
+ if(!known(d.holders?.count)||d.sources?.holders?.status==='failed')return value;
+ const date=d.date||d.date_bj;
+ const time=Date.parse(date+'T00:00:00+08:00');
+ const previousDate=Number.isFinite(time)?bjDate(time-86400000):null;
+ const old=history.find(h=>h.date===previousDate);
+ const comparable=old?.sources?.holders?.status==='ok'&&d.sources?.holders?.status==='ok'&&known(old.holders?.count)&&!!d.holders?.source&&old.holders?.source===d.holders.source;
+ const change=comparable?d.holders.count-old.holders.count:null;
+ return value+'('+(known(change)?(change>=0?'+':'')+fmt(change,0):'新增未验证')+')';
+}
 function evidencePanels(d){
  const rows=Object.entries(sourceNames).map(([key,label])=>{const s=d.sources?.[key];return tableRow([label,s?.status==='ok'?'采集完成':s?.status==='partial'?'部分覆盖':s?.status==='failed'?'采集失败':'未核验',s?.error||s?.reason||(s?.collected_at?asOf(s.collected_at):s?.evidence||'等待来源')])});$('sourceRows').replaceChildren(...rows);
  const pending=['实际日产DORY与全网卖压：缺少有效本金及96次结算价格、产出和实际卖出记录。','新增参与、新钱包、复投、跨交易套利：5000U筛选只反映金额特征，不是开矿门槛或全量矿池数。','奖励规则：直推、小区档位及级差已有课堂口述，正式分配、共用额度和新协议资格仍待核验。','NFT与应用：705B完整收款地址已确认；NFT身份、10%分红基数及会议 / 直播 / 打赏链路仍待核验。'];
@@ -26,9 +37,9 @@ function evidencePanels(d){
  if(!known(d.supply?.change_7d))pending.push('7日供应：缺少相同区块哈希的归档状态。');
  if(d.ohlcv_coverage&&!d.ohlcv_coverage.complete)pending.push('日K目标2025-09-09：实际最早'+d.ohlcv_coverage.actual_from.slice(0,10)+'；'+d.ohlcv_coverage.reason+'。');
  $('pendingEvidence').replaceChildren(...pending.map(text=>{const li=document.createElement('li');li.textContent=text;return li}));
- const recent=history.slice(-7);$('historyRows').replaceChildren(...recent.map(h=>tableRow([h.date,asOf(h.generated_at),money(h.pool?.usdc_reserve),signed(h.supply?.change_24h),fmt(h.zero_burn?.total_dory),historyMetric(h,'x9c_mint',h.x9c_dead_burn?.total_dory),historyMetric(h,'holders',h.holders?.count,0)])));
+ const recent=history.slice(-7);$('historyRows').replaceChildren(...recent.map(h=>tableRow([h.date,asOf(h.generated_at),money(h.pool?.usdc_reserve),signed(h.supply?.change_24h),fmt(h.zero_burn?.total_dory),historyMetric(h,'x9c_mint',h.x9c_dead_burn?.total_dory),holderCountDisplay(h)])));
  renderHistoryPicker();
- $('historyNote').textContent=recent.length<2?'当前仅有'+recent.length+'个日期；每日更新后形成趋势，同日重跑覆盖当日。':'展示真实每日记录；不同采集时刻的滚动24h窗口不能直接累加为7日。';
+ $('historyNote').textContent=recent.length<2?'当前仅有'+recent.length+'个日期；每日更新后形成趋势，同日重跑覆盖当日。':'持币地址以总数(本日净增)展示，净增为相邻两日同源索引差额，非首次持币地址数；前日缺失不跨日补算。不同采集时刻的滚动24h窗口不能直接累加为7日。';
 }
 function pctClass(el,v){const base=(el.className||'').split(/\s+/).filter(c=>c&&!['up','down','muted'].includes(c));el.className=[...base,known(v)?v>0?'up':v<0?'down':'muted':'muted'].join(' ')}
 function setSource(id,text,state=''){const e=$(id);e.textContent=text;e.className='pill '+state}
@@ -82,9 +93,9 @@ function renderSnapshot(d){snapshot=d;const m=d.market||{}, p=d.pool||{}, s=d.su
  $('zero7').textContent=fmt(z.total_7d);$('zbExplicit').textContent=fmt(z.categories?.explicit_pending_call?.dory);
  $('x9burn7').textContent=known(x.total_7d)?fmt(x.total_7d)+' DORY':'未验证';$('x9Absorption').textContent=known(x.absorption_24h_pct)?fmt(x.absorption_24h_pct,2)+'%':s.minted_24h===0?'新增发行为0，无分母':'未验证';
  $('pools').textContent=known(c.candidate_pools)?fmt(c.candidate_pools,0)+' 份金额单位':'未验证';$('poolTxs').textContent=known(c.transactions)?fmt(c.transactions,0)+' 笔':'未验证';$('poolCapital').textContent=money(c.candidate_usdc);$('poolMax').textContent=money(c.max_usdc);
- $('holders').textContent=fmt(d.holders?.count,0);$('holdersAsOf').textContent=d.holders?.as_of?asOf(d.holders.as_of):'未验证';
+ $('holders').textContent=holderCountDisplay(d);$('holdersAsOf').textContent=d.holders?.as_of?asOf(d.holders.as_of):'未验证';
  $('poolRoundtrip').textContent=known(c.same_tx_roundtrips_excluded)?fmt(c.same_tx_roundtrips_excluded,0)+' 笔':'未验证';
- $('tbReserve').textContent=money(p.usdc_reserve);$('tbReservePrev').textContent=money(p.baseline_24h?.usdc_reserve);$('tbSupply7').textContent=signed(s.change_7d);$('tbZero7').textContent=fmt(z.total_7d);$('tbX97').textContent=fmt(x.total_7d);$('tbHolders').textContent=fmt(d.holders?.count,0);
+ $('tbReserve').textContent=money(p.usdc_reserve);$('tbReservePrev').textContent=money(p.baseline_24h?.usdc_reserve);$('tbSupply7').textContent=signed(s.change_7d);$('tbZero7').textContent=fmt(z.total_7d);$('tbX97').textContent=fmt(x.total_7d);$('tbHolders').textContent=holderCountDisplay(d);
  $('tbUsdcNet').textContent=signed(p.swap_net_usdc,0,' U');$('tbZero').textContent=fmt(z.total_dory);$('tbX9').textContent=fmt(x.total_dory);$('tbPools').textContent=known(c.candidate_pools)?fmt(c.candidate_pools,0)+' 份':'未验证';$('tbSupplyDelta').textContent=signed(s.change_24h);
  const values=[m.price_usd,m.volume_24h,m.liquidity_usd,p.swap_net_usdc,z.total_dory,x.total_dory,c.candidate_pools,s.change_24h,p.usdc_reserve,s.change_7d,z.total_7d,x.total_7d,d.holders?.count]; document.querySelectorAll('#metricRows tr').forEach((row,i)=>{row.cells[3].textContent=known(values[i])?i===6?'金额筛选':i===12?'索引快照':'已取得（快照）':'未验证'});
  const inconsistent=d.sources?.chain_consistency?.status==='failed'||d.sources?.supply_event_reconciliation?.status==='failed';

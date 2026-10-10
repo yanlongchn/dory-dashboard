@@ -68,3 +68,23 @@ assert.equal(nodes.get('receiverRows').children.length,2);
 assert.equal(nodes.get('receiverBalance').textContent,'未验证 DORY');
 assert.ok(nodes.get('receiverRows').children.every(row=>row.children.slice(1).every(cell=>cell.textContent==='未验证')));
 console.log('PASS: old or incomplete snapshots cannot synthesize 705B totals, balance or matched wallet counts.');
+
+const holderToday={date_bj:'2026-10-10',holders:{count:39275,source:'index'},sources:{holders:{status:'ok'}}};
+const holderRead=(previous,today=holderToday)=>{
+ vm.runInContext('history='+JSON.stringify(previous),context);
+ return vm.runInContext('holderCountDisplay('+JSON.stringify(today)+')',context);
+};
+const holderYesterday={date:'2026-10-09',holders:{count:39200,source:'index'},sources:{holders:{status:'ok'}}};
+assert.equal(holderRead([holderYesterday]),'39,275(+75)');
+assert.equal(holderRead([{...holderYesterday,holders:{count:39300,source:'index'}}]),'39,275(-25)');
+assert.equal(holderRead([{...holderYesterday,holders:{count:39275,source:'index'}}]),'39,275(+0)');
+assert.equal(holderRead([{...holderYesterday,date:'2026-10-08'}]),'39,275(新增未验证)');
+assert.equal(holderRead([{...holderYesterday,holders:{count:null,source:'index'}}]),'39,275(新增未验证)');
+assert.equal(holderRead([{...holderYesterday,holders:{count:39200,source:'other'}}]),'39,275(新增未验证)');
+assert.equal(holderRead([{...holderYesterday,sources:{holders:{status:'failed'}}}]),'39,275(新增未验证)');
+assert.equal(holderRead([holderYesterday],{...holderToday,sources:{holders:{status:'failed',error:'HTTP 403'}}}),'未验证（接口受限）');
+vm.runInContext('history='+JSON.stringify([holderYesterday]),context);
+run({...fresh,...holderToday});
+assert.equal(nodes.get('holders').textContent,'39,275(+75)');
+assert.equal(nodes.get('tbHolders').textContent,'39,275(+75)');
+console.log('PASS: holder daily net changes; missing, failed, different-source and multi-day baselines stay unknown.');
