@@ -45,6 +45,8 @@ https://yanlongchn.github.io/dory-dashboard/
 
 公共 RPC 有超时、限流和历史日志范围限制。可在仓库 Actions secrets 中配置 `ARBITRUM_RPC_URL` 作为可选 RPC；不要提交任何凭据。
 
+Blockscout旧实例API可能返回HTTP 403。配置Actions secret `BLOCKSCOUT_API_KEY` 后，持币索引与X9C已验证源码改用官方通用API `https://api.blockscout.com/42161/api/v2/`。可从 https://dev.blockscout.com/ 申请API key；无密钥时保留旧公开接口尝试，受限会明确报错，不支付x402、不补造数据。密钥仅在采集端使用，不进入网页、JSON或错误日志。X9C仍须核对同区块运行字节码及原始Mint三重证据；持币数仍为索引快照，同一Blockscout索引的历史来源标识保持兼容。新采集不能补填过去缺失的索引快照；每日留档显示失败原因，真实零值与接口受限分开。
+
 ## 本地验证
 
 需要 Node.js 22 或更新版本，无第三方 npm 依赖。

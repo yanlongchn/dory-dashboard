@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { finiteNumber, beijingDay, validatePool, decodeSwap, isX9Mint, isDirectZeroTransfer, getLogs, collect, saveResult } from "./update-data.mjs";
+import { finiteNumber, beijingDay, blockscoutRequest, validatePool, decodeSwap, isX9Mint, isDirectZeroTransfer, getLogs, collect, saveResult } from "./update-data.mjs";
 
 const DORY = "0x33b49f2264e85bb124d2730dc180182717d436ae";
 const USDC = "0xaf88d065e77c8cc2239327c5edb3a432268e5831";
@@ -14,6 +14,27 @@ const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523
 const SWAP = "0x40e9cecb9f5f1f1c5b9c97dec2917b7ee92e57ba5563708daca94dd84ad7112f";
 const ZERO = "0x" + "0".repeat(64);
 const word = n => BigInt.asUintN(256, BigInt(n)).toString(16).padStart(64, "0");
+test('Blockscout authenticated reads use the official Arbitrum gateway and preserve payloads', async()=>{
+  for(const endpoint of ['tokens/'+DORY,'smart-contracts/'+X9]){
+    const payload={identity:'retained'};
+    const got=await blockscoutRequest(async(url,options,label)=>{
+      const u=new URL(url);assert.equal(u.origin,'https://api.blockscout.com');
+      assert.equal(u.pathname,'/42161/api/v2/'+endpoint);assert.equal(u.searchParams.get('apikey'),'test-only-key');
+      assert.equal(label,'probe');return payload;
+    },endpoint,'probe','test-only-key');
+    assert.equal(got,payload);
+  }
+});
+test('restricted Blockscout reads require configuration and never expose API keys', async()=>{
+  await assert.rejects(blockscoutRequest(async(url)=>{
+    assert.equal(new URL(url).origin,'https://arbitrum.blockscout.com');throw Error('probe: HTTP 403');
+  },'tokens/'+DORY,'probe',''),/configure BLOCKSCOUT_API_KEY/);
+  const key='test-only-key+/=';
+  await assert.rejects(blockscoutRequest(async(url)=>{throw Error('HTTP 401 '+url+' echoed '+key);},'tokens/'+DORY,'probe',key),e=>{
+    assert.match(e.message,/authorization rejected/);assert.ok(!e.message.includes(key));
+    assert.ok(!e.message.includes(encodeURIComponent(key)));assert.ok(!e.message.includes('apikey='));return true;
+  });
+});
 function poolResponse() {
   return { data: { id: `arbitrum_${POOL}`, attributes: { address: POOL }, relationships: {
     base_token: { data: { id: `arbitrum_${USDC}` } }, quote_token: { data: { id: `arbitrum_${DORY}` } },

@@ -36,6 +36,21 @@ export function beijingDay(when = new Date()) {
   const value = type => parts.find(p => p.type === type).value;
   return `${value("year")}-${value("month")}-${value("day")}`;
 }
+export async function blockscoutRequest(request, endpoint, label, key = process.env.BLOCKSCOUT_API_KEY || '') {
+  // Never store an authenticated URL in public snapshots or diagnostics.
+  const url = new URL((key ? 'https://api.blockscout.com/42161' : 'https://arbitrum.blockscout.com') + '/api/v2/' + endpoint);
+  if (key) url.searchParams.set('apikey', key);
+  try { return await request(url.href, {}, label); }
+  catch (e) {
+    let message = String(e.message);
+    for (const secret of [key, encodeURIComponent(key)].filter(Boolean)) message = message.replaceAll(secret, '[REDACTED]');
+    message = message.replace(/https?:\/\/\S+/g, '[source URL]');
+    if (/HTTP (401|402|403)/.test(message)) message += key
+      ? '; Blockscout API authorization rejected; check BLOCKSCOUT_API_KEY and plan access'
+      : '; Blockscout public API restricted; configure BLOCKSCOUT_API_KEY in Actions secrets';
+    throw new Error(message);
+  }
+}
 export function validatePool(response) {
   const p = response?.data;
   if (p?.id?.toLowerCase() !== `arbitrum_${POOL}` || p?.attributes?.address?.toLowerCase() !== POOL)
@@ -327,7 +342,8 @@ export async function collect() {
   ]);
   if (!result.sources.pool_identity) result.sources.pool_identity = { status: "unverified" };
   await component('holders', async () => {
-    result.holders = indexedHolders(await request('https://arbitrum.blockscout.com/api/v2/tokens/' + DORY, {}, 'Blockscout token index'), new Date().toISOString());
+    result.holders = indexedHolders(await blockscoutRequest(request, 'tokens/' + DORY, 'Blockscout token index'), new Date().toISOString());
+    result.holders.retrieval_source = process.env.BLOCKSCOUT_API_KEY ? 'https://api.blockscout.com/42161/api/v2/tokens/' + DORY : result.holders.source;
   });
   let key = null;
   if (window && poolResponse) {
@@ -469,7 +485,7 @@ export async function collect() {
       });
     }),
     component("x9c_mint", async () => {
-      const verified = await request('https://arbitrum.blockscout.com/api/v2/smart-contracts/' + X9, {}, 'X9 verified contract');
+      const verified = await blockscoutRequest(request, 'smart-contracts/' + X9, 'X9 verified contract');
       const code = await rpc('eth_getCode', [X9, hex(window.latest)]);
       if (!verified.is_fully_verified || verified.deployed_bytecode?.toLowerCase() !== code.toLowerCase())
         throw Error('X9 runtime differs from verified source');
