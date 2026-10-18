@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { LENS, INITIALIZE, INIT_BLOCK, TICKET_MINTED, RECEIVER_705B, distributionWatch, poolKey, decodeReserves, indexedHolders, x9ReceiptBurn, aggregateCandidates } from './evidence.mjs';
+import { LENS, STATE_VIEW, MODIFY_LIQUIDITY, decodeSlot0, liquidityActivity, INITIALIZE, INIT_BLOCK, TICKET_MINTED, RECEIVER_705B, distributionWatch, poolKey, decodeReserves, indexedHolders, x9ReceiptBurn, aggregateCandidates } from './evidence.mjs';
 import monitoring from '../monitoring.js';
 
 const DATA = path.join(path.resolve(process.cwd()), "data");
@@ -355,6 +355,14 @@ export async function collect() {
       result.pool.key = k; return k;
     });
     if (key) {
+      await component('pool_state', async () => {
+        if(await rpc('eth_getCode',[STATE_VIEW,hex(window.latest)])==='0x')throw Error('StateView not deployed');
+        result.pool.state_view={...decodeSlot0(await pinnedCall(STATE_VIEW,'0xc815641c'+POOL.slice(2),window.latestBlock)),address:STATE_VIEW,block:window.latest,block_hash:window.latestBlock.hash};
+      });
+      await component('lp_activity', async () => {
+        const logs=await getLogs(rpc,PM,window.start,window.latest,[MODIFY_LIQUIDITY,POOL],{maxStep:100000});
+        result.pool.lp_activity=liquidityActivity(logs,window.start,window.latest);
+      });
       const data = '0xf95138f2' + PM.slice(2).padStart(64, '0') + key.encoded;
       const read = async block => decodeReserves(await pinnedCall(LENS, data, block), key, block);
       await component('pool_reserves', async () => {
@@ -547,7 +555,7 @@ export async function collect() {
     }
   });
   const core = ["market", "pool_identity", "chain_window", "swaps", "supply", 'supply_24h', 'supply_7d', 'holders', 'pool_key',
-    'pool_reserves', 'pool_reserves_24h', "zero_burn", "zero_burn_categories", "x9c_mint", 'mint_emissions', 'supply_event_reconciliation', 'chain_consistency', 'distribution_705b', 'distribution_705b_balance'];
+    'pool_reserves', 'pool_reserves_24h', 'pool_state', 'lp_activity', "zero_burn", "zero_burn_categories", "x9c_mint", 'mint_emissions', 'supply_event_reconciliation', 'chain_consistency', 'distribution_705b', 'distribution_705b_balance'];
   const complete = core.every(name => result.sources[name]?.status === "ok");
   const hasEvidence = ["market", "supply", "zero_burn", "x9c_mint"].some(name => result.sources[name]?.status === "ok");
   result.status = complete ? "ok" : hasEvidence ? "partial" : "evidence_insufficient";

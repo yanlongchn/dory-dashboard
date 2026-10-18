@@ -39,19 +39,19 @@ test('stale and future snapshots retain provenance but cannot report current mon
   assert.equal(monitoring.build(value,now).chain_flow_status,'stale');
   value.generated_at=new Date(now+600000).toISOString();assert.equal(monitoring.build(value,now).fresh,false);
 });
-test('V4 course arithmetic uses small-area production and shared remaining quota, with eligibility explicitly unknown',()=>{
-  const result=monitoring.scenario({principal:10000,remaining:20000,smallArea:100000,level:4});
-  assert.equal(result.base,85);assert.ok(Math.abs(result.community-340)<1e-8);assert.ok(Math.abs(result.total-425)<1e-8);
-  assert.ok(Math.abs(result.arithmetic_days-20000/425)<1e-10);assert.equal(result.eligibility,'unverified');assert.equal(result.actual_income,null);
-  const ended=monitoring.scenario({principal:10000,remaining:0,smallArea:100000,level:4});assert.equal(ended.quota_finished,true);
+test('200 percent quota is DORY and time estimates require explicit DORY daily output',()=>{
+ const r=monitoring.scenario({principal:100,remaining:150,dailyDory:2});
+ assert.equal(r.unit,'DORY');assert.equal(r.quota,200);assert.equal(r.used,50);assert.equal(r.arithmetic_days,75);assert.equal(r.actual_income,null);
+ assert.equal(monitoring.scenario({principal:100,remaining:0,dailyDory:1}).quota_finished,true);
+ assert.equal(monitoring.scenario({principal:100,remaining:150,dailyDory:0}).arithmetic_days,null);
 });
-test('invalid inputs and below-course thresholds cannot turn into a statement of eligibility',()=>{
-  assert.equal(monitoring.scenario({principal:0,remaining:0,smallArea:0,level:0}).valid,false);
-  assert.equal(monitoring.scenario({principal:100,remaining:201,smallArea:0,level:0}).valid,false);
-  assert.equal(monitoring.scenario({principal:NaN,remaining:0,smallArea:0,level:0}).valid,false);
-  const below=monitoring.scenario({principal:5000,remaining:10000,smallArea:1000,level:7});
-  assert.equal(below.below_course_threshold,true);assert.equal(below.eligibility,'unverified');
-  assert.equal(monitoring.rules.course.atlas.personal_ratio,null);assert.equal(monitoring.rules.course.nft.address,null);
+test('coin quota boundaries and absent Atlas parameters do not produce eligibility',()=>{
+ for(const args of [{principal:0,remaining:0,dailyDory:1},{principal:100,remaining:201,dailyDory:1},{principal:100,remaining:1,dailyDory:-1},{principal:NaN,remaining:0,dailyDory:0}])assert.equal(monitoring.scenario(args).valid,false);
+ assert.equal(monitoring.rules.confirmed.quota_unit,'DORY');
+ assert.equal(monitoring.rules.course.atlas.status,'announcement_verified');
+ assert.equal(monitoring.rules.course.atlas.effective_status,'unverified');
+ assert.ok(Object.values(monitoring.rules.course.atlas.parameters).every(v=>v===null));
+ assert.equal(monitoring.rules.course.atlas.personal_ratio,null);assert.equal(monitoring.rules.course.nft.address,null);
 });
 test('705B overlay requires source completeness and reconciled windows; balance is independently sourced',()=>{
   const data=snapshot(), model=()=>monitoring.build(data,now).distribution;

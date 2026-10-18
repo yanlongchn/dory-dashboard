@@ -126,3 +126,27 @@ export function aggregateCandidates(swaps) {
     same_tx_roundtrips_excluded: roundtrips, examples: [], // Public monitoring exposes totals, never individual candidate hashes.
     rule: 'Aggregate BUY per transaction; exclude same-transaction BUY+SELL; 5000 USDC multiples ±8%. candidate_pools counts amount-size units, not mining positions or users. Participation has no minimum amount; this filter is not total mining capital.'};
 }
+
+export const STATE_VIEW = '0x76fd297e2d437cd7f76d50f01afe6160f86e9990';
+export const POSITION_MANAGER = '0xd88f38f930b7952f2db2432cb002e7abbf3dd869';
+export const MODIFY_LIQUIDITY = '0xf208f4912782fd25c7f114ca3723a2d5dd6f3bcc3ac8db5af63baa85f711d5ec';
+export function decodeSlot0(data) {
+  const w=words(data,4);
+  const tick=w[1] >= 1n<<255n?w[1]-(1n<<256n):w[1];
+  if(w[0]<=0n||w[0]>=1n<<160n||tick < -887272n||tick>887272n||w[2]>=1n<<24n||w[3]>1000000n)throw Error('Invalid StateView slot0');
+  return {sqrt_price_x96:w[0].toString(),tick:Number(tick),protocol_fee:Number(w[2]),lp_fee:Number(w[3]),
+    price_usdc_per_dory:(Number(w[0])/2**96)**2*1e12};
+}
+export function liquidityActivity(logs,firstBlock,lastBlock){
+  let adds=0,removes=0,zero=0,official=0;const seen=new Set(),txs=new Set();
+  for(const l of logs){
+    if(l.removed||l.address?.toLowerCase()!==PM||l.topics?.length!==3||l.topics[0]?.toLowerCase()!==MODIFY_LIQUIDITY||l.topics[1]?.toLowerCase()!==POOL||!/^0x0{24}[0-9a-f]{40}$/i.test(l.topics[2]||'')||!/^0x[0-9a-f]{64}$/i.test(l.transactionHash||'')||!/^0x[0-9a-f]+$/i.test(l.logIndex||'')||!/^0x[0-9a-f]+$/i.test(l.blockNumber||''))throw Error('Invalid ModifyLiquidity log');
+    const block=Number(BigInt(l.blockNumber));if(block<firstBlock||block>lastBlock)throw Error('LP event outside requested window');
+    const id=l.transactionHash.toLowerCase()+':'+BigInt(l.logIndex);if(seen.has(id))throw Error('Duplicate LP event');seen.add(id);txs.add(l.transactionHash.toLowerCase());
+    const w=words(l.data,4),delta=w[2]>=1n<<255n?w[2]-(1n<<256n):w[2];
+    if(delta>0n)adds++;else if(delta<0n)removes++;else zero++;
+    if(l.topics[2].slice(-40).toLowerCase()===POSITION_MANAGER.slice(2))official++;
+  }
+  return {add_events:adds,remove_events:removes,zero_delta_events:zero,total_events:logs.length,transactions:txs.size,position_manager_events:official,
+    single_withdrawal_pct:null,lp_owner:null,automation_status:'unverified',note:'Event sender is a routing contract, not proof of NFT ownership or automated operation; no withdrawal value percentage inferred from liquidityDelta.'};
+}

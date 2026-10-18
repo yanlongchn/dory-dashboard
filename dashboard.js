@@ -8,7 +8,7 @@ const money=n=>known(n)?'$'+n.toLocaleString('en-US',{maximumFractionDigits:0}):
 const signed=(n,d=2,suffix='')=>known(n)?(n>0?'+':'')+fmt(n,d)+suffix:'未验证';
 let chartGeometry=null, chartHoverIndex=null, chartSelectedIndex=null;
 let candlesAll=[], chartRange='all', marketState={}, chainState={}, history=[], snapshot=null;
-const sourceNames={market:'官方池行情',pool_identity:'池币种与精度',chain_window:'24h / 7日区块窗口',holders:'持币地址索引',pool_key:'初始化参数与Pool ID',pool_reserves:'当前两侧本金',pool_reserves_24h:'24h本金变化',ohlcv:'真实日K',ohlcv_history:'日K历史覆盖',swaps:'24h买卖资金',supply:'当前供应',supply_24h:'24h历史供应',supply_7d:'7日历史供应',zero_burn:'24h / 7日Zero Transfer',zero_burn_categories:'24h销毁分类',x9c_mint:'24h / 7日原始X9C认购',mint_emissions:'24h / 7日新增发行',supply_event_reconciliation:'供应与事件窗口对账',chain_consistency:'采集区块一致性',distribution_705b:'705B流入与同笔分流',distribution_705b_balance:'705B快照DORY余额'};
+const sourceNames={pool_state:'官方StateView池状态',lp_activity:'24h LP加减事件',market:'官方池行情',pool_identity:'池币种与精度',chain_window:'24h / 7日区块窗口',holders:'持币地址索引',pool_key:'初始化参数与Pool ID',pool_reserves:'当前两侧本金',pool_reserves_24h:'24h本金变化',ohlcv:'真实日K',ohlcv_history:'日K历史覆盖',swaps:'24h买卖资金',supply:'当前供应',supply_24h:'24h历史供应',supply_7d:'7日历史供应',zero_burn:'24h / 7日Zero Transfer',zero_burn_categories:'24h销毁分类',x9c_mint:'24h / 7日原始X9C认购',mint_emissions:'24h / 7日新增发行',supply_event_reconciliation:'供应与事件窗口对账',chain_consistency:'采集区块一致性',distribution_705b:'705B流入与同笔分流',distribution_705b_balance:'705B快照DORY余额'};
 function tableRow(values){const tr=document.createElement('tr');tr.replaceChildren(...values.map(value=>{const td=document.createElement('td');td.textContent=value;return td}));return tr}
 function historyMetric(d,key,value,decimals=2){
  const source=d.sources?.[key];
@@ -28,7 +28,7 @@ function holderCountDisplay(d){
 }
 function evidencePanels(d){
  const rows=Object.entries(sourceNames).map(([key,label])=>{const s=d.sources?.[key];return tableRow([label,s?.status==='ok'?'采集完成':s?.status==='partial'?'部分覆盖':s?.status==='failed'?'采集失败':'未核验',s?.error||s?.reason||(s?.collected_at?asOf(s.collected_at):s?.evidence||'等待来源')])});$('sourceRows').replaceChildren(...rows);
- const pending=['实际日产DORY与全网卖压：缺少有效本金及96次结算价格、产出和实际卖出记录。','新增参与、新钱包、复投、跨交易套利：5000U筛选只反映金额特征，不是开矿门槛或全量矿池数。','奖励规则：直推、小区档位及级差已有课堂口述，正式分配、共用额度和新协议资格仍待核验。','NFT与应用：705B完整收款地址已确认；NFT身份、10%分红基数及会议 / 直播 / 打赏链路仍待核验。'];
+ const pending=['实际日产DORY与全网卖压：缺少有效本金及96次结算价格、产出和实际卖出记录。','新增参与、新钱包、复投、跨交易套利：5000U筛选只反映金额特征，不是开矿门槛或全量矿池数。','Atlas公告公式已核对；币本位200%额度已由用户确认，当期参数、资格与实际扣减流水仍待核验。','NFT与应用：705B完整收款地址已确认；NFT身份、10%分红基数及会议 / 直播 / 打赏链路仍待核验。'];
  const old=history.find(h=>h.date===(new Date(Date.parse((d.date_bj||bjDate())+'T00:00:00+08:00')-7*86400000).toLocaleDateString('en-CA',{timeZone:'Asia/Shanghai'})));
  const delta=known(old?.holders?.count)&&old.holders?.source===d.holders?.source&&known(d.holders?.count)?d.holders.count-old.holders.count:null;
  $('holdersDelta7').textContent=known(delta)?signed(delta,0,' 地址'):'无同源7日前基线';
@@ -66,19 +66,28 @@ function renderMonitoring(d){
  $('mechanismRows').replaceChildren(...model.required_evidence.map(item=>tableRow([item.title,'待补证',item.need,item.impact])));
  $('mechanismCount').textContent=model.required_evidence.length+'项经营依据待补齐 · 与链上采集完成分别展示';
  $('courseRows').replaceChildren(...DoryMonitoring.rules.course.levels.map(tier=>tableRow(['V'+tier.level,fmt(tier.small_area_usd,0)+' U',fmt(tier.rate*100,0)+'%'])));
+ const v=d.pool?.state_view,lp=d.pool?.lp_activity,chainOK=d.sources?.chain_consistency?.status==='ok';
+ const stateOK=chainOK&&d.sources?.pool_state?.status==='ok';
+ $('stateViewPrice').textContent=stateOK&&known(v?.price_usdc_per_dory)?'$'+fmt(v.price_usdc_per_dory,4):'未验证';
+ $('proposalDistance').textContent=stateOK&&known(v?.price_usdc_per_dory)?signed((v.price_usdc_per_dory/100-1)*100,2,'%（快照链上价）'):'未验证';
+ $('stateViewFee').textContent=stateOK&&known(v?.lp_fee)?fmt(v.lp_fee/10000)+'%':'未验证';
+ $('lpActivity').textContent=chainOK&&d.sources?.lp_activity?.status==='ok'?'加仓 '+fmt(lp.add_events,0)+' / 减仓 '+fmt(lp.remove_events,0)+' / 零变动 '+fmt(lp.zero_delta_events,0)+' 个事件':'未验证';
+ $('lpRoute').textContent=chainOK&&d.sources?.lp_activity?.status==='ok'?fmt(lp.position_manager_events,0)+' / '+fmt(lp.total_events,0)+' 个事件':'未验证';
+ $('miningFingerprint').textContent='新开矿/复投指纹候选 · 24h：'+(watch.day.status==='ok'?fmt(watch.day.matched_wallets,0)+' 个地址（'+fmt(watch.day.matched_transactions,0)+' 笔），匹配总额 '+fmt(watch.day.matched_total_dory)+' DORY':'未验证')+'。不能区分新开矿与复投；不等于全量有效本金。';
  renderScenario();
 }
 function renderScenario(){
  const input=id=>{const value=$(id).value;return typeof value==='string'&&value.trim()!==''?Number(value):NaN};
- const value=DoryMonitoring.scenario({principal:input('scenarioPrincipal'),remaining:input('scenarioRemaining'),smallArea:input('scenarioSmallArea'),level:input('scenarioLevel')});
- for(const [id,key] of [['scenarioBase','base'],['scenarioBlock','settlement'],['scenarioCommunity','community'],['scenarioTotal','total']])$(id).textContent=value.valid?fmt(value[key],id==='scenarioBlock'?8:2)+' USD':'输入待修正';
- $('scenarioDays').textContent=value.valid?fmt(value.arithmetic_days,2)+'天（算术）':'输入待修正';
- $('scenarioNote').textContent=!value.valid?'本金需大于0，剩余额度须在0至2×本金之间，小区金额不得为负；请填写完整数值。':value.quota_finished?'剩余额度为0；口述产满即止。上方金额仅为公式值，不能视为仍可领取。':(value.below_course_threshold?'小区金额低于所选等级的课堂门槛。':'')+'仅演算课堂公式，不判断等级或新协议资格。社区项未扣级差；算术天数假设金额持续不变、共用额度、无追加 / 直推及其他奖励。实际计产、领取与现金到账均待核验。';
+ const value=DoryMonitoring.scenario({principal:input('scenarioPrincipal'),remaining:input('scenarioRemaining'),dailyDory:input('scenarioDaily')});
+ $('scenarioTotal').textContent=value.valid?fmt(value.quota)+' DORY':'输入待修正';
+ $('scenarioUsed').textContent=value.valid?fmt(value.used)+' DORY':'输入待修正';
+ $('scenarioDays').textContent=value.valid?(known(value.arithmetic_days)?fmt(value.arithmetic_days)+'天（假设）':'日产量为0，不计算天数'):'输入待修正';
+ $('scenarioNote').textContent=!value.valid?'投入需大于0，剩余币额度须在0至2×投入之间，假设日产量不得为负。':value.quota_finished?'剩余币额度为0；不能视为仍可领取。':'仅演算DORY额度；日产量为手动假设，不是实际收益。USD日额不能直接除DORY额度；未包含Atlas激活、价格路径、奖励扣减或费用，不作为现金回本。';
 }
 function renderMarket(m){marketState=m||{};const p=m?.price_usd;const price=known(p)?'$'+fmt(p,4):'未验证';$('price').textContent=price;$('tbPrice').textContent=price;
  $('volume').textContent=money(m?.volume_24h);$('tbVol').textContent=money(m?.volume_24h);$('reserveUsd').textContent=money(m?.liquidity_usd);$('tbLiq').textContent=money(m?.liquidity_usd);
  $('buys').textContent=known(m?.buys)?fmt(m.buys,0)+' 笔':'未验证';$('sells').textContent=known(m?.sells)?fmt(m.sells,0)+' 笔':'未验证';setPct('chg24',m?.change_24h_pct);setPct('chg7',m?.change_7d_pct);$('tb24').textContent=signed(m?.change_24h_pct,2,'%');
- $('feeRange').textContent=known(m?.volume_24h)?money(m.volume_24h*.03)+'–'+money(m.volume_24h*.05):'未验证';
+ const lpFee=snapshot?.pool?.state_view?.lp_fee;$('feeRange').textContent=known(m?.volume_24h)&&snapshot?.sources?.pool_state?.status==='ok'&&snapshot?.sources?.chain_consistency?.status==='ok'&&known(lpFee)?money(m.volume_24h*lpFee/1e6):'未验证';
  const v=m?.change_24h_pct;setLight('lPrice','tPrice',known(v)?v>3?'green':v<-3?'red':'yellow':'',signed(v,1,'% / 24h'));
 }
 function renderSnapshot(d){snapshot=d;const m=d.market||{}, p=d.pool||{}, s=d.supply||{}, z=d.zero_burn||{}, x=d.x9c_dead_burn||{}, c=d.pool_candidates||{};
@@ -181,7 +190,7 @@ function initEditorial(){
  cv.addEventListener?.('pointermove',e=>{if(e.pointerType!=='touch')point(e)});cv.addEventListener?.('click',point);cv.addEventListener?.('pointerleave',()=>{chartHoverIndex=null;$('chartTooltip').hidden=true;if(candlesAll.length)drawChart()});
  $('chartScrubber').addEventListener?.('input',e=>{chartSelectedIndex=Number(e.target.value);chartHoverIndex=chartSelectedIndex;drawChart()});$('chartScrubber').addEventListener?.('blur',()=>{chartHoverIndex=null;$('chartTooltip').hidden=true;if(candlesAll.length)drawChart()});
  $('historyDate').addEventListener?.('change',e=>showHistoryDay(e.target.value));
- for(const id of ['scenarioPrincipal','scenarioRemaining','scenarioSmallArea','scenarioLevel'])$(id).addEventListener?.('input',e=>{if(id==='scenarioPrincipal'){$('scenarioRemaining').value=Number(e.target.value)*2}renderScenario()});
+ for(const id of ['scenarioPrincipal','scenarioRemaining','scenarioDaily'])$(id).addEventListener?.('input',e=>{if(id==='scenarioPrincipal'){$('scenarioRemaining').value=Number(e.target.value)*2}renderScenario()});
  if(typeof IntersectionObserver!=='undefined'){const sections=[...document.querySelectorAll('main>section[id]')],links=[...document.querySelectorAll('.nav a')];const observer=new IntersectionObserver(entries=>{const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];if(!visible)return;const id=visible.target.id;links.forEach(a=>{const active=a.getAttribute('href')==='#'+id||(id==='observations'&&a.getAttribute('href')==='#trend')||(id==='history'&&a.getAttribute('href')==='#metrics');a.classList.toggle('active',active);if(active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current')})},{rootMargin:'-75px 0px -60% 0px',threshold:0});sections.forEach(s=>observer.observe(s))}
 }
 window.addEventListener('beforeprint',()=>{if(candlesAll.length)drawChart()});window.addEventListener('afterprint',()=>{if(candlesAll.length)drawChart()});

@@ -47,3 +47,18 @@ test('5000U amount-size units aggregate whole transactions and exclude simultane
   const m=new Map([['split-buy',{buy_usdc:5000,sell_usdc:0}],['round-trip',{buy_usdc:10000,sell_usdc:9990}],['ordinary',{buy_usdc:6000,sell_usdc:0}]]);
   const r=aggregateCandidates(m);assert.equal(r.candidate_pools,1);assert.equal(r.transactions,1);assert.equal(r.same_tx_roundtrips_excluded,1);assert.equal(r.candidate_usdc,5000);assert.deepEqual(r.examples,[],'candidate identifiers are never published');
 });
+
+// Independent raw ABI fixtures for the added StateView and LP decoding.
+const extra=await import('./evidence.mjs');
+test('slot0 decodes signed tick, 18/6 price and current fee, rejects malformed state',()=>{
+ const word=n=>BigInt(n).toString(16).padStart(64,'0');
+ const raw='0x'+word(2n**96n)+word(0)+word(0)+word(10000);
+ const state=extra.decodeSlot0(raw);assert.equal(state.price_usdc_per_dory,1e12);assert.equal(state.lp_fee,10000);
+ assert.throws(()=>extra.decodeSlot0('0x'));assert.throws(()=>extra.decodeSlot0('0x'+word(0)+word(0)+word(0)+word(10000)));
+});
+test('LP event activity is direction counts, never owner or withdrawal percentage',()=>{
+ const word=n=>(n<0n?(1n<<256n)+n:n).toString(16).padStart(64,'0');
+ const log={address:extra.PM,topics:[extra.MODIFY_LIQUIDITY,extra.POOL,'0x'+extra.POSITION_MANAGER.slice(2).padStart(64,'0')],blockNumber:'0xa',transactionHash:'0x'+'12'.repeat(32),logIndex:'0x0',data:'0x'+word(0n)+word(200n)+word(-5n)+word(1n)};
+ const result=extra.liquidityActivity([log],10,10);assert.equal(result.remove_events,1);assert.equal(result.position_manager_events,1);assert.equal(result.single_withdrawal_pct,null);assert.equal(result.lp_owner,null);
+ assert.throws(()=>extra.liquidityActivity([log],11,12));assert.throws(()=>extra.liquidityActivity([log,log],10,10));assert.throws(()=>extra.liquidityActivity([{...log,removed:true}],10,10));
+});
