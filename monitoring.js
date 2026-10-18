@@ -3,8 +3,8 @@
   const finite = value => typeof value === 'number' && Number.isFinite(value);
   const sourceOK = (snapshot, name) => snapshot.sources?.[name]?.status === 'ok';
   const rules = {
-    version: '2026-10-18-atlas-v3',
-    confirmed: {daily_rate: 0.0085, settlements_per_day: 96, minutes_per_settlement: 15, quota_multiple: 2, quota_unit: 'DORY', daily_rate_basis: 'E USD from earlier user-confirmed settlement rule; actual conversion and quota deduction require records', quota_source: '用户2026-10-18确认币本位；不与USD日计产直接相除'},
+    version: '2026-10-18-u-basis-v4',
+    confirmed: {daily_rate: 0.0085, settlements_per_day: 96, minutes_per_settlement: 15, quota_multiple: 2, quota_unit: 'USD', daily_rate_basis: 'E USD principal accounting basis; each of 96 settlements converts its USD amount at the settlement price', quota_source: '用户复核后最终确认U本位；取代此前币本位确认及附件冲突表述'},
     course: {
       source: '用户提供的2026-10-05课堂录音；重点片段二次转写复核，尚未独立链上核验',
       direct_rate: 0.1, shared_quota: true,
@@ -33,7 +33,7 @@
   // These are required business evidence, not failed RPC calls and not measured zeroes.
   const requiredEvidence = [
     {id: 'atlas', title: 'Atlas实际激活资格', basis: '官方公告公式已核对：Ψ=H+min(C,μH)', need: '生效时间、全部当期参数、本人H/C/S及未出局分笔时间', impact: '公告有公式不等于账户已生效；不按V等级直接推算实际社区收益'},
-    {id: 'shared_quota', title: '币本位200%额度与扣减', basis: '用户2026-10-18确认：投入DORY数量的两倍', need: '六项奖励、NFT是否扣币额度；USD计产转换、超额截断及满额流水', impact: '不能把日奖励视为持续无限产出'},
+    {id: 'shared_quota', title: 'U本位200%额度与扣减', basis: '用户最终确认：本金U金额的两倍，非投入DORY数量的两倍', need: '六项奖励、NFT是否扣U额度；逐次计价、超额截断及满额流水', impact: '不能把日奖励视为持续无限产出'},
     {id: 'active_principal', title: '有效本金与96次计价', basis: '日率0.0085及96次已由用户确认', need: '未到顶本金、逐次价格、计产币数、领取及实际卖出记录', impact: '全网日产币与矿工卖压保持未知'},
     {id: 'community', title: '小区、等级与级差', basis: '旧课堂档位保留历史；Atlas激活系数按小区连续变化', need: '小区定义、有效业绩、平级 / 多分支扣减及奖励资格', impact: '70%不能统一叠加本人基础计产'},
     {id: 'nft_dividends', title: 'NFT分红来源与权益', basis: '705B完整收款地址已确认；NFT关联仍为课堂口述', need: 'NFT合约对应、10%分红基数、个人份额与来源到账链路', impact: '705B流入不能代替NFT收入或股权证明'},
@@ -104,10 +104,11 @@
       day: windowValue(data?.day, day), week: windowValue(data?.week, week)};
   }
 
-  function scenario({principal, remaining, dailyDory}) {
-    if (![principal, remaining, dailyDory].every(finite) || principal <= 0 || remaining < 0 || remaining > principal * 2 || dailyDory < 0) return {valid:false};
-    return {valid:true, unit:'DORY', quota:principal*2, used:principal*2-remaining, remaining,
-      arithmetic_days:dailyDory>0?remaining/dailyDory:null, quota_finished:remaining===0,
+  function scenario({principal, remaining}) {
+    if (![principal, remaining].every(finite) || principal <= 0 || remaining < 0 || remaining > principal * 2) return {valid:false};
+    const daily=principal*rules.confirmed.daily_rate;
+    return {valid:true, unit:'USD', quota:principal*2, used:principal*2-remaining, remaining,
+      daily, settlement:daily/rules.confirmed.settlements_per_day, arithmetic_days:remaining/daily, quota_finished:remaining===0,
       eligibility:'unverified', actual_income:null};
   }
   const api = {rules, requiredEvidence, build, scenario};

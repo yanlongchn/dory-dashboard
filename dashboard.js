@@ -28,7 +28,7 @@ function holderCountDisplay(d){
 }
 function evidencePanels(d){
  const rows=Object.entries(sourceNames).map(([key,label])=>{const s=d.sources?.[key];return tableRow([label,s?.status==='ok'?'采集完成':s?.status==='partial'?'部分覆盖':s?.status==='failed'?'采集失败':'未核验',s?.error||s?.reason||(s?.collected_at?asOf(s.collected_at):s?.evidence||'等待来源')])});$('sourceRows').replaceChildren(...rows);
- const pending=['实际日产DORY与全网卖压：缺少有效本金及96次结算价格、产出和实际卖出记录。','新增参与、新钱包、复投、跨交易套利：5000U筛选只反映金额特征，不是开矿门槛或全量矿池数。','Atlas公告公式已核对；币本位200%额度已由用户确认，当期参数、资格与实际扣减流水仍待核验。','NFT与应用：705B完整收款地址已确认；NFT身份、10%分红基数及会议 / 直播 / 打赏链路仍待核验。'];
+ const pending=['实际日产DORY与全网卖压：缺少有效本金及96次结算价格、产出和实际卖出记录。','新增参与、新钱包、复投、跨交易套利：5000U筛选只反映金额特征，不是开矿门槛或全量矿池数。','Atlas公告公式已核对；U本位200%额度已由用户最终确认，当期参数、资格与实际扣减流水仍待核验。','NFT与应用：705B完整收款地址已确认；NFT身份、10%分红基数及会议 / 直播 / 打赏链路仍待核验。'];
  const old=history.find(h=>h.date===(new Date(Date.parse((d.date_bj||bjDate())+'T00:00:00+08:00')-7*86400000).toLocaleDateString('en-CA',{timeZone:'Asia/Shanghai'})));
  const delta=known(old?.holders?.count)&&old.holders?.source===d.holders?.source&&known(d.holders?.count)?d.holders.count-old.holders.count:null;
  $('holdersDelta7').textContent=known(delta)?signed(delta,0,' 地址'):'无同源7日前基线';
@@ -80,11 +80,13 @@ function renderMonitoring(d){
 }
 function renderScenario(){
  const input=id=>{const value=$(id).value;return typeof value==='string'&&value.trim()!==''?Number(value):NaN};
- const value=DoryMonitoring.scenario({principal:input('scenarioPrincipal'),remaining:input('scenarioRemaining'),dailyDory:input('scenarioDaily')});
- $('scenarioTotal').textContent=value.valid?fmt(value.quota)+' DORY':'输入待修正';
- $('scenarioUsed').textContent=value.valid?fmt(value.used)+' DORY':'输入待修正';
- $('scenarioDays').textContent=value.valid?(known(value.arithmetic_days)?fmt(value.arithmetic_days)+'天（假设）':'日产量为0，不计算天数'):'输入待修正';
- $('scenarioNote').textContent=!value.valid?'投入需大于0，剩余币额度须在0至2×投入之间，假设日产量不得为负。':value.quota_finished?'剩余币额度为0；不能视为仍可领取。':'仅演算DORY额度；日产量为手动假设，不是实际收益。USD日额不能直接除DORY额度；未包含Atlas激活、价格路径、奖励扣减或费用，不作为现金回本。';
+ const value=DoryMonitoring.scenario({principal:input('scenarioPrincipal'),remaining:input('scenarioRemaining')});
+ $('scenarioTotal').textContent=value.valid?fmt(value.quota)+' U':'输入待修正';
+ $('scenarioUsed').textContent=value.valid?fmt(value.used)+' U':'输入待修正';
+ $('scenarioBase').textContent=value.valid?fmt(value.daily)+' U / 日':'输入待修正';
+ $('scenarioBlock').textContent=value.valid?fmt(value.settlement,8)+' U / 次':'输入待修正';
+ $('scenarioDays').textContent=value.valid?fmt(value.arithmetic_days)+'天（基础计产假设）':'输入待修正';
+ $('scenarioNote').textContent=!value.valid?'本金需大于0，剩余U额度须在0至2×本金之间。':value.quota_finished?'剩余U额度为0；不能视为仍可领取。':'U本位核算：每次qᵢ=(E×0.0085/96)/Pᵢ DORY，日产币为96次合计；币价变化不将累计U上限变成固定币数。天数只假设基础日额不变，无动态加速、追加或费用；不代表实际领取、卖出到账或现金回本。';
 }
 function renderMarket(m){marketState=m||{};const p=m?.price_usd;const price=known(p)?'$'+fmt(p,4):'未验证';$('price').textContent=price;$('tbPrice').textContent=price;
  $('volume').textContent=money(m?.volume_24h);$('tbVol').textContent=money(m?.volume_24h);$('reserveUsd').textContent=money(m?.liquidity_usd);$('tbLiq').textContent=money(m?.liquidity_usd);
@@ -192,7 +194,7 @@ function initEditorial(){
  cv.addEventListener?.('pointermove',e=>{if(e.pointerType!=='touch')point(e)});cv.addEventListener?.('click',point);cv.addEventListener?.('pointerleave',()=>{chartHoverIndex=null;$('chartTooltip').hidden=true;if(candlesAll.length)drawChart()});
  $('chartScrubber').addEventListener?.('input',e=>{chartSelectedIndex=Number(e.target.value);chartHoverIndex=chartSelectedIndex;drawChart()});$('chartScrubber').addEventListener?.('blur',()=>{chartHoverIndex=null;$('chartTooltip').hidden=true;if(candlesAll.length)drawChart()});
  $('historyDate').addEventListener?.('change',e=>showHistoryDay(e.target.value));
- for(const id of ['scenarioPrincipal','scenarioRemaining','scenarioDaily'])$(id).addEventListener?.('input',e=>{if(id==='scenarioPrincipal'){$('scenarioRemaining').value=Number(e.target.value)*2}renderScenario()});
+ for(const id of ['scenarioPrincipal','scenarioRemaining'])$(id).addEventListener?.('input',e=>{if(id==='scenarioPrincipal'){$('scenarioRemaining').value=Number(e.target.value)*2}renderScenario()});
  if(typeof IntersectionObserver!=='undefined'){const sections=[...document.querySelectorAll('main>section[id]')],links=[...document.querySelectorAll('.nav a')];const observer=new IntersectionObserver(entries=>{const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];if(!visible)return;const id=visible.target.id;links.forEach(a=>{const active=a.getAttribute('href')==='#'+id||(id==='observations'&&a.getAttribute('href')==='#trend')||(id==='history'&&a.getAttribute('href')==='#metrics');a.classList.toggle('active',active);if(active)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current')})},{rootMargin:'-75px 0px -60% 0px',threshold:0});sections.forEach(s=>observer.observe(s))}
 }
 window.addEventListener('beforeprint',()=>{if(candlesAll.length)drawChart()});window.addEventListener('afterprint',()=>{if(candlesAll.length)drawChart()});
