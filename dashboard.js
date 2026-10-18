@@ -70,6 +70,8 @@ function renderMonitoring(d){
  const stateOK=chainOK&&d.sources?.pool_state?.status==='ok';
  $('stateViewPrice').textContent=stateOK&&known(v?.price_usdc_per_dory)?'$'+fmt(v.price_usdc_per_dory,4):'未验证';
  $('proposalDistance').textContent=stateOK&&known(v?.price_usdc_per_dory)?signed((v.price_usdc_per_dory/100-1)*100,2,'%（快照链上价）'):'未验证';
+ $('virtualDepth').textContent=stateOK&&known(v?.virtual_equivalent_tvl_usdc)?fmt(v.virtual_equivalent_tvl_usdc,0)+' USDC（虚拟）':'未验证';
+ $('actualUsdcPrincipal').textContent=chainOK&&d.sources?.pool_reserves?.status==='ok'?fmt(d.pool?.usdc_reserve,0)+' USDC（本金）':'未验证';
  $('stateViewFee').textContent=stateOK&&known(v?.lp_fee)?fmt(v.lp_fee/10000)+'%':'未验证';
  $('lpActivity').textContent=chainOK&&d.sources?.lp_activity?.status==='ok'?'加仓 '+fmt(lp.add_events,0)+' / 减仓 '+fmt(lp.remove_events,0)+' / 零变动 '+fmt(lp.zero_delta_events,0)+' 个事件':'未验证';
  $('lpRoute').textContent=chainOK&&d.sources?.lp_activity?.status==='ok'?fmt(lp.position_manager_events,0)+' / '+fmt(lp.total_events,0)+' 个事件':'未验证';

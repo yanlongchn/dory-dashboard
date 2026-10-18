@@ -150,3 +150,12 @@ export function liquidityActivity(logs,firstBlock,lastBlock){
   return {add_events:adds,remove_events:removes,zero_delta_events:zero,total_events:logs.length,transactions:txs.size,position_manager_events:official,
     single_withdrawal_pct:null,lp_owner:null,automation_status:'unverified',note:'Event sender is a routing contract, not proof of NFT ownership or automated operation; no withdrawal value percentage inferred from liquidityDelta.'};
 }
+
+export function virtualDepth(state,liquidityData){
+ const L=words(liquidityData,1)[0];if(L>=1n<<128n)throw Error('Invalid active liquidity');
+ const sqrt=Number(BigInt(state.sqrt_price_x96))/2**96;
+ if(!Number.isFinite(sqrt)||sqrt<=0)throw Error('Invalid square root price for virtual reserves');
+ const virtualUSDC=Number(L)*sqrt/1e6;
+ return {active_liquidity:L.toString(),virtual_dory:Number(L)/sqrt/1e18,virtual_usdc:virtualUSDC,virtual_equivalent_tvl_usdc:2*virtualUSDC,
+  virtual_semantics:'Local constant-active-L virtual reserves, not fee-excluded principal, withdrawable funds or treasury backing; crossing ticks requires a new liquidity curve.'};
+}

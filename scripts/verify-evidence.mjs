@@ -62,3 +62,12 @@ test('LP event activity is direction counts, never owner or withdrawal percentag
  const result=extra.liquidityActivity([log],10,10);assert.equal(result.remove_events,1);assert.equal(result.position_manager_events,1);assert.equal(result.single_withdrawal_pct,null);assert.equal(result.lp_owner,null);
  assert.throws(()=>extra.liquidityActivity([log],11,12));assert.throws(()=>extra.liquidityActivity([log,log],10,10));assert.throws(()=>extra.liquidityActivity([{...log,removed:true}],10,10));
 });
+
+test('active-L virtual depth is separate from actual pool reserves',()=>{
+ const word=n=>BigInt(n).toString(16).padStart(64,'0');
+ const state={sqrt_price_x96:(2n**96n).toString()};
+ const d=extra.virtualDepth(state,'0x'+word(1000000));
+ assert.equal(d.virtual_usdc,1);assert.equal(d.virtual_equivalent_tvl_usdc,2);assert.equal(d.active_liquidity,'1000000');
+ assert.ok(d.virtual_semantics.includes('not fee-excluded principal'));
+ assert.throws(()=>extra.virtualDepth(state,'0x'+word(1n<<128n)));
+});

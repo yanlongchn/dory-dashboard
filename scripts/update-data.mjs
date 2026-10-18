@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { LENS, STATE_VIEW, MODIFY_LIQUIDITY, decodeSlot0, liquidityActivity, INITIALIZE, INIT_BLOCK, TICKET_MINTED, RECEIVER_705B, distributionWatch, poolKey, decodeReserves, indexedHolders, x9ReceiptBurn, aggregateCandidates } from './evidence.mjs';
+import { LENS, STATE_VIEW, MODIFY_LIQUIDITY, decodeSlot0, virtualDepth, liquidityActivity, INITIALIZE, INIT_BLOCK, TICKET_MINTED, RECEIVER_705B, distributionWatch, poolKey, decodeReserves, indexedHolders, x9ReceiptBurn, aggregateCandidates } from './evidence.mjs';
 import monitoring from '../monitoring.js';
 
 const DATA = path.join(path.resolve(process.cwd()), "data");
@@ -357,7 +357,9 @@ export async function collect() {
     if (key) {
       await component('pool_state', async () => {
         if(await rpc('eth_getCode',[STATE_VIEW,hex(window.latest)])==='0x')throw Error('StateView not deployed');
-        result.pool.state_view={...decodeSlot0(await pinnedCall(STATE_VIEW,'0xc815641c'+POOL.slice(2),window.latestBlock)),address:STATE_VIEW,block:window.latest,block_hash:window.latestBlock.hash};
+        const slot=decodeSlot0(await pinnedCall(STATE_VIEW,'0xc815641c'+POOL.slice(2),window.latestBlock));
+        const depth=virtualDepth(slot,await pinnedCall(STATE_VIEW,'0xfa6793d5'+POOL.slice(2),window.latestBlock));
+        result.pool.state_view={...slot,...depth,address:STATE_VIEW,block:window.latest,block_hash:window.latestBlock.hash};
       });
       await component('lp_activity', async () => {
         const logs=await getLogs(rpc,PM,window.start,window.latest,[MODIFY_LIQUIDITY,POOL],{maxStep:100000});
