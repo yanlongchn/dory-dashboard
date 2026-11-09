@@ -3,8 +3,8 @@
   const finite = value => typeof value === 'number' && Number.isFinite(value);
   const sourceOK = (snapshot, name) => snapshot.sources?.[name]?.status === 'ok';
   const rules = {
-    version: '2026-11-09-v3',
-    app: {sell_reference_usdc_per_dory: 200},
+    version: '2026-11-09-x9-terminal',
+    app: {sell_mode: 'power_reinvestment', price_condition: null, cash_channel: 'offline_community', team_cash_purchase: true, source: 'user_confirmed'},
     confirmed: {daily_rate: 0.0085, settlements_per_day: 96, minutes_per_settlement: 15, quota_multiple: 2, quota_unit: 'USD', daily_rate_basis: 'E USD principal accounting basis; each of 96 settlements converts its USD amount at the settlement price', quota_source: '用户复核后最终确认U本位；取代此前币本位确认及附件冲突表述'},
     course: {
       source: '用户提供的2026-10-05课堂录音；重点片段二次转写复核，尚未独立链上核验',
@@ -24,7 +24,7 @@
         formula: 'Ψ = H + min(C, μH)', activation: 'μ = Λ × Γ(S) × Θ(τ)',
         factors: ['自身有效算力H', '小区算力S', '金额加权算力龄τ'],
         parameters: {Lambda:null,kappa:null,S0:null,Sstar:null,tau_star:null,epsilon:null,delta:null,Delta0:null},
-        note: '已核对官方公式；生效时间、当期参数及账户状态仍待核验，不以25%或V等级直接计算激活额度'},
+        note: '公式来自官方公告。页面按公告展示激活系数的组成。'},
       nft: {address: null, dividend_base: null, claimed_rate: 0.1, status: 'unverified',
         note: '705B完整收款地址已由Transfer记录确认；NFT身份、10%分红基数及与X9 Charter的对应关系仍未确认'},
       applications: ['会议付费销毁', '直播质押', '打赏转账', '持仓准入', '信号与内容置顶']
@@ -40,8 +40,7 @@
     {id: 'nft_dividends', title: 'NFT分红来源与权益', basis: '705B完整收款地址已确认；NFT关联仍为课堂口述', need: 'NFT合约对应、10%分红基数、个人份额与来源到账链路', impact: '705B流入不能代替NFT收入或股权证明'},
     {id: 'applications', title: '实际应用付费与消耗', basis: '会议、质押、打赏、准入各有不同用途', need: '付费订单与链上记录；活跃用户统计周期及去重方法', impact: '不能把全部转账或质押计作销毁 / 平台收入'},
     {id: 'permissions', title: '权限与LP控制凭证', basis: '官方部署表已确认PositionManager；路由合约不等于实际LP所有人', need: 'LP NFT合约与tokenId、持有人、全组件权限及升级路径', impact: '代币或单个LP头寸信息不足以证明全协议安全'},
-    {id: 'pending', title: 'Pending触发与全量归因', basis: '已有样本前后Pending归零及90% / 10%分流；直接调用可单列', need: '实现合约、触发条件、舍入规则、更多前后状态及全量逐笔链路', impact: '样本清零不证明所有自动结算；分流模式不直接改写销毁用途'},
-    {id: 'cash_exit', title: '领取、卖出与实际到账', basis: '据2026-11-03用户转述，低于200 U时App内卖出自动复投；公告原文待核', need: '核对App是否再次上调门槛，以及越线后卖出订单是否实际到账USDC', impact: '链上越过观察线及池内USDC本金均不能验证App兑付'}
+    {id: 'pending', title: 'Pending触发与全量归因', basis: '已有样本前后Pending归零及90% / 10%分流；直接调用可单列', need: '实现合约、触发条件、舍入规则、更多前后状态及全量逐笔链路', impact: '样本清零不证明所有自动结算；分流模式不直接改写销毁用途'}
   ];
 
   function flowWindow(snapshot, window) {
@@ -73,6 +72,7 @@
       rules_version: rules.version, generated_at: snapshot.generated_at, fresh,
       chain_flow_status: !fresh ? 'stale' : day.status === 'ok' && week.status === 'ok' ? 'ok' : 'unverified',
       business_status: 'evidence_incomplete',
+      app_policy: {...rules.app},
       flow: {day, week, x9c_dead_24h: x9,
         unknown_burn_24h: attributionOK ? other : null,
         unknown_burn_pct: attributionOK && day.zero_transfer > 0 ? other / day.zero_transfer * 100 : null},

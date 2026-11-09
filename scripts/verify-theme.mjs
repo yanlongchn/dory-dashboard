@@ -16,7 +16,7 @@ function page({saved, dark = false, blocked = false} = {}) {
   return {theme: context.DoryTheme, system, values, button, attributes, meta, events};
 }
 test('first paint follows system; stored manual choice survives reload and overrides later system changes', () => {
-  const fresh = page({dark: true});assert.equal(fresh.theme.current(), 'dark');assert.equal(fresh.meta.color, '#101d27');
+  const fresh = page({dark: true});assert.equal(fresh.theme.current(), 'dark');assert.equal(fresh.meta.color, '#08101d');
   fresh.system.matches = false;fresh.system.change();assert.equal(fresh.theme.current(), 'light');
   fresh.theme.toggle();assert.equal(fresh.values.get('dory-color-theme'), 'dark');
   fresh.system.change();assert.equal(fresh.theme.current(), 'dark');
@@ -26,7 +26,7 @@ test('first paint follows system; stored manual choice survives reload and overr
 test('switching with denied storage still works and exposes the correct button and browser colors', () => {
   const p = page({blocked: true});p.theme.toggle();assert.equal(p.theme.current(), 'dark');
   assert.equal(p.attributes['aria-pressed'], 'true');assert.equal(p.button.textContent, '☾ 夜间');
-  p.theme.toggle();assert.equal(p.attributes['aria-pressed'], 'false');assert.equal(p.meta.color, '#f7f6f2');
+  p.theme.toggle();assert.equal(p.attributes['aria-pressed'], 'false');assert.equal(p.meta.color, '#edf3f9');
 });
 test('other tabs sync valid preferences; clearing or invalid storage falls back to system', () => {
   const p = page({saved: 'light', dark: true});p.events.storage({key: 'unrelated', newValue: 'dark'});assert.equal(p.theme.current(), 'light');

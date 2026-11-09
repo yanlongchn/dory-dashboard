@@ -2,116 +2,459 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#f7f6f2"><meta name="description" content="DORY 每日数据观察：官方池行情、资金、供应与销毁。逐项有据，未知保留。">
-<title>DORY 日报 · 每日数据观察</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23173a4c'/%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='Georgia' font-size='26' fill='%23fffefa'%3ED%3C/text%3E%3C/svg%3E">
-<script src="./theme.js"></script>
+<meta name="theme-color" content="#edf3f9"><meta name="description" content="DORY 市场监控 · Arbitrum 链上行情、资金与供应">
+<title>DORY 市场监控 · Arbitrum</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23091427'/%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='Georgia' font-size='26' fill='%2389e9dd'%3ED%3C/text%3E%3C/svg%3E">
+<script src="./theme.js?v=20261109-terminal"></script>
 <style>
-:root{--paper:#f7f6f2;--white:#fffefa;--ink:#203343;--muted:#687680;--line:#dedfd7;--navy:#173a4c;--gold:#95723c;--green:#168365;--red:#b84646;--yellow:#9a762c;--gray:#818c91;--masthead:#f7f6f2f2;--hover:#eaece6;--selected:#ebe9df;--selection:#e9dec6;--on-accent:#fff;--accent-hover:#2b5061;--tooltip:#173a4c;--tooltip-ink:#fff;--chart-grid:#e5e8df;--chart-label:#748078;--flash:#e7ddc6;--ease:cubic-bezier(.22,1,.36,1);color-scheme:light}
-:root[data-theme="dark"]{--paper:#101d27;--white:#172832;--ink:#e4edf1;--muted:#9aaebb;--line:#314450;--navy:#9ec9de;--gold:#d3b078;--green:#69cba7;--red:#ed8d8d;--yellow:#dbbd76;--gray:#8599a5;--masthead:#101d27f2;--hover:#223943;--selected:#293f4c;--selection:#3b5364;--on-accent:#102331;--accent-hover:#b9dceb;--tooltip:#244553;--tooltip-ink:#f3f6f8;--chart-grid:#304651;--chart-label:#9aaebb;--flash:#3b4b38;color-scheme:dark}
-*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:90px}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}button,input,select{font:inherit}button,a,summary,select{-webkit-tap-highlight-color:transparent}a{color:var(--navy);text-underline-offset:4px}button{cursor:pointer}button:disabled{cursor:wait;opacity:.6}button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:5px}button{transition:background .18s,color .18s,border-color .18s}::selection{background:var(--selection)}h1,h2,h3,p{margin:0}h1,h2,h3{line-height:1.35}h2{font-size:23px;font-weight:650;letter-spacing:-.5px}h3{font-size:16px}.shell{max-width:1240px;margin:0 auto;padding:0 36px}.masthead{background:var(--masthead);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}.masthead-inner{min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:24px}.wordmark{text-decoration:none;color:var(--navy);font:700 24px/1 ui-serif,Georgia,serif;letter-spacing:3px;white-space:nowrap}.wordmark span{font:500 11px/1 sans-serif;letter-spacing:1px;color:var(--muted);margin-left:13px}.nav{margin-left:auto;display:flex;gap:27px;font-size:13px;white-space:nowrap}.nav a{text-decoration:none;color:var(--muted);padding:23px 0;border-bottom:2px solid transparent}.nav a:hover,.nav a.active{border-color:var(--gold);color:var(--ink)}.issue{display:flex;justify-content:space-between;gap:20px;padding:36px 0 22px;color:var(--muted);font-size:12px;letter-spacing:.3px}.eyebrow{font-size:11px;font-weight:650;letter-spacing:2px;color:var(--gold)}.hero{display:flex;justify-content:space-between;align-items:flex-start;gap:30px;padding-bottom:28px}.hero h1{font:600 42px/1.35 ui-serif,"Songti SC","STSong",serif;letter-spacing:1px;margin:7px 0 12px}.hero-copy{color:var(--muted);max-width:550px;font-size:14px}.edition-actions{display:flex;gap:9px;flex-wrap:wrap;padding-top:16px;justify-content:flex-end}.btn{border:1px solid var(--line);background:transparent;color:var(--navy);border-radius:5px;padding:9px 14px;font-size:12px;font-weight:600;min-height:40px}.btn.primary{background:var(--navy);color:var(--on-accent);border-color:var(--navy)}.btn:hover{background:var(--hover)}.btn.primary:hover{background:var(--accent-hover)}.sourcebar{display:flex;flex-wrap:wrap;gap:8px 20px;border-top:1px solid var(--line);padding:13px 0 21px}.pill{font-size:11px;color:var(--muted);display:inline-flex;gap:6px;align-items:center}.pill:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--gray);flex-shrink:0}.pill.ok:before{background:var(--green)}.pill.busy:before{background:var(--yellow)}.pill.err:before{background:var(--red)}.stateline{font-size:11px;color:var(--muted)}.overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:2px solid var(--navy);border-bottom:1px solid var(--line);padding:27px 0 29px;gap:0}.metric{padding:0 24px;border-right:1px solid var(--line);min-width:0}.metric:first-child{padding-left:0}.metric:last-child{border:0;padding-right:0}.metric-label{font-size:12px;color:var(--muted);margin-bottom:12px}.big{font:600 32px/1.25 ui-serif,Georgia,"Songti SC",serif;font-variant-numeric:tabular-nums;letter-spacing:-1px;overflow-wrap:anywhere;margin-bottom:15px}.metric .big{white-space:nowrap}.metric .row{font-size:11px}.row{display:flex;justify-content:space-between;gap:16px;padding:5px 0;font-size:13px}.row>span{color:var(--muted)}.row strong{font-weight:600;text-align:right;font-variant-numeric:tabular-nums}.up{color:var(--green)}.down{color:var(--red)}.warn{color:var(--yellow)}.muted{color:var(--muted)}.small{font-size:12px;line-height:1.8;color:var(--muted)}.section{padding:37px 0;border-bottom:1px solid var(--line);scroll-margin-top:16px}.sectionhead{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:23px}.section-title{display:flex;gap:17px;align-items:baseline}.section-index{font:italic 17px ui-serif,Georgia,serif;color:var(--gold)}.chartControls{display:flex;gap:5px;flex-wrap:wrap}.cbtn{border:0;background:transparent;color:var(--muted);padding:7px 11px;border-radius:4px;font-size:12px;min-height:34px}.cbtn:hover{background:var(--hover)}.cbtn.active{background:var(--navy);color:var(--on-accent)}.chart-summary{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-bottom:16px}.badge{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}.chart-help{font-size:11px;color:var(--muted)}.chartwrap{height:365px;position:relative;background:var(--white);border-radius:4px;padding:12px}.chartwrap canvas{display:block;width:100%;height:100%;touch-action:pan-y}.chart-tooltip{position:absolute;z-index:3;background:var(--tooltip);color:var(--tooltip-ink);font-size:11px;line-height:1.9;border-radius:4px;padding:8px 12px;pointer-events:none;box-shadow:0 4px 14px #173a4c20;max-width:260px;white-space:pre-line;font-variant-numeric:tabular-nums}.chart-tooltip[hidden]{display:none}.chart-note{margin-top:15px;font-size:11px;color:var(--muted);max-width:900px}.chart-reader{display:flex;align-items:center;gap:14px;padding:12px 0 0;font-size:11px;color:var(--muted)}.chart-reader input{accent-color:var(--navy);flex:1;min-width:0;height:30px;cursor:ew-resize}.chart-reader output{min-width:95px;text-align:right}.observations{display:grid;grid-template-columns:1.15fr 1fr;gap:48px}.state{border-left:3px solid var(--gold);padding-left:16px;margin-bottom:23px}.state .eyebrow{margin-bottom:6px}.state b{font:600 24px/1.4 ui-serif,"Songti SC",serif}.lights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 26px}.light{padding:13px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:8px 1fr;align-items:baseline;column-gap:10px}.dot{width:7px;height:7px;border-radius:50%;background:var(--gray)}.dot.green{background:var(--green)}.dot.red{background:var(--red)}.dot.yellow{background:var(--yellow)}.light b{font-size:12px;font-weight:600}.light div:last-child{grid-column:2;font-size:11px;color:var(--muted);padding-top:4px}.risks{padding-left:20px;margin:14px 0 0}.risks li{padding-left:6px;margin-bottom:15px;font-size:13px;line-height:1.8}.risks li::marker{color:var(--gold);font-weight:600}.coverage{padding-top:18px}.progress{height:2px;background:var(--line);margin:10px 0}.progress>div{height:100%;width:0;background:var(--navy);transition:width .35s var(--ease)}.detail{border-top:1px solid var(--line)}.detail:last-of-type{border-bottom:1px solid var(--line)}summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:18px;padding:20px 0;cursor:pointer;font-size:15px;font-weight:550}summary::-webkit-details-marker{display:none}summary:after{content:"＋";font-size:20px;font-weight:400;color:var(--gold);flex-shrink:0;transition:transform .2s}details[open]>summary:after{content:"−"}summary span{display:block;font-size:11px;color:var(--muted);font-weight:400;padding-top:3px}summary:hover{color:var(--gold)}.detail-body{padding:0 0 24px;animation:reveal .25s var(--ease)}.detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px}.detail-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-block h3{font-size:13px;margin-bottom:13px}.detail-block .small{margin-top:14px}.caption{margin-bottom:20px;font-size:12px;color:var(--muted)}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}th,td{padding:13px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-size:11px;font-weight:500}th:first-child,td:first-child{text-align:left;padding-left:0}tbody tr:hover{background:var(--hover)}td:last-child{color:var(--muted)}#sourceRows td:last-child{white-space:normal;min-width:280px;max-width:650px;font-size:11px;text-align:left}#historyRows tr.selected{background:var(--selected)}select{background:var(--white);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:8px 12px;font-size:12px;min-height:38px}.history-picker{display:flex;gap:10px;align-items:center}.history-summary{border-left:2px solid var(--gold);margin:20px 0;padding-left:16px;font-size:13px;line-height:1.8;color:var(--muted)}.audit-layout{display:grid;grid-template-columns:1fr 1fr;gap:45px;margin-bottom:24px}.audit-layout .risks{margin-top:8px}.audit-layout h3{margin-bottom:12px;font-size:13px}.audit-claim{font-size:12px;color:var(--muted);line-height:1.9}.audit-links{display:flex;gap:10px 22px;flex-wrap:wrap;margin:18px 0;font-size:12px}.foot{padding:30px 0 40px;font-size:10px;color:var(--muted);line-height:1.9;overflow-wrap:anywhere}.foot-top{display:flex;justify-content:space-between;gap:20px;margin-bottom:12px;color:var(--navy);font-size:11px;letter-spacing:1px}.refresh-note{font-size:11px;color:var(--muted);text-align:right;min-height:22px;margin-top:7px}.chart-flash{animation:reveal .28s var(--ease)}@keyframes reveal{from{opacity:.3;transform:translateY(5px)}to{opacity:1;transform:none}}.hero{animation:reveal .5s var(--ease)}
+:root {
+  --paper: #edf3f9;
+  --white: #fff;
+  --ink: #15243b;
+  --muted: #4d617d;
+  --line: #cbd9e8;
+  --navy: #184cad;
+  --gold: #0b697c;
+  --green: #087455;
+  --red: #b52d51;
+  --yellow: #856118;
+  --gray: #6e809a;
+  --masthead: #f5f9fdef;
+  --hover: #e8f0fd;
+  --selected: #e0edff;
+  --selection: #d7e8fe;
+  --on-accent: #fff;
+  --accent-hover: #123c8d;
+  --tooltip: #101c35;
+  --tooltip-ink: #f4f7ff;
+  --chart-grid: #dce6f1;
+  --chart-label: #4d617d;
+  --flash: #d4eafe;
+  --mono: ui-monospace, "SF Mono", Consolas, monospace;
+  --radius: 14px;
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --paper: #08101d;
+  --white: #101b2c;
+  --ink: #eaf2ff;
+  --muted: #a1b3cb;
+  --line: #263a54;
+  --navy: #85b4ff;
+  --gold: #61daca;
+  --green: #65e0ad;
+  --red: #ff8fa7;
+  --yellow: #ecc778;
+  --gray: #8295af;
+  --masthead: #08101def;
+  --hover: #162843;
+  --selected: #1b3150;
+  --selection: #264974;
+  --on-accent: #081426;
+  --accent-hover: #a8cbff;
+  --tooltip: #203655;
+  --tooltip-ink: #f4f7ff;
+  --chart-grid: #25374e;
+  --chart-label: #a1b3cb;
+  --flash: #254660;
+  color-scheme: dark;
+}
 
-.monitor-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;margin:20px 0}.monitor-card{background:var(--white);border:1px solid var(--line);border-radius:5px;padding:18px;min-width:0}.monitor-card h3{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:10px}.monitor-value{font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.monitor-card p{font-size:11px;color:var(--muted);margin-top:8px}.rule-label{display:inline-block;color:var(--gold);font-size:11px;margin-bottom:10px}.scenario-inputs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:14px 0 20px}.scenario-inputs label{font-size:12px;color:var(--muted);min-width:0}.scenario-inputs input,.scenario-inputs select{display:block;width:100%;min-width:0;background:var(--white);border:1px solid var(--line);border-radius:4px;padding:8px;margin-top:6px;color:var(--ink);min-height:40px}.scenario-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px;margin-bottom:16px}.scenario-results .row{border-bottom:1px solid var(--line)}#mechanismRows td{white-space:normal;text-align:left;vertical-align:top}#mechanismRows td:first-child{min-width:140px}#mechanismRows td:nth-child(2){min-width:70px;color:var(--gold)}#mechanismRows td:nth-child(3){min-width:230px}#mechanismRows td:nth-child(4){min-width:210px}#monitorFlowRows td:last-child{white-space:normal;text-align:left;min-width:170px}.mechanism-note{border-left:2px solid var(--gold);padding-left:15px;margin:16px 0}.scenario-results strong{overflow-wrap:anywhere}
-@media(max-width:760px){#mechanisms .sectionhead{flex-direction:column;gap:8px}.monitor-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.monitor-card{padding:14px}.monitor-value{font-size:18px}.scenario-inputs{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.scenario-results{grid-template-columns:1fr}.nav{gap:12px}}
-@media(max-width:390px){.nav{gap:10px}.monitor-card{padding:12px}.monitor-value{font-size:16px}}
-@media(min-width:1100px){.metric:first-child .big{font-size:38px}.metric:nth-child(3) .big{font-size:30px}}
-@media(max-width:1050px){.shell{padding:0 25px}.metric{padding:0 17px}.big{font-size:27px}.metric:nth-child(3) .big{font-size:24px}.observations{gap:32px}.hero h1{font-size:37px}.nav{gap:20px}.detail-grid{gap:22px}}
-@media(max-width:760px){.shell{padding:0 22px}.masthead-inner{min-height:61px;gap:18px}.wordmark{font-size:21px}.wordmark span{display:none}.nav{font-size:12px;gap:15px}.nav a{padding:18px 0}.issue{padding-top:27px;font-size:11px}.issue span:last-child{max-width:160px;text-align:right}.hero{display:block;padding-bottom:22px}.hero h1{font-size:34px;margin-top:6px}.edition-actions{justify-content:flex-start;padding-top:21px}.refresh-note{text-align:left}.overview{grid-template-columns:repeat(2,minmax(0,1fr));padding:0}.metric{padding:23px 0}.metric:nth-child(odd){padding-right:18px}.metric:nth-child(even){padding-left:18px;border-right:0}.metric:nth-child(-n+2){border-bottom:1px solid var(--line)}.metric .big{font-size:30px}.metric:nth-child(3) .big{font-size:27px}.section{padding:29px 0}.sectionhead{align-items:flex-start;gap:15px}.section-title{gap:11px}h2{font-size:21px}.chartControls{gap:2px}.cbtn{padding:6px 8px;font-size:11px;min-height:36px}.chartwrap{height:305px;padding:8px}.chart-summary{gap:6px}.chart-help{font-size:10px}.observations{grid-template-columns:1fr;gap:29px}.detail-grid,.detail-grid.two,.audit-layout{grid-template-columns:1fr;gap:24px}.detail-block+.detail-block{border-top:1px solid var(--line);padding-top:23px}th,td{padding:12px 13px;font-size:11px}.history-picker{font-size:11px;gap:6px}.history-picker label{display:none}.history-summary{font-size:12px}.foot-top{display:block}.foot-top span{display:block;margin-bottom:6px}.sourcebar{gap:6px 16px}.hero-copy{font-size:13px}}
-@media(max-width:390px){.shell{padding:0 17px}.nav{gap:11px;font-size:11px}.hero h1{font-size:30px}.metric .big{font-size:27px}.metric:nth-child(3) .big{font-size:23px}.metric .row{font-size:10px;gap:5px}.charthead{display:block}.chartControls{margin-top:14px}.chartwrap{height:280px}.chart-reader{gap:8px}.chart-reader output{min-width:82px}.sectionhead:has(.history-picker){align-items:center}.history-picker select{padding:6px;font-size:11px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}}
-.theme-toggle{white-space:nowrap;min-width:82px;min-height:44px;padding:8px 12px;color:var(--ink)}
-@media(max-width:760px){html{scroll-padding-top:118px}.masthead-inner{flex-wrap:wrap;gap:0 18px;padding-top:10px}.theme-toggle{margin-left:auto}.nav{order:3;margin-left:0;width:100%;justify-content:space-between;gap:12px}.nav a{padding:10px 0 12px}.section{scroll-margin-top:10px}}
-@media print{:root[data-theme]{--paper:#fff;--white:#fff;--ink:#203343;--muted:#52616b;--line:#dedfd7;--navy:#173a4c;--gold:#806032;--green:#168365;--red:#b84646;--selected:#ebe9df;--masthead:#fff;--chart-grid:#dedfd7;--chart-label:#52616b;color-scheme:light}.theme-toggle{display:none}.masthead{position:static}.nav,.edition-actions,.chartControls,.chart-reader,.refresh-note{display:none}body{background:white}.shell{max-width:none;padding:0}.section{break-inside:avoid}.hero h1{font-size:32px}.sourcebar{padding-bottom:10px}.chartwrap{height:300px}.foot{padding:20px 0}details{break-inside:avoid}.big{font-size:25px}}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+body {
+  margin: 0;
+  background: var(--paper);
+  background-image: radial-gradient(ellipse at 50% 0%, color-mix(in oklab, var(--navy) 8%, transparent), transparent 62%);
+  color: var(--ink);
+  font: 15px/1.65 system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+::selection { background: var(--selection); }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { line-height: 1.35; }
+h2 { font-size: clamp(18px, 2.4vw, 24px); font-weight: 680; }
+h3 { font-size: 15px; }
+a { color: var(--navy); text-underline-offset: 4px; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: wait; opacity: .62; }
+:focus-visible { outline: 2px solid var(--navy); outline-offset: 3px; }
+.shell { max-width: 1320px; padding-inline: clamp(16px, 4vw, 44px); margin-inline: auto; }
+.masthead {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--masthead);
+  backdrop-filter: blur(16px) saturate(135%);
+}
+.masthead-inner, .nav { display: flex; align-items: center; }
+.masthead-inner { min-height: 66px; gap: 22px; }
+.wordmark { display: inline-flex; align-items: center; gap: 11px; color: var(--ink); text-decoration: none; font: 760 22px/1 var(--mono); letter-spacing: .12em; }
+.wordmark::before { content: ""; width: 10px; height: 10px; border: 2px solid var(--gold); transform: rotate(45deg); }
+.wordmark span { color: var(--muted); font-size: 10px; letter-spacing: .08em; }
+.nav { gap: clamp(12px, 2.5vw, 32px); margin-left: auto; font-size: 13px; }
+.nav a { padding: 22px 3px 20px; color: var(--muted); text-decoration: none; border-bottom: 2px solid transparent; white-space: nowrap; }
+.nav a:hover, .nav a.active { color: var(--navy); border-color: var(--navy); }
+.btn, .cbtn {
+  min-height: 42px;
+  padding: 8px 15px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--white);
+  font-size: 13px;
+  font-weight: 650;
+  transition: background .16s, border-color .16s;
+}
+.btn:hover, .cbtn:hover, .cbtn.active { background: var(--hover); }
+.btn.primary { color: var(--on-accent); background: var(--navy); border-color: var(--navy); }
+.btn.primary:hover { background: var(--accent-hover); }
+.theme-toggle { white-space: nowrap; }
+.issue, .foot-top { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font: 11px/1.6 var(--mono); }
+.issue { padding: 23px 0 12px; }
+
+.hero {
+  isolation: isolate;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(250px, 1fr);
+  align-items: center;
+  overflow: hidden;
+  min-height: 307px;
+  padding: clamp(24px, 4vw, 52px);
+  border: 1px solid #2e4a71;
+  border-radius: calc(var(--radius) + 4px);
+  color: #f3f8ff;
+  background: radial-gradient(ellipse at 80% 45%, #163d63, transparent 58%), linear-gradient(125deg, #091427 18%, #11284a);
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image: linear-gradient(#89bbff13 1px, transparent 1px), linear-gradient(90deg, #89bbff13 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(90deg, transparent 10%, #000);
+}
+.hero-content { z-index: 1; }
+.eyebrow { color: var(--gold); font: 650 10px/1.5 var(--mono); letter-spacing: .13em; }
+.hero .eyebrow { display: flex; align-items: center; gap: 10px; color: #81e5d9; }
+.signal { width: 7px; height: 7px; border-radius: 50%; background: #79efde; box-shadow: 0 0 0 4px #79efde22, 0 0 14px #79efdea0; }
+.hero h1 { margin: 10px 0; font-size: clamp(32px, 5vw, 65px); font-weight: 770; letter-spacing: -.045em; }
+.hero h1 span { color: #b1d1ff; }
+.hero-copy { max-width: 480px; color: #c0d2ec; font-size: 14px; }
+.edition-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 23px; }
+.hero .btn { color: #e0edff; background: #132943; border-color: #446085; }
+.hero .btn:hover { background: #254366; }
+.hero .btn.primary { color: #06152b; background: #a1c8ff; border-color: #a1c8ff; }
+.hero .btn.primary:hover { background: #c3dbff; }
+.hero :focus-visible { outline-color: #8ce7dc; }
+.refresh-note { min-height: 21px; margin-top: 8px; color: #b4c7e1; font-size: 11px; }
+.network-panel {
+  position: relative;
+  justify-self: end;
+  width: min(100%, 260px);
+  padding: 16px;
+  border: 1px solid #7bacf762;
+  border-radius: 10px;
+  background: #0a172ad9;
+  color: #c9defa;
+}
+.network-label { display: flex; justify-content: space-between; gap: 8px; font: 10px/1.5 var(--mono); letter-spacing: .08em; }
+.network-label span { color: #83e2d7; }
+.network-panel strong { display: block; margin: 12px 0; font: 700 clamp(15px, 2.3vw, 20px)/1 var(--mono); letter-spacing: .045em; }
+.orbit { position: absolute; z-index: -1; width: 420px; height: 320px; top: 50%; right: -55px; transform: translateY(-50%); color: #6fafff72; pointer-events: none; }
+.sourcebar { display: flex; flex-wrap: wrap; gap: 7px 10px; padding: 14px 0; }
+.pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 20px; color: var(--muted); font-size: 11px; background: var(--white); }
+.pill::before, .dot { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--gray); }
+.pill::before { content: ""; }
+.pill.ok::before, .dot.green { background: var(--green); }
+.pill.busy::before, .dot.yellow { background: var(--yellow); }
+.pill.err::before, .dot.red { background: var(--red); }
+
+.overview-shell { container-type: inline-size; }
+.overview, .monitor-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.metric, .monitor-card, .policy-card, .section {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--white);
+}
+.metric, .monitor-card { padding: clamp(12px, 1.7vw, 22px); }
+.metric:first-child {
+  border-color: color-mix(in oklab, var(--navy) 48%, var(--line));
+  background: linear-gradient(140deg, color-mix(in oklab, var(--navy) 8%, var(--white)), var(--white) 62%);
+}
+.metric-label, .monitor-card h3 { color: var(--muted); font-size: 12px; font-weight: 650; }
+.big, .monitor-value { overflow-wrap: anywhere; margin: 10px 0 8px; font: 650 clamp(20px, 3vw, 33px)/1.2 var(--mono); letter-spacing: -.06em; }
+.metric:first-child .big { color: var(--navy); }
+.metric .row { font-size: 11px; gap: 6px; }
+.metric .row > span { white-space: nowrap; }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 6px 0; font-size: 13px; }
+.row > span { color: var(--muted); }
+.row strong { min-width: 0; text-align: right; overflow-wrap: anywhere; font-weight: 650; font-variant-numeric: tabular-nums; }
+.up { color: var(--green); }
+.down { color: var(--red); }
+.warn { color: var(--yellow); }
+.muted { color: var(--muted); }
+.small, .stateline { color: var(--muted); font-size: 12px; line-height: 1.75; }
+.policy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.policy-card { display: flex; gap: 13px; align-items: flex-start; padding: 15px; }
+.policy-index {
+  flex: 0 0 auto;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--hover);
+  color: var(--navy);
+  font: 650 11px/1 var(--mono);
+}
+.policy-card h2 { font-size: 14px; }
+.policy-card p { margin-top: 3px; color: var(--muted); font-size: 12px; }
+
+.section { margin-top: 17px; padding: clamp(16px, 2.4vw, 29px); }
+.sectionhead, .section-title, .chartControls { display: flex; align-items: center; gap: 10px; }
+.sectionhead { justify-content: space-between; margin-bottom: 18px; }
+.section-index { flex: 0 0 auto; color: var(--gold); font: 650 11px/1 var(--mono); }
+.chartControls { flex-wrap: wrap; gap: 4px; }
+.cbtn { min-height: 36px; padding: 5px 10px; background: transparent; color: var(--muted); font-size: 12px; }
+.cbtn.active { color: var(--navy); border-color: var(--navy); }
+.chart-summary { display: flex; justify-content: space-between; gap: 8px 18px; flex-wrap: wrap; margin-bottom: 12px; }
+.badge, .chart-help, .chart-note { color: var(--muted); font-size: 11px; }
+.badge, .chart-reader output { font-family: var(--mono); }
+.chartwrap { height: clamp(265px, 36vw, 430px); position: relative; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+.chartwrap canvas { display: block; width: 100%; height: 100%; touch-action: pan-y; }
+.chart-tooltip { position: absolute; z-index: 3; max-width: min(230px, calc(100% - 16px)); padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--tooltip); color: var(--tooltip-ink); font: 11px/1.75 var(--mono); white-space: pre-line; pointer-events: none; }
+.chart-tooltip[hidden] { display: none; }
+.chart-reader { display: flex; align-items: center; gap: 10px; padding-top: 9px; color: var(--muted); font-size: 11px; }
+.chart-reader input { accent-color: var(--navy); flex: 1; min-width: 0; height: 36px; }
+.chart-reader output { min-width: 85px; text-align: right; }
+.chart-note { margin-top: 9px; }
+
+.observations, .audit-layout, .detail-grid, .scenario-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.state { border-left: 3px solid var(--gold); padding-left: 11px; margin-bottom: 12px; }
+.state b { display: block; margin-top: 5px; font-size: 21px; }
+.lights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+.light { display: grid; grid-template-columns: 7px 1fr; align-items: baseline; gap: 3px 7px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.light b { font-size: 12px; }
+.light div:last-child { grid-column: 2; color: var(--muted); font-size: 11px; }
+.risks { margin: 7px 0 12px; padding-left: 19px; color: var(--muted); font-size: 13px; }
+.risks li + li { margin-top: 8px; }
+.risks li::marker { color: var(--gold); }
+.coverage { margin-top: 12px; }
+.progress { height: 4px; margin: 7px 0; background: var(--line); border-radius: 5px; overflow: hidden; }
+.progress > div { width: 0; height: 100%; background: var(--navy); transition: width .2s; }
+.monitor-grid { margin: 14px 0; }
+.monitor-card { background: var(--paper); }
+.monitor-card p, .rule-label { color: var(--muted); font-size: 11px; }
+.monitor-value { font-size: clamp(19px, 2.5vw, 28px); }
+.rule-label { display: block; margin-bottom: 10px; }
+.detail { border-top: 1px solid var(--line); }
+.detail:last-of-type { border-bottom: 1px solid var(--line); }
+summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 4px; list-style: none; cursor: pointer; font-weight: 650; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "＋"; flex: 0 0 auto; color: var(--navy); }
+details[open] > summary::after { content: "−"; }
+summary:hover { color: var(--navy); }
+summary span { display: block; color: var(--muted); font-size: 11px; font-weight: 450; }
+.detail-body { padding: 0 4px 16px; overflow-wrap: anywhere; }
+.detail-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.detail-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.detail-block h3 { margin: 7px 0 8px; }
+.detail-block .small, .mechanism-note { margin-top: 10px; }
+.mechanism-note { border-left: 2px solid var(--line); padding-left: 10px; }
+.caption, .audit-claim { color: var(--muted); font-size: 12px; }
+.caption { margin-bottom: 12px; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th { background: var(--paper); color: var(--muted); font-weight: 640; }
+th:first-child, td:first-child { text-align: left; }
+tbody tr:hover { background: var(--hover); }
+#historyRows tr.selected { background: var(--selected); }
+#sourceRows td:last-child, #monitorFlowRows td:last-child { min-width: 150px; white-space: normal; text-align: left; overflow-wrap: anywhere; }
+.history-picker { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+select, .scenario-inputs input {
+  min-height: 38px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px;
+  background: var(--white); color: var(--ink); font-size: 13px;
+}
+.history-summary { margin: 10px 0; color: var(--muted); font-size: 12px; }
+.scenario-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+.scenario-inputs label { color: var(--muted); font-size: 12px; }
+.scenario-inputs input { display: block; width: 100%; margin-top: 5px; }
+.scenario-results { gap: 0 14px; }
+.scenario-results .row { border-bottom: 1px solid var(--line); }
+.audit-layout { margin-bottom: 17px; }
+.audit-layout h3 { margin-bottom: 8px; }
+.audit-links { display: flex; flex-wrap: wrap; gap: 7px 14px; margin-top: 10px; font-size: 12px; }
+.foot { color: var(--muted); padding: 22px 0 30px; font-size: 10px; overflow-wrap: anywhere; }
+.foot-top { margin-bottom: 8px; }
+
+@container (max-width: 730px) {
+  .overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  html { scroll-padding-top: 117px; }
+  .masthead-inner { flex-wrap: wrap; min-height: 57px; padding-top: 7px; gap: 0 12px; }
+  .theme-toggle { margin-left: auto; min-height: 38px; }
+  .nav { order: 3; width: 100%; margin: 0; justify-content: space-between; }
+  .nav a { padding: 9px 2px; }
+  .issue { padding-top: 12px; font-size: 10px; }
+  .hero { grid-template-columns: minmax(0, 1fr); min-height: 0; padding: 21px; }
+  .edition-actions { margin-top: 16px; }
+  .network-panel { display: none; }
+  .overview, .monitor-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .observations, .audit-layout, .detail-grid, .detail-grid.two { grid-template-columns: minmax(0, 1fr); gap: 15px; }
+  .chartwrap { height: 285px; }
+}
+@media (max-width: 470px) {
+  .sectionhead { flex-wrap: wrap; }
+  .policy-grid, .scenario-results { grid-template-columns: minmax(0, 1fr); }
+  .overview, .monitor-grid, .policy-grid { gap: 8px; }
+  .metric .big { font-size: clamp(18px, 6vw, 26px); }
+  .wordmark span { font-size: 9px; }
+  .policy-card { padding: 11px; }
+  .chartwrap { height: 260px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; }
+}
+@media print {
+  :root[data-theme] { --paper: #fff; --white: #fff; --ink: #15243b; --muted: #4d617d; --line: #cbd9e8; --navy: #184cad; --gold: #0b697c; --chart-grid: #dce6f1; --chart-label: #4d617d; color-scheme: light; }
+  body { background: #fff; }
+  .shell { padding: 0; }
+  .masthead { position: static; background: #fff; }
+  .hero { display: block; min-height: 0; padding: 12px 0; border: 0; color: var(--ink); background: none; }
+  .hero h1 span, .hero-copy, .hero .eyebrow { color: var(--muted); }
+  .hero::before, .theme-toggle, .network-panel, .nav, .edition-actions, .chartControls, .chart-reader, .refresh-note { display: none; }
+  .metric, .monitor-card, details { break-inside: avoid; }
+}
 </style>
 </head>
 <body>
-<header class="masthead"><div class="shell masthead-inner"><a class="wordmark" href="#today" aria-label="DORY 日报首页">DORY<span>DAILY NOTES</span></a><nav class="nav" aria-label="日报章节"><a href="#today" class="active">今日</a><a href="#trend">趋势</a><a href="#mechanisms">机制</a><a href="#metrics">指标</a><a href="#audit">核验</a></nav><button class="btn theme-toggle" id="themeToggle" type="button" aria-label="夜间配色" aria-pressed="false" title="切换到夜间配色">☀ 日间</button></div></header>
+<header class="masthead"><div class="shell masthead-inner"><a class="wordmark" href="#today" aria-label="DORY 日报首页">DORY<span>MARKET TERMINAL</span></a><nav class="nav" aria-label="日报章节"><a href="#today" class="active">今日</a><a href="#trend">趋势</a><a href="#mechanisms">机制</a><a href="#metrics">指标</a><a href="#audit">来源</a></nav><button class="btn theme-toggle" id="themeToggle" type="button" aria-label="夜间配色" aria-pressed="false" title="切换到夜间配色">☀ 日间</button></div></header>
 <main class="shell">
 <section id="today" aria-labelledby="dailyTitle">
 <div class="issue"><span id="reportDate">每日数据观察</span><span>ARBITRUM · 官方 DORY / USDC 池</span></div>
-<div class="hero"><div><p class="eyebrow">THE DAILY BRIEF</p><h1 id="dailyTitle">今日变化，逐项有据。</h1><p class="hero-copy">从价格到资金，从供应到销毁。记录真实变化，让每一个判断都能回到证据。</p></div><div><div class="edition-actions"><button class="btn" id="marketBtn" onclick="loadMarket()">刷新行情</button><button class="btn primary" id="chainBtn" onclick="deepScan()">刷新快照</button></div><div class="refresh-note" id="refreshNote" role="status" aria-live="polite">每天北京时间 08:00 自动采集</div></div></div>
-<div class="sourcebar" aria-label="数据采集状态"><span class="pill" id="srcMarket">行情：等待</span><span class="pill" id="srcRpc">链上：等待</span><span class="pill" id="srcChain">快照：等待</span><span class="pill" id="srcHolders">持币地址：等待索引</span></div>
-<div class="overview" aria-label="今日四项核心数据">
-<article class="metric"><h2 class="metric-label">DORY 价格 · USD</h2><div class="big" id="price">未验证</div><div class="row"><span>24h 涨跌</span><strong id="chg24">未验证</strong></div><div class="row"><span>7日涨跌</span><strong id="chg7">未验证</strong></div></article>
-<article class="metric"><h2 class="metric-label">池内 USDC 本金</h2><div class="big" id="reserveUsdc">未验证</div><div class="row"><span>24h 变化</span><strong id="reserveDelta">未验证</strong></div><div class="row"><span>口径</span><strong>不含未领取费用</strong></div></article>
-<article class="metric"><h2 class="metric-label">净供应变化 · 24h / DORY</h2><div class="big" id="supplyDelta">未验证</div><div class="row"><span>7日变化</span><strong id="supplyDelta7">未验证</strong></div><div class="row"><span>口径</span><strong>链上 totalSupply</strong></div></article>
-<article class="metric"><h2 class="metric-label">成交额 · 24h / USD</h2><div class="big" id="volume">未验证</div><div class="row"><span>BUY</span><strong id="buys">未验证</strong></div><div class="row"><span>SELL</span><strong id="sells">未验证</strong></div></article>
+<div class="hero">
+  <div class="hero-content">
+    <p class="eyebrow"><span class="signal" aria-hidden="true"></span> DORY / MARKET TERMINAL</p>
+    <h1 id="dailyTitle">DORY <span>市场监控</span></h1>
+    <p class="hero-copy">跟踪 Arbitrum 上的 DORY 行情、池内资金、代币供应和链上成交。</p>
+    <div class="edition-actions">
+      <button class="btn primary" id="marketBtn" onclick="loadMarket()">刷新行情</button>
+      <button class="btn" id="chainBtn" onclick="deepScan()">刷新快照</button>
+    </div>
+    <div class="refresh-note" id="refreshNote" role="status" aria-live="polite">每日北京时间 08:00 计划采集</div>
+  </div>
+  <div class="network-panel" aria-label="Arbitrum One，链 ID 42161，Uniswap v4 DORY 和 USDC 池">
+    <svg class="orbit" viewBox="0 0 420 320" fill="none" aria-hidden="true">
+      <g stroke="currentColor">
+        <circle cx="231" cy="160" r="68"/><circle cx="231" cy="160" r="103" stroke-dasharray="3 7"/>
+        <circle cx="231" cy="160" r="135"/><circle cx="231" cy="160" r="155" stroke-dasharray="1 9"/>
+        <path d="M65 160h332M231 4v312M114 43l234 234M114 277 348 43" opacity=".45"/>
+        <path d="m231 97 55 31v64l-55 31-55-31v-64zM176 128l55 32 55-32m-55 32v63" stroke-width="1.4"/>
+      </g>
+      <g fill="currentColor"><circle cx="231" cy="25" r="3"/><circle cx="326" cy="255" r="4"/><circle cx="163" cy="160" r="3"/></g>
+    </svg>
+    <span class="network-label">NETWORK <span>42161</span></span>
+    <strong>ARBITRUM ONE</strong>
+    <span class="network-label">UNISWAP V4 <span>DORY / USDC</span></span>
+  </div>
 </div>
+<div class="sourcebar" aria-label="数据采集状态"><span class="pill" id="srcMarket">行情：等待</span><span class="pill" id="srcRpc">链上：等待</span><span class="pill" id="srcChain">快照：等待</span><span class="pill" id="srcHolders">持币地址：等待索引</span></div>
+<aside class="policy-grid" aria-label="X9 App 与社区交易规则">
+  <article class="policy-card">
+    <span class="policy-index" aria-hidden="true">01</span>
+    <div><h2>X9 App · 算力复投</h2><p>在 X9 App 内卖出 DORY，无论价格多少，均自动转为算力复投。</p></div>
+  </article>
+  <article class="policy-card">
+    <span class="policy-index" aria-hidden="true">02</span>
+    <div><h2>社区线下 · 现金交易</h2><p>现金买卖仅在社区线下进行。团队可随时与持有人协商，以现金回收 DORY。</p></div>
+  </article>
+</aside>
+<div class="overview-shell"><div class="overview" aria-label="今日四项核心数据">
+<article class="metric"><h2 class="metric-label">DORY 价格 · USD</h2><div class="big" id="price">暂无数据</div><div class="row"><span>24h 涨跌</span><strong id="chg24">暂无数据</strong></div><div class="row"><span>7日涨跌</span><strong id="chg7">暂无数据</strong></div></article>
+<article class="metric"><h2 class="metric-label">池内 USDC 本金</h2><div class="big" id="reserveUsdc">暂无数据</div><div class="row"><span>24h 变化</span><strong id="reserveDelta">暂无数据</strong></div><div class="row"><span>口径</span><strong>不含未领取费用</strong></div></article>
+<article class="metric"><h2 class="metric-label">净供应变化 · 24h / DORY</h2><div class="big" id="supplyDelta">暂无数据</div><div class="row"><span>7日变化</span><strong id="supplyDelta7">暂无数据</strong></div><div class="row"><span>口径</span><strong>链上 totalSupply</strong></div></article>
+<article class="metric"><h2 class="metric-label">成交额 · 24h / USD</h2><div class="big" id="volume">暂无数据</div><div class="row"><span>BUY</span><strong id="buys">暂无数据</strong></div><div class="row"><span>SELL</span><strong id="sells">暂无数据</strong></div></article>
+</div></div>
+
 </section>
 <section class="section" id="trend" aria-labelledby="trendTitle">
-<div class="sectionhead charthead"><div class="section-title"><span class="section-index" aria-hidden="true">01</span><h2 id="trendTitle">价格的轨迹</h2></div><div class="chartControls" role="group" aria-label="日K显示范围"><button class="cbtn active" data-range="all" aria-pressed="true" onclick="setRange('all',this)">全部</button><button class="cbtn" data-range="180" aria-pressed="false" onclick="setRange(180,this)">180日</button><button class="cbtn" data-range="90" aria-pressed="false" onclick="setRange(90,this)">90日</button><button class="cbtn" data-range="30" aria-pressed="false" onclick="setRange(30,this)">30日</button></div></div>
+<div class="sectionhead charthead"><div class="section-title"><span class="section-index" aria-hidden="true">01</span><h2 id="trendTitle">DORY 价格走势</h2></div><div class="chartControls" role="group" aria-label="日K显示范围"><button class="cbtn active" data-range="all" aria-pressed="true" onclick="setRange('all',this)">全部</button><button class="cbtn" data-range="180" aria-pressed="false" onclick="setRange(180,this)">180日</button><button class="cbtn" data-range="90" aria-pressed="false" onclick="setRange(90,this)">90日</button><button class="cbtn" data-range="30" aria-pressed="false" onclick="setRange(30,this)">30日</button></div></div>
 <div class="chart-summary"><span class="badge" id="chartMeta">等待真实 OHLCV</span><span class="chart-help">悬停查看日K · 下方滑杆可逐日读取</span></div>
 <div class="chartwrap"><canvas id="chart" role="img" aria-label="DORY 官方池价格日K与成交量，日数据可通过下方滑杆读取"></canvas><div id="chartTooltip" class="chart-tooltip" hidden></div></div>
 <div class="chart-reader"><label for="chartScrubber">逐日查看</label><input type="range" id="chartScrubber" min="0" max="0" value="0" disabled aria-label="选择日K日期"><output for="chartScrubber" id="chartReadout">等待日K</output></div>
 <p id="chartAccessible" class="small" aria-live="polite"></p><p class="chart-note" id="chartNote">只使用官方池真实日K；未取得的历史保留空白。</p>
 </section>
-<section class="section" id="observations" aria-labelledby="observeTitle"><div class="sectionhead"><div class="section-title"><span class="section-index" aria-hidden="true">02</span><h2 id="observeTitle">今日观察</h2></div><span class="small">六项指标 · 未验证保留灰色</span></div>
-<div class="observations"><div><div class="state"><p class="eyebrow">STRUCTURE OBSERVATION</p><b id="systemState">证据不足</b></div><div class="lights">
-<div class="light"><div class="dot" id="lPool"></div><b>新增参与趋势</b><div id="tPool">未验证</div></div><div class="light"><div class="dot" id="lUsdc"></div><b>USDC本金变化</b><div id="tUsdc">未验证</div></div><div class="light"><div class="dot" id="lSupply"></div><b>净供应增长</b><div id="tSupply">未验证</div></div><div class="light"><div class="dot" id="lPrice"></div><b>价格趋势</b><div id="tPrice">未验证</div></div><div class="light"><div class="dot" id="lX9"></div><b>X9C流通转出参考</b><div id="tX9">未验证</div></div><div class="light"><div class="dot" id="lTrade"></div><b>买卖失衡</b><div id="tTrade">未验证</div></div>
-</div></div><div><h3>变化与待核验事项</h3><ol class="risks" id="riskList"><li>等待真实快照。</li></ol><p class="small">观察灯仅反映所列指标；经营结构是否成立，仍需完整证据。</p><div class="coverage"><p class="small" id="coverageSummary">核心表格：等待快照</p><div class="progress"><div id="progressBar"></div></div><p class="stateline" id="asof">未采集</p></div></div></div>
+<section class="section" id="observations" aria-labelledby="observeTitle"><div class="sectionhead"><div class="section-title"><span class="section-index" aria-hidden="true">02</span><h2 id="observeTitle">今日观察</h2></div><span class="small">六项链上观察指标</span></div>
+<div class="observations"><div><div class="state"><p class="eyebrow">STRUCTURE OBSERVATION</p><b id="systemState">暂无快照</b></div><div class="lights">
+<div class="light"><div class="dot" id="lPool"></div><b>新增参与趋势</b><div id="tPool">暂无数据</div></div><div class="light"><div class="dot" id="lUsdc"></div><b>USDC本金变化</b><div id="tUsdc">暂无数据</div></div><div class="light"><div class="dot" id="lSupply"></div><b>净供应增长</b><div id="tSupply">暂无数据</div></div><div class="light"><div class="dot" id="lPrice"></div><b>价格趋势</b><div id="tPrice">暂无数据</div></div><div class="light"><div class="dot" id="lX9"></div><b>X9C流通转出参考</b><div id="tX9">暂无数据</div></div><div class="light"><div class="dot" id="lTrade"></div><b>买卖失衡</b><div id="tTrade">暂无数据</div></div>
+</div></div><div><h3>本期数据摘要</h3><ol class="risks" id="riskList"><li>等待真实快照。</li></ol><p class="small">观察灯反映快照内各项指标的方向与幅度。</p><div class="coverage"><p class="small" id="coverageSummary">核心表格：等待快照</p><div class="progress"><div id="progressBar"></div></div><p class="stateline" id="asof">未采集</p></div></div></div>
 </section>
 <section class="section" id="mechanisms" aria-labelledby="mechanismTitle">
-<div class="sectionhead"><div class="section-title"><span class="section-index" aria-hidden="true">03</span><h2 id="mechanismTitle">计产与机制跟踪</h2></div><span class="small">链上流量 · 规则版本 · 待补证事项</span></div>
+<div class="sectionhead"><div class="section-title"><span class="section-index" aria-hidden="true">03</span><h2 id="mechanismTitle">计产与机制跟踪</h2></div><span class="small">发行、销毁与计产规则</span></div>
 <p class="small" id="monitorStatus">等待链上流量对账</p>
 <div class="monitor-grid">
-<article class="monitor-card"><h3>实际新增发行 · 24h</h3><div class="monitor-value" id="monitorMint">未验证</div><p>Zero → 非Zero Mint；不等于基础日产币</p></article>
-<article class="monitor-card"><h3>Zero Transfer · 24h</h3><div class="monitor-value" id="monitorZero">未验证</div><p>与实际totalSupply变化独立对账</p></article>
-<article class="monitor-card"><h3>净供应变化 · 24h</h3><div class="monitor-value" id="monitorNet">未验证</div><p>Mint − Zero；不减X9C → dEaD</p></article>
-<article class="monitor-card"><h3>销毁归因待补占比 · 24h</h3><div class="monitor-value" id="monitorUnknown">未验证</div><p id="monitorUnknownNote">等待完整销毁分类</p></article>
+<article class="monitor-card"><h3>实际新增发行 · 24h</h3><div class="monitor-value" id="monitorMint">暂无数据</div><p>Zero → 非Zero Mint；不等于基础日产币</p></article>
+<article class="monitor-card"><h3>Zero Transfer · 24h</h3><div class="monitor-value" id="monitorZero">暂无数据</div><p>与实际totalSupply变化独立对账</p></article>
+<article class="monitor-card"><h3>净供应变化 · 24h</h3><div class="monitor-value" id="monitorNet">暂无数据</div><p>Mint − Zero；不减X9C → dEaD</p></article>
+<article class="monitor-card"><h3>未分类销毁占比 · 24h</h3><div class="monitor-value" id="monitorUnknown">暂无数据</div><p id="monitorUnknownNote">等待完整销毁分类</p></article>
 </div>
-<details class="detail"><summary><div>24h / 7日发行与销毁对账<span>同窗口比对，不用“117:1”代替全网供需</span></div></summary><div class="detail-body"><div class="table-scroll"><table><thead><tr><th scope="col">窗口</th><th scope="col">新增发行 DORY</th><th scope="col">Zero Transfer DORY</th><th scope="col">供应变化 DORY</th><th scope="col">Zero / Mint</th><th scope="col">对账</th></tr></thead><tbody id="monitorFlowRows"></tbody></table></div><p class="small" id="monitorX9" style="margin-top:16px">X9C转出等待核验</p></div></details>
+<details class="detail"><summary><div>24h / 7日发行与销毁对账<span>同窗口比对，不用“117:1”代替全网供需</span></div></summary><div class="detail-body"><div class="table-scroll"><table><thead><tr><th scope="col">窗口</th><th scope="col">新增发行 DORY</th><th scope="col">Zero Transfer DORY</th><th scope="col">供应变化 DORY</th><th scope="col">Zero / Mint</th><th scope="col">对账</th></tr></thead><tbody id="monitorFlowRows"></tbody></table></div><p class="small" id="monitorX9" style="margin-top:16px">X9C 转出 · 等待采集</p></div></details>
 <details class="detail" id="receiverWatch"><summary><div>705B收款与90% / 10%分流观察<span id="receiverStatus">等待完整窗口分流证据</span></div></summary><div class="detail-body">
 <p class="rule-label">收款地址 · <a href="https://arbiscan.io/address/0x0135f06fbb34cad4a4c0a321efe964b38d2c705b" target="_blank" rel="noopener" style="overflow-wrap:anywhere">0x0135f06fbb34cad4a4c0a321efe964b38d2c705b</a></p>
-<div class="row"><span>快照DORY余额</span><strong id="receiverBalance">未验证</strong></div><p id="miningFingerprint" class="mechanism-note">新开矿/复投指纹候选：未验证</p>
+<div class="row"><span>快照DORY余额</span><strong id="receiverBalance">暂无数据</strong></div><p id="miningFingerprint" class="mechanism-note">新开矿/复投指纹候选：暂无数据</p>
 <div class="table-scroll"><table><thead><tr><th scope="col">窗口</th><th scope="col">705B流入 DORY</th><th scope="col">匹配分流组</th><th scope="col">转出地址数</th><th scope="col">匹配Zero DORY</th><th scope="col">匹配705B DORY</th><th scope="col">占Zero比例</th><th scope="col">未匹配流入 DORY</th></tr></thead><tbody id="receiverRows"></tbody></table></div>
 <p class="small mechanism-note">仅匹配同一交易、同一转出地址的一条Zero和一条705B Transfer，按原始整数精度核对90% / 10%及舍入；多条转账有歧义时不强行配对。匹配Zero已包含在销毁总量中，不重复加总。地址数不代表人数或矿池数。</p>
 <p class="small mechanism-note">实测样本已有Pending前后归零、净余额90%到Zero及10%到705B的证据。因此“买入DORY全部进入Zero”不能作为统一口径。新资料将该指纹定义为新开矿/复投；下方候选统计沿用严格同笔匹配，不区分两者，也不证明全部算力登记、全量Pending清零、NFT分红或已实现收入。</p>
 </div></details>
-<details class="detail"><summary><div>机制证据跟踪<span id="mechanismCount">经营依据待补齐</span></div></summary><div class="detail-body"><p class="caption">资料更新至2026-10-18；用户确认、官方公告与链上事实分别记录。待补证不表示测得零值。</p><div class="table-scroll"><table><thead><tr><th scope="col">监控对象</th><th scope="col">状态</th><th scope="col">需要的证据</th><th scope="col">判断边界</th></tr></thead><tbody id="mechanismRows"></tbody></table></div></div></details>
 <details class="detail"><summary><div>U本位额度与结算演算<span>用户复核后最终确认 · 200%按本金U金额计</span></div></summary><div class="detail-body">
 <p class="rule-label">累计上限 = 本金E × 2 U；基础日计产 = E × 0.0085 U，分96次按当次币价换算DORY</p>
 <div class="scenario-inputs"><label for="scenarioPrincipal">假设本金计产基数 E · U<input type="number" id="scenarioPrincipal" min="0.01" step="any" value="10000" inputmode="decimal"></label><label for="scenarioRemaining">假设剩余累计额度 · U<input type="number" id="scenarioRemaining" min="0" step="any" value="20000" inputmode="decimal"></label></div>
 <div class="scenario-results"><div class="row"><span>累计产出价值上限</span><strong id="scenarioTotal">等待输入</strong></div><div class="row"><span>已消耗额度</span><strong id="scenarioUsed">等待输入</strong></div><div class="row"><span>基础日计产金额</span><strong id="scenarioBase">等待输入</strong></div><div class="row"><span>基础单次计产金额</span><strong id="scenarioBlock">等待输入</strong></div><div class="row"><span>剩余U额度 ÷ 基础日额</span><strong id="scenarioDays">等待输入</strong></div></div>
 <p class="small mechanism-note" id="scenarioNote" role="status" aria-live="polite">累计额度按U价值核算，实际获得的DORY数量随各次结算币价变化；非固定币数或现金回本承诺。</p></div></details>
-<details class="detail" id="atlasRules"><summary><div>Atlas Protocol 激活规则<span>官方公告已核对 · 实际生效与参数待核验</span></div></summary><div class="detail-body">
+<details class="detail" id="atlasRules"><summary><div>Atlas Protocol 激活规则<span>官方公告公式与参数定义</span></div></summary><div class="detail-body">
 <p>Atlas算力 Ψ = H + min(C, μH)。H为本人未出局的有效算力，C为社区收益算力；超出μH的社区收益不参与产出，也不转给其他人。</p><p>激活系数 μ = Λ × Γ(S) × Θ(τ)，由激活上限、小区算力和金额加权算力龄共同决定。小区系数连续变化；V1—V7等级不能直接替代激活系数。</p>
 <p class="small">Γ(S) = clamp((1 + logκ(S/S₀)) / (1 + logκ(S*/S₀)), 0, 1)；Θ(τ) = clamp(τ/τ*, ε, 1)；τ = Σpⱼ(t−tⱼ) / Σpⱼ。每周期按μ前值及Δ=max(δμ前值,Δ₀)平滑；当期Λ、κ、S₀、S*、τ*、ε、δ、Δ₀未取得，不生成个人收益测算。</p>
 <p class="small">公告称已有算力继承历史持有时长，其他有效算力、出局、级差、平级、大小区和VIP规则保留。公告中“社区治理”表述不证明已有可核验投票或权限约束。<a href="https://dapp.dory.global/notice/atlas/" target="_blank" rel="noopener">查看官方公告</a></p></div></details>
-<details class="detail" id="marketStructure"><summary><div>池状态、LP与App兑付<span>链上池资金和App金库分别观察</span></div></summary><div class="detail-body">
-<div class="row"><span>StateView链上价 · USDC/DORY</span><strong id="stateViewPrice">未验证</strong></div><div class="row"><span id="sellReferenceLabel">距 App 卖出观察线</span><strong id="sellReferenceDistance">未验证</strong></div><div class="row"><span>当前LP费率</span><strong id="stateViewFee">未验证</strong></div><div class="row"><span>活跃L虚拟等价深度 · USDC</span><strong id="virtualDepth">未验证</strong></div><div class="row"><span>实际USDC本金 · 不含费用</span><strong id="actualUsdcPrincipal">未验证</strong></div><p class="small">虚拟等价深度 = 2 × L × sqrtPriceX96 / 2^96 / 10^6。资料约1831万深度、917万USDC与此类虚拟储备数量级一致，不是实际TVL或可提USDC；跨tick及LP变化后须重算，不能直接用于证明资金准备金。</p><div class="row"><span>LP事件 · 24h</span><strong id="lpActivity">未验证</strong></div><div class="row"><span>经官方PositionManager的事件</span><strong id="lpRoute">未验证</strong></div><div class="row"><span>单笔撤池占比 / 实际LP控制人</span><strong>待补证</strong></div>
+<details class="detail" id="marketStructure"><summary><div>池状态与 LP 活动<span>链上价格、实际本金与流动性变化</span></div></summary><div class="detail-body">
+<div class="row"><span>StateView链上价 · USDC/DORY</span><strong id="stateViewPrice">暂无数据</strong></div><div class="row"><span>当前LP费率</span><strong id="stateViewFee">暂无数据</strong></div><div class="row"><span>活跃L虚拟等价深度 · USDC</span><strong id="virtualDepth">暂无数据</strong></div><div class="row"><span>实际USDC本金 · 不含费用</span><strong id="actualUsdcPrincipal">暂无数据</strong></div><p class="small">虚拟等价深度 = 2 × L × sqrtPriceX96 / 2^96 / 10^6。资料约1831万深度、917万USDC与此类虚拟储备数量级一致，不是实际TVL或可提USDC；跨tick及LP变化后须重算，不能直接用于证明资金准备金。</p><div class="row"><span>LP事件 · 24h</span><strong id="lpActivity">暂无数据</strong></div><div class="row"><span>经官方PositionManager的事件</span><strong id="lpRoute">暂无数据</strong></div>
 <p class="small">PositionManager是官方路由合约，不能据此判断实际头寸所有人或自动化程度。加减仓笔数不等于净撤出金额，不能据此宣称没有大额撤池；撤后回补也不自动归为开矿。</p>
-<p>按用户转述，App 内卖出自动复投参考线从 $100 调至 $150，再于 11 月 3 日调至 $200。App 公告原文待核。上方用链上快照价比较，App 有独立报价。越线后仍需核实门槛是否再次上调，以及 App 卖出是否实际到账 USDC。</p><p class="small">据资料，App 兑付由项目金库处理。池内 USDC 只反映链上池资金。开矿据转述已可选 100% U 或 50% U 加 50% DORY，具体执行与 App 内部抵扣待核。网页按日采集。</p>
 </div></details>
-<details class="detail" id="holderBands"><summary><div>持币地址十档基线<span>2026-10-18资料参考 · 非实时分布</span></div></summary><div class="detail-body"><p class="caption">资料称已剔除 Zero、dEaD、PoolManager 和 705B。11 月 9 日资料称持币账本仍停在 10 月 28 日，尚无可核验的新分档，暂不计算每日变化。下表仅作 10 月 18 日历史参考。</p><div class="table-scroll"><table><thead><tr><th scope="col">档位</th><th scope="col">余额区间 DORY</th><th scope="col">资料基线地址数</th><th scope="col">较昨日</th></tr></thead><tbody><tr><td>T1</td><td>0 &lt; 余额 &lt; 0.1</td><td>13,468</td><td>未验证</td></tr><tr><td>T2</td><td>[0.1, 1)</td><td>5,965</td><td>未验证</td></tr><tr><td>T3</td><td>[1, 5)</td><td>7,489</td><td>未验证</td></tr><tr><td>T4</td><td>[5, 10)</td><td>4,447</td><td>未验证</td></tr><tr><td>T5</td><td>[10, 30)</td><td>5,144</td><td>未验证</td></tr><tr><td>T6</td><td>[30, 50)</td><td>1,575</td><td>未验证</td></tr><tr><td>T7</td><td>[50, 100)</td><td>1,333</td><td>未验证</td></tr><tr><td>T8</td><td>[100, 300)</td><td>665</td><td>未验证</td></tr><tr><td>T9</td><td>[300, 1000)</td><td>74</td><td>未验证</td></tr><tr><td>T10</td><td>≥1000</td><td>9</td><td>未验证</td></tr></tbody></table></div><p class="small mechanism-note">十档合计40,169；资料另列总数40,175，相差6户，与“剔除4个地址”尚未完全对账。各档左闭右开，仅正余额；当前持币总数仍使用有采集时间的Blockscout索引，不混用资料全账本基线。地址数不是人数，单日减少不直接等同离场。</p></div></details>
+<details class="detail" id="holderBands"><summary><div>持币地址十档基线<span>2026-10-18资料参考 · 非实时分布</span></div></summary><div class="detail-body"><p class="caption">资料称已剔除 Zero、dEaD、PoolManager 和 705B。11 月 9 日资料称持币账本仍停在 10 月 28 日，该次更新未提供新分档。下表仅作 10 月 18 日历史参考。</p><div class="table-scroll"><table><thead><tr><th scope="col">档位</th><th scope="col">余额区间 DORY</th><th scope="col">资料基线地址数</th><th scope="col">较昨日</th></tr></thead><tbody><tr><td>T1</td><td>0 &lt; 余额 &lt; 0.1</td><td>13,468</td><td>暂无数据</td></tr><tr><td>T2</td><td>[0.1, 1)</td><td>5,965</td><td>暂无数据</td></tr><tr><td>T3</td><td>[1, 5)</td><td>7,489</td><td>暂无数据</td></tr><tr><td>T4</td><td>[5, 10)</td><td>4,447</td><td>暂无数据</td></tr><tr><td>T5</td><td>[10, 30)</td><td>5,144</td><td>暂无数据</td></tr><tr><td>T6</td><td>[30, 50)</td><td>1,575</td><td>暂无数据</td></tr><tr><td>T7</td><td>[50, 100)</td><td>1,333</td><td>暂无数据</td></tr><tr><td>T8</td><td>[100, 300)</td><td>665</td><td>暂无数据</td></tr><tr><td>T9</td><td>[300, 1000)</td><td>74</td><td>暂无数据</td></tr><tr><td>T10</td><td>≥1000</td><td>9</td><td>暂无数据</td></tr></tbody></table></div><p class="small mechanism-note">十档合计40,169；资料另列总数40,175，相差6户，与“剔除4个地址”尚未完全对账。各档左闭右开，仅正余额；当前持币总数仍使用有采集时间的Blockscout索引，不混用资料全账本基线。地址数不是人数，单日减少不直接等同离场。</p></div></details>
 </section>
-<section class="section" id="metrics" aria-labelledby="metricTitle"><div class="sectionhead"><div class="section-title"><span class="section-index" aria-hidden="true">04</span><h2 id="metricTitle">打开数据细节</h2></div><span class="small">点击展开 · 完整口径保留</span></div>
+<section class="section" id="metrics" aria-labelledby="metricTitle"><div class="sectionhead"><div class="section-title"><span class="section-index" aria-hidden="true">04</span><h2 id="metricTitle">链上指标</h2></div><span class="small">点击展开 · 完整口径保留</span></div>
 <details class="detail"><summary><div>资金与链上供应<span>池内本金、买卖资金与供应变化</span></div></summary><div class="detail-body detail-grid">
-<div class="detail-block"><h3>官方池</h3><div class="row"><span>流动性 · USD</span><strong id="reserveUsd">未验证</strong></div><div class="row"><span>DORY 本金</span><strong id="reserveDory">未验证</strong></div><div class="row"><span>Swap净 USDC</span><strong id="usdcNet">未验证</strong></div><div class="row"><span>池侧 Swap 净 DORY</span><strong id="doryNet">未验证</strong></div><p class="small">本金由官方 ReservesLens 独立读取，不含费用、捐赠和 hook 资产；Swap净额另列，不等同本金变化。</p></div>
-<div class="detail-block"><h3>成交资金</h3><div class="row"><span>链上 BUY 金额</span><strong id="buyAmt">未验证</strong></div><div class="row"><span>链上 SELL 金额</span><strong id="sellAmt">未验证</strong></div><div class="row"><span>初始化基础费</span><strong id="poolFee">未验证</strong></div><p class="small">金额来自官方池事件；同一交易中的成交方向与资金单独核验。</p></div>
-<div class="detail-block"><h3>供应与持币地址</h3><div class="row"><span>totalSupply</span><strong id="supply">未验证</strong></div><div class="row"><span>24h新增发行</span><strong id="minted24">未验证</strong></div><div class="row"><span>持币地址索引</span><strong id="holders">未验证</strong></div><div class="row"><span>7日前索引变化</span><strong id="holdersDelta7">无历史基线</strong></div><p class="small">括号内为较前一日同源索引的净增，非首次持币地址数；前日缺失显示“新增未验证”。索引取回：<span id="holdersAsOf">未验证</span>。Blockscout 未提供精确更新区块，不等同精确实时地址数。<a target="_blank" rel="noopener" href="https://arbiscan.io/token/0x33b49f2264e85bB124d2730DC180182717D436Ae">核对 Arbiscan</a></p></div>
+<div class="detail-block"><h3>官方池</h3><div class="row"><span>流动性 · USD</span><strong id="reserveUsd">暂无数据</strong></div><div class="row"><span>DORY 本金</span><strong id="reserveDory">暂无数据</strong></div><div class="row"><span>Swap净 USDC</span><strong id="usdcNet">暂无数据</strong></div><div class="row"><span>池侧 Swap 净 DORY</span><strong id="doryNet">暂无数据</strong></div><p class="small">本金由官方 ReservesLens 独立读取，不含费用、捐赠和 hook 资产；Swap净额另列，不等同本金变化。</p></div>
+<div class="detail-block"><h3>成交资金</h3><div class="row"><span>链上 BUY 金额</span><strong id="buyAmt">暂无数据</strong></div><div class="row"><span>链上 SELL 金额</span><strong id="sellAmt">暂无数据</strong></div><div class="row"><span>初始化基础费</span><strong id="poolFee">暂无数据</strong></div><p class="small">金额来自官方池事件；同一交易中的成交方向与资金单独核验。</p></div>
+<div class="detail-block"><h3>供应与持币地址</h3><div class="row"><span>totalSupply</span><strong id="supply">暂无数据</strong></div><div class="row"><span>24h新增发行</span><strong id="minted24">暂无数据</strong></div><div class="row"><span>持币地址索引</span><strong id="holders">暂无数据</strong></div><div class="row"><span>7日前索引变化</span><strong id="holdersDelta7">无历史基线</strong></div><p class="small">括号内为较前一日同源索引的净增，非首次持币地址数；前日缺失显示“新增暂无数据”。索引取回：<span id="holdersAsOf">暂无数据</span>。Blockscout 未提供精确更新区块，不等同精确实时地址数。<a target="_blank" rel="noopener" href="https://arbiscan.io/token/0x33b49f2264e85bB124d2730DC180182717D436Ae">核对 Arbiscan</a></p></div>
 </div></details>
 <details class="detail"><summary><div>销毁与原始认购<span>Zero Transfer 与 X9C → dEaD 永久分列</span></div></summary><div class="detail-body detail-grid two">
-<div class="detail-block"><h3>Zero Address · Transfer口径</h3><div class="big" id="zeroBurn">未验证</div><div class="row"><span>卖出同笔</span><strong id="zbSell">未验证</strong></div><div class="row"><span>买入同笔</span><strong id="zbBuy">未验证</strong></div><div class="row"><span>直接 Transfer</span><strong id="zbDirect">未验证</strong></div><div class="row"><span>显式 Pending 调用</span><strong id="zbExplicit">未验证</strong></div><div class="row"><span>其他 / 未知</span><strong id="zbOther">未验证</strong></div><div class="row"><span>7日总量</span><strong id="zero7">未验证</strong></div><p class="small">显式调用仅识别直接 processPendingBurn(account) 与对应 Zero Transfer；业务用途不明的自动或嵌套结算仍归其他 / 未知；90% / 10%转账模式另列，不改写上述分类。</p></div>
-<div class="detail-block"><h3>X9C → dEaD · 原始认购</h3><div class="big" id="x9burn">未验证</div><div class="row"><span>已验证 Mint 交易</span><strong id="x9mintTx">未验证</strong></div><div class="row"><span>7日认购销毁</span><strong id="x9burn7">未验证</strong></div><div class="row"><span>24h / 新增发行</span><strong id="x9Absorption">未验证</strong></div><p class="small">原始 TicketMinted、对应凭证、付款人 → dEaD 金额须一致，剔除拆分。比率分母为实际链上新增发行；仅作流通转出参考，不抵扣totalSupply，不代表NFT分红或全部应用销毁。</p></div>
+<div class="detail-block"><h3>Zero Address · Transfer口径</h3><div class="big" id="zeroBurn">暂无数据</div><div class="row"><span>卖出同笔</span><strong id="zbSell">暂无数据</strong></div><div class="row"><span>买入同笔</span><strong id="zbBuy">暂无数据</strong></div><div class="row"><span>直接 Transfer</span><strong id="zbDirect">暂无数据</strong></div><div class="row"><span>显式 Pending 调用</span><strong id="zbExplicit">暂无数据</strong></div><div class="row"><span>其他 / 未知</span><strong id="zbOther">暂无数据</strong></div><div class="row"><span>7日总量</span><strong id="zero7">暂无数据</strong></div><p class="small">显式调用仅识别直接 processPendingBurn(account) 与对应 Zero Transfer；业务用途不明的自动或嵌套结算仍归其他 / 未知；90% / 10%转账模式另列，不改写上述分类。</p></div>
+<div class="detail-block"><h3>X9C → dEaD · 原始认购</h3><div class="big" id="x9burn">暂无数据</div><div class="row"><span>已验证 Mint 交易</span><strong id="x9mintTx">暂无数据</strong></div><div class="row"><span>7日认购销毁</span><strong id="x9burn7">暂无数据</strong></div><div class="row"><span>24h / 新增发行</span><strong id="x9Absorption">暂无数据</strong></div><p class="small">原始 TicketMinted、对应凭证、付款人 → dEaD 金额须一致，剔除拆分。比率分母为实际链上新增发行；仅作流通转出参考，不抵扣totalSupply，不代表NFT分红或全部应用销毁。</p></div>
 </div></details>
 <details class="detail"><summary><div>候选交易与估算情景<span>候选、理论估算与已验证数据分别标识</span></div></summary><div class="detail-body detail-grid">
-<div class="detail-block"><h3>5000U BUY金额筛选</h3><div class="big" id="pools">未验证</div><div class="row"><span>筛选 BUY 交易</span><strong id="poolTxs">未验证</strong></div><div class="row"><span>筛选 BUY 金额</span><strong id="poolCapital">未验证</strong></div><div class="row"><span>最大单笔</span><strong id="poolMax">未验证</strong></div><div class="row"><span>剔除同笔往返</span><strong id="poolRoundtrip">未验证</strong></div><p class="small">按整笔交易归并 BUY，筛选5000U整数倍 ±8%，每5000U计一份金额单位。最新资料明确参与金额不限；此筛选不代表开矿门槛、矿池数量或全量参与本金。跨交易套利、新钱包、复投未识别。</p></div>
-<div class="detail-block"><h3>全网矿工卖压</h3><div class="big" id="minerPressure">未验证</div><div class="row"><span>示例本金 E</span><strong>5,000 USD</strong></div><div class="row"><span>示例日计产额度</span><strong id="exampleDailyUsd">42.50 USD</strong></div><div class="row"><span>示例每次计产额度</span><strong id="exampleSettlementUsd">0.44270833… USD</strong></div><p class="small">示例仅按本金 × 0.85%计产，不是实际日产DORY或卖出所得。币数需逐次按当时币价换算后合计；缺少活跃本金、结算价格和实际卖出比例，全网卖压保持未知。社区加速不默认计入全体矿工产出。</p></div>
-<div class="detail-block"><h3>池LP费用 · 情景估算</h3><div class="big" id="feeRange">未验证</div><p class="small">行情成交额 × 快照StateView的LP费率，仅情景估算；实际手续费、hook收费与分成另需核验，不称X9或项目方收入。</p></div>
+<div class="detail-block"><h3>5000U BUY金额筛选</h3><div class="big" id="pools">暂无数据</div><div class="row"><span>筛选 BUY 交易</span><strong id="poolTxs">暂无数据</strong></div><div class="row"><span>筛选 BUY 金额</span><strong id="poolCapital">暂无数据</strong></div><div class="row"><span>最大单笔</span><strong id="poolMax">暂无数据</strong></div><div class="row"><span>剔除同笔往返</span><strong id="poolRoundtrip">暂无数据</strong></div><p class="small">按整笔交易归并 BUY，筛选5000U整数倍 ±8%，每5000U计一份金额单位。最新资料明确参与金额不限；此筛选不代表开矿门槛、矿池数量或全量参与本金。跨交易套利、新钱包、复投未识别。</p></div>
+<div class="detail-block"><h3>全网矿工卖压</h3><div class="big" id="minerPressure">暂无数据</div><div class="row"><span>示例本金 E</span><strong>5,000 USD</strong></div><div class="row"><span>示例日计产额度</span><strong id="exampleDailyUsd">42.50 USD</strong></div><div class="row"><span>示例每次计产额度</span><strong id="exampleSettlementUsd">0.44270833… USD</strong></div><p class="small">示例仅按本金 × 0.85%计产，不是实际日产DORY或卖出所得。币数需逐次按当时币价换算后合计；缺少活跃本金、结算价格和实际卖出比例，全网卖压保持未知。社区加速不默认计入全体矿工产出。</p></div>
+<div class="detail-block"><h3>池LP费用 · 情景估算</h3><div class="big" id="feeRange">暂无数据</div><p class="small">行情成交额 × 快照StateView的LP费率，仅情景估算；估算范围仅含池 LP 费用。</p></div>
 </div></details>
 <details class="detail" id="miningRules"><summary><div>挖矿与结算规则<span>最新资料及用户确认 · 2026-10-18 · 规则尚未做链上核验</span></div></summary><div class="detail-body detail-grid">
 <div class="detail-block"><h3>本金与产出额度</h3><div class="row"><span>参与金额</span><strong>不限金额</strong></div><div class="row"><span>累计U额度 Q上限</span><strong>2 × E U（200%）</strong></div><div class="row"><span>按本金日计产比例</span><strong>0.0085（0.85%）</strong></div><p class="small">E为本金U计产基数，累计额度按2E U价值核算，并非投入DORY数量的两倍。用户复核后最终确认为U本位；各次结算币价、扣额及到顶截断仍需完整流水核验。开矿指纹为90%到Zero、10%到705B；实际算力登记仍需业务凭证。</p></div>
 <div class="detail-block"><h3>96次结算 · 逐次换算</h3><div class="row"><span>结算间隔</span><strong>每15分钟一次</strong></div><div class="row"><span>每天结算次数</span><strong>96次</strong></div><div class="row"><span>单次计产比例</span><strong>0.0085 ÷ 96</strong></div><p class="small">单次比例约0.000088541666…（0.0088541667%）。第i次产币 qᵢ =（E × 0.0085 ÷ 96）÷ Pᵢ，Pᵢ为当次结算币价（USD/DORY）。日产DORY = 96次qᵢ之和。固定的是本金计产比例，日产币数会随各次币价变化；不能用当前币价或日末价替代96次价格。</p></div>
-<div class="detail-block"><h3>奖励与自行领取</h3><div class="row"><span>社区 / SVIP加速</span><strong>最高70%</strong></div><div class="row"><span>200%本金公式</span><strong>邀请不改变</strong></div><div class="row"><span>领取方式</span><strong>钱包自行签名 Claim</strong></div><p class="small">六项收益：个人、邀请、社区、级别、合伙人、办公室。最高70%不统一加在本人基础计产上；课堂补充直推一次性10%扣本人额度；V1—V7比例保留为历史课堂口径；Atlas新增激活上限，实际收益不能只按等级比例计算。计产、领取与实际卖出分别记录，不能互相替代。共用额度及各项扣减须用U计价记录与对应DORY流水核对；Atlas公告公式已核对，实际资格与参数仍待补。</p></div>
+<div class="detail-block"><h3>奖励与自行领取</h3><div class="row"><span>社区 / SVIP加速</span><strong>最高70%</strong></div><div class="row"><span>200%本金公式</span><strong>邀请不改变</strong></div><div class="row"><span>领取方式</span><strong>钱包自行签名 Claim</strong></div><p class="small">六项收益：个人、邀请、社区、级别、合伙人、办公室。最高70%不统一加在本人基础计产上；课堂补充直推一次性10%扣本人额度；V1—V7比例保留为历史课堂口径；Atlas新增激活上限，实际收益不能只按等级比例计算。计产、领取与实际卖出分别记录，不能互相替代。共用额度与扣减以账户的 U 计价记录及对应 DORY 流水为准。</p></div>
 </div><div class="detail-body"><p class="rule-label">历史课堂口述档位 · 非Atlas激活系数或当前收益判定</p><div class="table-scroll"><table><thead><tr><th scope="col">等级</th><th scope="col">小区门槛</th><th scope="col">加速比例</th></tr></thead><tbody id="courseRows"></tbody></table></div><p class="small" style="margin-top:14px">V4例题：小区10万U × 0.0085 × 40% = 340U/日；本人1万U基础85U/日，旧公式名义合计425U。该例不含Atlas激活上限，不作为当前收益或U额度耗尽时间。</p></div></details>
-<details class="detail"><summary><div>13项核心快照<span>当前值、比较基线与验证状态</span></div></summary><div class="detail-body table-scroll"><table><thead><tr><th scope="col">指标</th><th scope="col">当前</th><th scope="col">基线 / 比较口径</th><th scope="col">验证状态</th></tr></thead><tbody id="metricRows">
-<tr><td>DORY价格</td><td id="tbPrice">未验证</td><td id="tb24">未验证</td><td>未验证</td></tr><tr><td>24h成交额</td><td id="tbVol">未验证</td><td>—</td><td>未验证</td></tr><tr><td>官方池流动性</td><td id="tbLiq">未验证</td><td>—</td><td>未验证</td></tr><tr><td>Swap净USDC</td><td id="tbUsdcNet">未验证</td><td id="prevUsdcNet">无历史基线</td><td>未验证</td></tr><tr><td>Zero Transfer</td><td id="tbZero">未验证</td><td id="prevZero">无历史基线</td><td>未验证</td></tr><tr><td>X9C → dEaD</td><td id="tbX9">未验证</td><td id="prevX9">无历史基线</td><td>未验证</td></tr><tr><td>5000U筛选金额份数</td><td id="tbPools">未验证</td><td id="prevPools">无历史基线</td><td>金额筛选</td></tr><tr><td>totalSupply变化</td><td id="tbSupplyDelta">未验证</td><td>24h归档区块</td><td>未验证</td></tr><tr><td>池内USDC本金</td><td id="tbReserve">未验证</td><td id="tbReservePrev">未验证</td><td>未验证</td></tr><tr><td>7日供应变化</td><td id="tbSupply7">未验证</td><td>7日前区块</td><td>未验证</td></tr><tr><td>7日Zero Transfer</td><td id="tbZero7">未验证</td><td>完整7日窗口</td><td>未验证</td></tr><tr><td>7日X9C认购销毁</td><td id="tbX97">未验证</td><td>原始Mint核验</td><td>未验证</td></tr><tr><td>持币地址索引</td><td id="tbHolders">未验证</td><td>取回时间</td><td>索引快照</td></tr>
+<details class="detail"><summary><div>13项核心快照<span>当前值、比较基线与数据状态</span></div></summary><div class="detail-body table-scroll"><table><thead><tr><th scope="col">指标</th><th scope="col">当前</th><th scope="col">基线 / 比较口径</th><th scope="col">数据状态</th></tr></thead><tbody id="metricRows">
+<tr><td>DORY价格</td><td id="tbPrice">暂无数据</td><td id="tb24">暂无数据</td><td>暂无数据</td></tr><tr><td>24h成交额</td><td id="tbVol">暂无数据</td><td>—</td><td>暂无数据</td></tr><tr><td>官方池流动性</td><td id="tbLiq">暂无数据</td><td>—</td><td>暂无数据</td></tr><tr><td>Swap净USDC</td><td id="tbUsdcNet">暂无数据</td><td id="prevUsdcNet">无历史基线</td><td>暂无数据</td></tr><tr><td>Zero Transfer</td><td id="tbZero">暂无数据</td><td id="prevZero">无历史基线</td><td>暂无数据</td></tr><tr><td>X9C → dEaD</td><td id="tbX9">暂无数据</td><td id="prevX9">无历史基线</td><td>暂无数据</td></tr><tr><td>5000U筛选金额份数</td><td id="tbPools">暂无数据</td><td id="prevPools">无历史基线</td><td>金额筛选</td></tr><tr><td>totalSupply变化</td><td id="tbSupplyDelta">暂无数据</td><td>24h归档区块</td><td>暂无数据</td></tr><tr><td>池内USDC本金</td><td id="tbReserve">暂无数据</td><td id="tbReservePrev">暂无数据</td><td>暂无数据</td></tr><tr><td>7日供应变化</td><td id="tbSupply7">暂无数据</td><td>7日前区块</td><td>暂无数据</td></tr><tr><td>7日Zero Transfer</td><td id="tbZero7">暂无数据</td><td>完整7日窗口</td><td>暂无数据</td></tr><tr><td>7日X9C认购销毁</td><td id="tbX97">暂无数据</td><td>原始Mint核验</td><td>暂无数据</td></tr><tr><td>持币地址索引</td><td id="tbHolders">暂无数据</td><td>取回时间</td><td>索引快照</td></tr>
 </tbody></table></div></details>
 </section>
 <section class="section" id="history" aria-labelledby="historyTitle"><div class="sectionhead"><div class="section-title"><span class="section-index" aria-hidden="true">05</span><h2 id="historyTitle">每日留档</h2></div><div class="history-picker"><label for="historyDate">查看日期</label><select id="historyDate" aria-label="查看已采集的历史日期"><option>等待记录</option></select></div></div><p class="caption" id="historyNote">只展示真实每日快照</p><div class="history-summary" id="historySummary" aria-live="polite">等待记录</div><div class="table-scroll"><table><thead><tr><th scope="col">北京时间日期</th><th scope="col">采集时间</th><th scope="col">USDC本金</th><th scope="col">供应变化24h</th><th scope="col">Zero Transfer24h</th><th scope="col">X9C认购24h</th><th scope="col">持币地址索引</th></tr></thead><tbody id="historyRows"></tbody></table></div></section>
-<section class="section" id="audit" aria-labelledby="auditTitle"><div class="sectionhead"><div class="section-title"><span class="section-index" aria-hidden="true">06</span><h2 id="auditTitle">证据与边界</h2></div><span class="small">未知保留 · 来源可追溯</span></div><div class="audit-layout"><div><h3>仍需补齐的判断依据</h3><ul class="risks" id="pendingEvidence"><li>等待核验结果</li></ul></div><div><h3>一致的审计口径</h3><p class="audit-claim">行情与日K来自官方 DORY / USDC 池；未取得历史不补数。Zero Transfer 单列，供应变化独立读取 totalSupply 并与事件窗口对账。X9C 只统计核验通过的原始认购，候选交易保留候选标签。</p><p class="audit-claim" style="margin-top:15px">最新资料与用户确认：U本位200%额度；Atlas公告已核对，实际参数与资格仍待证。705B、NFT及App金库业务身份分别核验。采集完成与经营模型核验分别展示。单项灯色只反映所列指标；已验证的零值与缺少证据明确区分。</p><div class="audit-links"><a target="_blank" rel="noopener" href="https://www.geckoterminal.com/arbitrum/pools/0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb">官方池行情</a><a target="_blank" rel="noopener" href="https://arbitrum.blockscout.com/token/0x33b49f2264e85bb124d2730dc180182717d436ae">持币索引</a><a target="_blank" rel="noopener" href="https://developers.uniswap.org/docs/protocols/v4/guides/reading-pool-reserves">本金口径</a><a target="_blank" rel="noopener" href="https://arbiscan.io/address/0xecdDa172D2E8aa8efF55500fD28Da828CFfbc5B0">X9 Charter</a><a href="./docs/monitoring-rules.md" target="_blank" rel="noopener">最新口径与监控定义</a></div></div></div>
+<section class="section" id="audit" aria-labelledby="auditTitle"><div class="sectionhead"><div class="section-title"><span class="section-index" aria-hidden="true">06</span><h2 id="auditTitle">数据来源</h2></div><span class="small">采集时间与覆盖范围</span></div><div class="audit-layout"><div><h3>数据覆盖</h3><p class="audit-claim">资金与供应来自 Arbitrum，持币总数来自 Blockscout 索引，价格和日 K 来自指定 DORY / USDC 池。社区线下现金成交单独发生，页面行情统计覆盖链上池。</p></div><div><h3>一致的审计口径</h3><p class="audit-claim">行情与日K来自官方 DORY / USDC 池；未取得历史不补数。Zero Transfer 单列，供应变化独立读取 totalSupply 并与事件窗口对账。X9C 只统计核验通过的原始认购，候选交易保留候选标签。</p><p class="audit-claim" style="margin-top:15px">U 本位 200% 额度按结算金额计算。Atlas 公式来自官方公告。表格保留实际零值，空缺指标显示数据状态。</p><div class="audit-links"><a target="_blank" rel="noopener" href="https://www.geckoterminal.com/arbitrum/pools/0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb">官方池行情</a><a target="_blank" rel="noopener" href="https://arbitrum.blockscout.com/token/0x33b49f2264e85bb124d2730dc180182717d436ae">持币索引</a><a target="_blank" rel="noopener" href="https://developers.uniswap.org/docs/protocols/v4/guides/reading-pool-reserves">本金口径</a><a target="_blank" rel="noopener" href="https://arbiscan.io/address/0xecdDa172D2E8aa8efF55500fD28Da828CFfbc5B0">X9 Charter</a><a href="./docs/monitoring-rules.md" target="_blank" rel="noopener">最新口径与监控定义</a></div></div></div>
 <details class="detail"><summary><div>逐项核对数据来源<span>采集状态、时间与失败原因</span></div></summary><div class="detail-body table-scroll"><table><thead><tr><th scope="col">来源 / 项目</th><th scope="col">采集结果</th><th scope="col">证据与范围</th></tr></thead><tbody id="sourceRows"></tbody></table></div></details><p class="stateline" id="scanStatus" style="margin-top:20px">等待真实每日快照</p>
 </section>
-<footer class="foot"><div class="foot-top"><span>DORY / DAILY NOTES</span><span>每日北京时间08:00采集 · 同日重跑覆盖当日记录</span></div><p>DORY 0x33b49f2264e85bB124d2730DC180182717D436Ae · Pool ID 0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb · PoolManager 0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32 · X9C 0xecdDa172D2E8aa8efF55500fD28Da828CFfbc5B0</p><p>接口失败时保留已有快照与采集时间，不以虚构数据替代。</p></footer>
-</main><script src="./monitoring.js?v=20261109-v3"></script><script src="./dashboard.js?v=20261109-v3"></script>
+<footer class="foot"><div class="foot-top"><span>DORY / MARKET TERMINAL</span><span>每日北京时间08:00采集 · 同日重跑覆盖当日记录</span></div><p>DORY 0x33b49f2264e85bB124d2730DC180182717D436Ae · Pool ID 0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb · PoolManager 0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32 · X9C 0xecdDa172D2E8aa8efF55500fD28Da828CFfbc5B0</p><p>接口失败时保留已有快照与采集时间，不以虚构数据替代。</p></footer>
+</main><script src="./monitoring.js?v=20261109-terminal"></script><script src="./dashboard.js?v=20261109-terminal"></script>
 </body></html>

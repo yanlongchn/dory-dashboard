@@ -17,6 +17,7 @@ test('same-window actual supply reconciles Mint minus Zero without subtracting X
   assert.equal(value.flow.day.zero_cover_pct,80);assert.equal(value.flow.unknown_burn_pct,75);assert.equal(value.flow.x9c_dead_24h,999);
   assert.ok(value.required_evidence.every(item=>item.value===null&&item.status==='unverified'));
   assert.equal(value.business_status,'evidence_incomplete');
+  assert.deepEqual(value.app_policy,{sell_mode:'power_reinvestment',price_condition:null,cash_channel:'offline_community',team_cash_purchase:true,source:'user_confirmed'});
 });
 test('missing and contradictory source evidence cannot populate a seemingly valid derived ratio',()=>{
   const value=snapshot();delete value.sources.mint_emissions;

@@ -23,7 +23,7 @@
       try { root.localStorage?.setItem(key, value); } catch (_) {}
     }
     root.document.documentElement.dataset.theme = value;
-    root.document.querySelector('meta[name="theme-color"]')?.setAttribute('content', value === 'dark' ? '#101d27' : '#f7f6f2');
+    root.document.querySelector('meta[name="theme-color"]')?.setAttribute('content', value === 'dark' ? '#08101d' : '#edf3f9');
     syncButton();
     listeners.forEach(listener => listener(value));
   }
