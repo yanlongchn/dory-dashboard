@@ -69,13 +69,15 @@ function renderMonitoring(d){
  const v=d.pool?.state_view,lp=d.pool?.lp_activity,chainOK=d.sources?.chain_consistency?.status==='ok';
  const stateOK=chainOK&&d.sources?.pool_state?.status==='ok';
  $('stateViewPrice').textContent=stateOK&&known(v?.price_usdc_per_dory)?'$'+fmt(v.price_usdc_per_dory,4):'未验证';
- $('proposalDistance').textContent=stateOK&&known(v?.price_usdc_per_dory)?signed((v.price_usdc_per_dory/100-1)*100,2,'%（快照链上价）'):'未验证';
+ const reference=DoryMonitoring.rules.app.sell_reference_usdc_per_dory;
+ $('sellReferenceLabel').textContent='距 App 卖出观察线（$'+fmt(reference,0)+'）';
+ $('sellReferenceDistance').textContent=stateOK&&known(v?.price_usdc_per_dory)?signed(v.price_usdc_per_dory-reference,2,' USDC/DORY'):'未验证';
  $('virtualDepth').textContent=stateOK&&known(v?.virtual_equivalent_tvl_usdc)?fmt(v.virtual_equivalent_tvl_usdc,0)+' USDC（虚拟）':'未验证';
  $('actualUsdcPrincipal').textContent=chainOK&&d.sources?.pool_reserves?.status==='ok'?fmt(d.pool?.usdc_reserve,0)+' USDC（本金）':'未验证';
  $('stateViewFee').textContent=stateOK&&known(v?.lp_fee)?fmt(v.lp_fee/10000)+'%':'未验证';
  $('lpActivity').textContent=chainOK&&d.sources?.lp_activity?.status==='ok'?'加仓 '+fmt(lp.add_events,0)+' / 减仓 '+fmt(lp.remove_events,0)+' / 零变动 '+fmt(lp.zero_delta_events,0)+' 个事件':'未验证';
  $('lpRoute').textContent=chainOK&&d.sources?.lp_activity?.status==='ok'?fmt(lp.position_manager_events,0)+' / '+fmt(lp.total_events,0)+' 个事件':'未验证';
- $('miningFingerprint').textContent='新开矿/复投指纹候选 · 24h：'+(watch.day.status==='ok'?fmt(watch.day.matched_wallets,0)+' 个地址（'+fmt(watch.day.matched_transactions,0)+' 笔），匹配总额 '+fmt(watch.day.matched_total_dory)+' DORY':'未验证')+'。不能区分新开矿与复投；不等于全量有效本金。';
+ $('miningFingerprint').textContent='新开矿/复投指纹候选 · 24h：'+(watch.day.status==='ok'?fmt(watch.day.matched_wallets,0)+' 个地址（'+fmt(watch.day.matched_transactions,0)+' 笔），匹配总额 '+fmt(watch.day.matched_total_dory)+' DORY':'未验证')+'。地址数不能视为人数，链上无法区分新开矿与复投；匹配量与池内买卖量、有效本金分开看。';
  renderScenario();
 }
 function renderScenario(){

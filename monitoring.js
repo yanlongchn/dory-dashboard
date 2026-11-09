@@ -3,7 +3,8 @@
   const finite = value => typeof value === 'number' && Number.isFinite(value);
   const sourceOK = (snapshot, name) => snapshot.sources?.[name]?.status === 'ok';
   const rules = {
-    version: '2026-10-18-u-basis-v4',
+    version: '2026-11-09-v3',
+    app: {sell_reference_usdc_per_dory: 200},
     confirmed: {daily_rate: 0.0085, settlements_per_day: 96, minutes_per_settlement: 15, quota_multiple: 2, quota_unit: 'USD', daily_rate_basis: 'E USD principal accounting basis; each of 96 settlements converts its USD amount at the settlement price', quota_source: '用户复核后最终确认U本位；取代此前币本位确认及附件冲突表述'},
     course: {
       source: '用户提供的2026-10-05课堂录音；重点片段二次转写复核，尚未独立链上核验',
@@ -40,7 +41,7 @@
     {id: 'applications', title: '实际应用付费与消耗', basis: '会议、质押、打赏、准入各有不同用途', need: '付费订单与链上记录；活跃用户统计周期及去重方法', impact: '不能把全部转账或质押计作销毁 / 平台收入'},
     {id: 'permissions', title: '权限与LP控制凭证', basis: '官方部署表已确认PositionManager；路由合约不等于实际LP所有人', need: 'LP NFT合约与tokenId、持有人、全组件权限及升级路径', impact: '代币或单个LP头寸信息不足以证明全协议安全'},
     {id: 'pending', title: 'Pending触发与全量归因', basis: '已有样本前后Pending归零及90% / 10%分流；直接调用可单列', need: '实现合约、触发条件、舍入规则、更多前后状态及全量逐笔链路', impact: '样本清零不证明所有自动结算；分流模式不直接改写销毁用途'},
-    {id: 'cash_exit', title: '领取、卖出与实际到账', basis: '新资料称App卖出销毁DORY并由金库兑付USDC；与池内Swap分列', need: '金库地址、订单/销毁/USDC付款对应、App报价、到账及小额提现凭证', impact: '池内USDC本金不能证明App金库准备金或提现畅通'}
+    {id: 'cash_exit', title: '领取、卖出与实际到账', basis: '据2026-11-03用户转述，低于200 U时App内卖出自动复投；公告原文待核', need: '核对App是否再次上调门槛，以及越线后卖出订单是否实际到账USDC', impact: '链上越过观察线及池内USDC本金均不能验证App兑付'}
   ];
 
   function flowWindow(snapshot, window) {
