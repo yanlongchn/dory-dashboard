@@ -9,8 +9,8 @@ on:
       - "README.md"
       - "DORY_PROJECT_CONTEXT.md"
   schedule:
-    # 08:00 Asia/Shanghai = 00:00 UTC
-    - cron: "0 0 * * *"
+    - cron: "0 22 * * *"
+      timezone: Asia/Shanghai
 
 permissions:
   contents: write

@@ -9,7 +9,7 @@ nodes.get('supplyDelta').className='big';
 const document={getElementById(id){assert.ok(nodes.has(id),'missing element '+id);return nodes.get(id)},createElement(){return newNode()},querySelectorAll(){return[]}};
 const context=vm.createContext({document,window:{addEventListener(){}},Intl,Date,Number,Array,Math,AbortSignal,console,fetch:async()=>{throw Error('offline')},devicePixelRatio:1});
 vm.runInContext(fs.readFileSync('monitoring.js','utf8'),context);
-vm.runInContext(fs.readFileSync('dashboard.js','utf8').replace('deepScan();',''),context);
+vm.runInContext(fs.readFileSync('dashboard.js','utf8').replace(/\nstartDashboard\(\);\s*$/,''),context);
 const run=(data)=>vm.runInContext('renderSnapshot('+JSON.stringify(data)+')',context);
 run({status:'partial',generated_at:new Date().toISOString(),market:{price_usd:null,volume_24h:null,buy_usdc:null,sell_usdc:null},pool:{swap_net_usdc:null},supply:{total_supply:null,change_24h:null},zero_burn:{total_dory:null},x9c_dead_burn:{total_dory:null},pool_candidates:{candidate_pools:null}});
 for(const id of ['price','volume','buyAmt','sellAmt','supply','zeroBurn','x9burn','pools'])assert.equal(nodes.get(id).textContent,'暂无数据',id);
@@ -106,3 +106,34 @@ run({...augmented,sources:{...augmented.sources,chain_consistency:{status:'faile
 assert.equal(nodes.get('stateViewFee').textContent,'暂无数据');
 assert.equal(nodes.get('lpActivity').textContent,'暂无数据');
 console.log('PASS: Pool and LP metrics require consistent sources. Current X9 rules appear without a price threshold.');
+
+
+const miningTier={matches:2,wallets:1,buy_usdc:10040,transfer_usdc_estimate:10040};
+const miningSources={mining_funding:{status:'ok'},chain_consistency:{status:'ok'}};
+run({...fresh,mining_funding:{tier_5000:miningTier,tier_10000:{matches:0}},sources:miningSources});
+assert.equal(nodes.get('miningFundingRows').children[0].children[1].textContent,'2');
+assert.equal(nodes.get('miningFundingRows').children[1].children[1].textContent,'0');
+run({...fresh,mining_funding:{tier_5000:miningTier},sources:{...miningSources,chain_consistency:{status:'failed'}}});
+assert.equal(nodes.get('miningFundingRows').children[0].children[1].textContent,'暂无数据');
+
+let nextRefresh;
+context.window.clearTimeout=()=>{};
+context.window.setTimeout=(fn,delay)=>{nextRefresh={fn,delay};return 1;};
+let attempts=0;
+context.fetch=async()=>{attempts++;throw Error('network timeout');};
+await vm.runInContext('loadMarket(true)',context);
+assert.equal(nextRefresh.delay,30*60*1000);
+assert.equal(attempts,1);
+assert.match(nodes.get('srcMarket').textContent,/network timeout/);
+document.hidden=true;
+nextRefresh.fn();
+assert.equal(attempts,1,'background tab skips polling');
+document.hidden=false;
+vm.runInContext('lastMarketAttempt=Date.now()-MARKET_REFRESH_MS; refreshMarketWhenVisible()',context);
+assert.equal(attempts,2,'returning to an overdue tab resumes polling');
+
+vm.runInContext('liveMarket={price_usd:7,volume_24h:100}',context);
+run(fresh);
+assert.equal(nodes.get('price').textContent,'$7.0000','daily reload retains the current quote');
+assert.equal(nodes.get('tbPrice').textContent,'$2.0000','daily table stays on the captured snapshot');
+console.log('PASS: mining coverage and zero handling, quote timing, hidden tabs, failure handling, and daily snapshot separation.');
