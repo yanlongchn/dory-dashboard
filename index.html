@@ -412,11 +412,11 @@ select, .scenario-inputs input {
       <thead><tr><th scope="col">链上投入档位</th><th scope="col">匹配组</th><th scope="col">去重地址</th><th scope="col">账户付出 · USDC</th><th scope="col">DORY 卖出净额 · USDC</th></tr></thead>
       <tbody id="miningRoutedRows"></tbody>
     </table></div>
-    <p class="small mechanism-note">X9 路由先将账户的 DORY 卖为 USDC，再和该账户支付的 USDC 合并买回 DORY。按每腿约 2520U 或 5040U 分档，之后须匹配同址 90% Zero / 10% 分流。链上候选与 App 矿单分开统计。</p>
+    <p class="small mechanism-note">X9 路由先将账户的 DORY 卖为 USDC，再和该账户支付的 USDC 合并买回 DORY。按两条资金腿的合计投入分为约 5000U 和 10000U 两档，之后须匹配同址 90% Zero / 10% 分流。链上候选与 App 矿单分开统计。</p>
   </div>
 </details>
 <details class="detail" id="miningFunding">
-  <summary><div>双笔 DORY 到账<span id="miningFundingStatus">暂无数据</span></div></summary>
+  <summary><div>双笔 DORY 到账（旧口径参考）<span id="miningFundingStatus">暂无数据</span></div></summary>
   <div class="detail-body">
     <div class="table-scroll"><table>
       <thead><tr><th scope="col">档位</th><th scope="col">双腿匹配组</th><th scope="col">去重地址</th><th scope="col">买入 USDC</th><th scope="col">转入 DORY 估值 · U</th></tr></thead>

@@ -140,8 +140,8 @@ export function routedMiningCredit(credit, swap, receipt) {
       tokenFee !== credit.poolAmount - credit.amount) return null;
   const cashUsdc = Number(walletCash) / 1e6;
   const doryUsdc = Number(sellProceeds - cashFee) / 1e6;
-  const tier = Object.keys(routedTargets).find(key => nearTarget(cashUsdc, routedTargets[key]) &&
-    nearTarget(doryUsdc, routedTargets[key]));
+  const totalUsdc = Number(walletCash + sellProceeds - cashFee) / 1e6;
+  const tier = Object.keys(routedTargets).find(key => nearTarget(totalUsdc, 2 * routedTargets[key]));
   return tier ? {...credit, tier, cashUsdc, doryUsdc} : null;
 }
 
