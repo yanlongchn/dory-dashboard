@@ -405,8 +405,18 @@ select, .scenario-inputs input {
 <article class="monitor-card"><h3>未分类销毁占比 · 24h</h3><div class="monitor-value" id="monitorUnknown">暂无数据</div><p id="monitorUnknownNote">等待完整销毁分类</p></article>
 </div>
 <details class="detail"><summary><div>24h / 7日发行与销毁对账<span>同窗口比对，不用“117:1”代替全网供需</span></div></summary><div class="detail-body"><div class="table-scroll"><table><thead><tr><th scope="col">窗口</th><th scope="col">新增发行 DORY</th><th scope="col">Zero Transfer DORY</th><th scope="col">供应变化 DORY</th><th scope="col">Zero / Mint</th><th scope="col">对账</th></tr></thead><tbody id="monitorFlowRows"></tbody></table></div><p class="small" id="monitorX9" style="margin-top:16px">X9C 转出 · 等待采集</p></div></details>
-<details class="detail" id="miningFunding" open>
-  <summary><div>5000U / 10000U 开矿监测<span id="miningFundingStatus">暂无数据</span></div></summary>
+<details class="detail" id="miningRouted" open>
+  <summary><div>X9 开矿路由监测<span id="miningRoutedStatus">暂无数据</span></div></summary>
+  <div class="detail-body">
+    <div class="table-scroll"><table>
+      <thead><tr><th scope="col">链上投入档位</th><th scope="col">匹配组</th><th scope="col">去重地址</th><th scope="col">账户付出 · USDC</th><th scope="col">DORY 卖出净额 · USDC</th></tr></thead>
+      <tbody id="miningRoutedRows"></tbody>
+    </table></div>
+    <p class="small mechanism-note">X9 路由先将账户的 DORY 卖为 USDC，再和该账户支付的 USDC 合并买回 DORY。按每腿约 2520U 或 5040U 分档，之后须匹配同址 90% Zero / 10% 分流。链上候选与 App 矿单分开统计。</p>
+  </div>
+</details>
+<details class="detail" id="miningFunding">
+  <summary><div>双笔 DORY 到账<span id="miningFundingStatus">暂无数据</span></div></summary>
   <div class="detail-body">
     <div class="table-scroll"><table>
       <thead><tr><th scope="col">档位</th><th scope="col">双腿匹配组</th><th scope="col">去重地址</th><th scope="col">买入 USDC</th><th scope="col">转入 DORY 估值 · U</th></tr></thead>
@@ -466,5 +476,5 @@ select, .scenario-inputs input {
 <details class="detail"><summary><div>逐项核对数据来源<span>采集状态、时间与失败原因</span></div></summary><div class="detail-body table-scroll"><table><thead><tr><th scope="col">来源 / 项目</th><th scope="col">采集结果</th><th scope="col">证据与范围</th></tr></thead><tbody id="sourceRows"></tbody></table></div></details><p class="stateline" id="scanStatus" style="margin-top:20px">等待真实每日快照</p>
 </section>
 <footer class="foot"><div class="foot-top"><span>DORY / MARKET TERMINAL</span><span>北京时间 22:00 计划采集 · 网页行情每 30 分钟刷新</span></div><p>DORY 0x33b49f2264e85bB124d2730DC180182717D436Ae · Pool ID 0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb · PoolManager 0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32 · X9C 0xecdDa172D2E8aa8efF55500fD28Da828CFfbc5B0</p><p>接口失败时保留已有快照与采集时间，不以虚构数据替代。</p></footer>
-</main><script src="./monitoring.js?v=20261109-terminal"></script><script src="./dashboard.js?v=20261109-nightly"></script>
+</main><script src="./monitoring.js?v=20261109-terminal"></script><script src="./dashboard.js?v=20261110-mining"></script>
 </body></html>

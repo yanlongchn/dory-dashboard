@@ -77,13 +77,13 @@ const byWallet = (map, wallet, value) => {
   map.set(wallet, entries);
 };
 
-function doryTransfer(log) {
-  if (log.removed || log.address?.toLowerCase() !== DORY || log.topics?.length !== 3 ||
+function tokenTransfer(log, token = DORY) {
+  if (log.removed || log.address?.toLowerCase() !== token || log.topics?.length !== 3 ||
       log.topics[0]?.toLowerCase() !== TRANSFER ||
       !log.topics.slice(1).every(topic => /^0x0{24}[0-9a-f]{40}$/i.test(topic)) ||
       !/^0x[0-9a-f]{64}$/i.test(log.transactionHash || '') || !/^0x[0-9a-f]{64}$/i.test(log.blockHash || '') ||
       !/^0x[0-9a-f]+$/i.test(log.logIndex || '') || !/^0x[0-9a-f]+$/i.test(log.blockNumber || ''))
-    throw Error('Invalid mining DORY Transfer identity');
+    throw Error('Invalid mining Transfer identity');
   const hash = log.transactionHash.toLowerCase(), index = Number(BigInt(log.logIndex));
   return {id: hash + ':' + index, hash, index, block: Number(BigInt(log.blockNumber)),
     from: log.topics[1].toLowerCase(), wallet: log.topics[2].toLowerCase(), amount: words(log.data, 1)[0]};
@@ -96,7 +96,7 @@ export function isMiningBuy(swap) {
 export function miningBuyReceipt(hash, swap, receipt) {
   if (receipt.transactionHash?.toLowerCase() !== hash || receipt.blockHash?.toLowerCase() !== swap.block_hash ||
       receipt.status !== '0x1' || !Array.isArray(receipt.logs)) throw Error('Mining BUY receipt identity mismatch');
-  const transfers = receipt.logs.filter(log => log.address?.toLowerCase() === DORY && log.topics?.[0]?.toLowerCase() === TRANSFER).map(doryTransfer);
+  const transfers = receipt.logs.filter(log => log.address?.toLowerCase() === DORY && log.topics?.[0]?.toLowerCase() === TRANSFER).map(log => tokenTransfer(log));
   const settlements = transfers.filter(entry => entry.from === poolTopic && entry.amount > 0n);
   if (settlements.length !== 1 || settlements[0].amount !== swap.buy_dory_raw) return null;
   let credit = settlements[0];
@@ -112,13 +112,69 @@ export function miningBuyReceipt(hash, swap, receipt) {
   return {...credit, usdc: swap.buy_usdc, poolAmount: swap.buy_dory_raw};
 }
 
+const routedTargets = {tier_5000: 2520, tier_10000: 5040};
+const nearTarget = (value, target) => Math.abs(value - target) <= target * .08;
+
+export function isRoutedMiningBuy(swap) {
+  return swap.buy_dory_raw > 0n && swap.sell_dory_raw > 0n &&
+    Object.values(routedTargets).some(target => nearTarget(swap.buy_usdc, 2 * target) && nearTarget(swap.sell_usdc, target));
+}
+
+export function routedMiningCredit(credit, swap, receipt) {
+  if (!credit || credit.from !== appDistribution || credit.amount >= credit.poolAmount) return null;
+  const transfers = token => receipt.logs.filter(log => log.address?.toLowerCase() === token &&
+    log.topics?.[0]?.toLowerCase() === TRANSFER).map(log => tokenTransfer(log, token));
+  const dory = transfers(DORY), cash = transfers(USDC);
+  const sum = (entries, from, to, before) => entries.filter(entry => entry.from === from &&
+    entry.wallet === to && beforeTransfer(entry, before)).reduce((total, entry) => total + entry.amount, 0n);
+  const rebuy = cash.find(entry => entry.from === appDistribution && entry.wallet === poolTopic &&
+    entry.amount === swap.buy_usdc_raw && beforeTransfer(entry, credit));
+  if (!rebuy) return null;
+  const soldDory = sum(dory, credit.wallet, poolTopic, rebuy);
+  const sellProceeds = sum(cash, poolTopic, appDistribution, rebuy);
+  const walletCash = sum(cash, credit.wallet, appDistribution, rebuy);
+  const cashFee = sum(cash, appDistribution, appFee, rebuy);
+  const tokenFee = sum(dory, appDistribution, appFee, credit);
+  if (soldDory !== swap.sell_dory_raw || sellProceeds !== swap.sell_usdc_raw ||
+      walletCash <= 0n || cashFee <= 0n || sellProceeds + walletCash - cashFee !== rebuy.amount ||
+      tokenFee !== credit.poolAmount - credit.amount) return null;
+  const cashUsdc = Number(walletCash) / 1e6;
+  const doryUsdc = Number(sellProceeds - cashFee) / 1e6;
+  const tier = Object.keys(routedTargets).find(key => nearTarget(cashUsdc, routedTargets[key]) &&
+    nearTarget(doryUsdc, routedTargets[key]));
+  return tier ? {...credit, tier, cashUsdc, doryUsdc} : null;
+}
+
+export function routedMiningWatch(credits, burns) {
+  const byAddress = new Map();
+  const wallets = new Set(credits.map(credit => credit.wallet));
+  for (const burn of burns) if (wallets.has(burn.wallet)) byWallet(byAddress, burn.wallet, burn);
+  const candidates = credits.map(credit => ({credit, burns: (byAddress.get(credit.wallet) || []).filter(burn =>
+    beforeTransfer(credit, burn) && (burn.amount === credit.poolAmount || burn.amount === credit.amount))}));
+  const usage = new Map();
+  for (const candidate of candidates) for (const burn of candidate.burns)
+    usage.set(burn.id, (usage.get(burn.id) || 0) + 1);
+  const groups = {tier_5000: [], tier_10000: []}, burnIds = new Set();
+  for (const {credit, burns: matches} of candidates) {
+    if (matches.length !== 1 || usage.get(matches[0].id) !== 1) continue;
+    burnIds.add(matches[0].id);
+    groups[credit.tier].push(credit);
+  }
+  return {burnIds, totals: Object.fromEntries(Object.entries(groups).map(([tier, entries]) => [tier, {
+    matches: entries.length,
+    wallets: new Set(entries.map(entry => entry.wallet)).size,
+    cash_usdc: entries.reduce((total, entry) => total + entry.cashUsdc, 0),
+    dory_proceeds_usdc: entries.reduce((total, entry) => total + entry.doryUsdc, 0),
+  }]))};
+}
+
 export function miningFundingWatch(buys, deposits, burns, swaps) {
   const depositsByWallet = new Map(), burnsByWallet = new Map();
   const wallets = new Set(buys.map(buy => buy.wallet));
   for (const entry of burns) if (wallets.has(entry.wallet)) byWallet(burnsByWallet, entry.wallet, entry);
   const seenDeposits = new Map();
   for (const log of deposits) {
-    const entry = doryTransfer(log);
+    const entry = tokenTransfer(log);
     if (!wallets.has(entry.wallet)) throw Error('Mining inbound Transfer outside wallet filter');
     const fingerprint = [log.blockHash, entry.from, entry.wallet, entry.amount].join(':');
     if (seenDeposits.has(entry.id)) {

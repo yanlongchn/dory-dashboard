@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {DORY, PM, RECEIVER_705B, distributionWatch, distributionMatches, isMiningBuy, miningBuyReceipt, miningFundingWatch} from './evidence.mjs';
+import {DORY, USDC, PM, RECEIVER_705B, distributionWatch, distributionMatches, isMiningBuy, miningBuyReceipt, miningFundingWatch, isRoutedMiningBuy, routedMiningCredit, routedMiningWatch} from './evidence.mjs';
 const topic = address => '0x' + address.slice(2).padStart(64, '0');
 const zero = '0x' + '0'.repeat(40), payer = '0x' + 'a'.repeat(40), other = '0x' + 'b'.repeat(40);
 const hash = '0x' + 'c'.repeat(64), unit = 10n ** 18n;
@@ -74,4 +74,32 @@ test('mining funding requires both credits and the same wallet’s exact 90/10 s
   const crossBurn=distributionMatches([transfer(burnTx,3,a,zero,1809n*unit/10n)],
     [transfer(burnTx,4,a,RECEIVER_705B,201n*unit/10n)],100,100).matches;
   assert.equal(find(swap,[transfer(depositTx,1,b,a,crossAmount)],crossBurn).unclassified.matches,1);
+});
+
+test('X9 route reconciles both funding legs and matches the gross buyback to a later burn', () => {
+  const app='0xa51afafe0263b40edaef0df8781ea9aa03e381a3';
+  const fee='0x5af3b5bca2b49478f75aa8d3f8320e326337f22f';
+  const gross=12n*unit, doryFee=42n*unit/1000n, million=1000000n;
+  const cash=(from,to,amount,index)=>({...log(to,amount,index,from),address:USDC});
+  const swap={buy_usdc:5010,sell_usdc:2499,buy_usdc_raw:5010n*million,sell_usdc_raw:2499n*million,
+    buy_dory_raw:gross,sell_dory_raw:6n*unit,block_hash:'0x'+'d'.repeat(64)};
+  const receipt={transactionHash:hash,blockHash:swap.block_hash,status:'0x1',logs:[
+    log(PM,6n*unit,0,payer),cash(PM,app,2499n*million,1),cash(app,fee,9n*million,2),
+    cash(payer,app,2520n*million,3),cash(app,PM,5010n*million,4),
+    log(app,gross,5,PM),log(fee,doryFee,6,app),log(payer,gross-doryFee,7,app)
+  ]};
+  const route=routedMiningCredit(miningBuyReceipt(hash,swap,receipt),swap,receipt);
+  assert.equal(isMiningBuy(swap),false);
+  assert.equal(isRoutedMiningBuy(swap),true);
+  assert.equal(route.tier,'tier_5000');
+  assert.equal(route.cashUsdc,2520);
+  assert.equal(route.doryUsdc,2490);
+  const burnHash='0x'+'e'.repeat(64);
+  const burnLogs=distributionMatches([{...log(zero,108n*unit/10n,9),transactionHash:burnHash}],
+    [{...log(RECEIVER_705B,12n*unit/10n,10),transactionHash:burnHash}],100,100).matches;
+  assert.equal(routedMiningWatch([route],burnLogs).totals.tier_5000.matches,1);
+  assert.equal(routedMiningWatch([route],[]).totals.tier_5000.matches,0);
+  assert.equal(routedMiningWatch([route,{...route,id:'another'}],burnLogs).totals.tier_5000.matches,0);
+  const noCash={...receipt,logs:receipt.logs.filter((_,i)=>i!==3)};
+  assert.equal(routedMiningCredit(miningBuyReceipt(hash,swap,noCash),swap,noCash),null);
 });

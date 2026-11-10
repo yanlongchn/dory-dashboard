@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { LENS, STATE_VIEW, MODIFY_LIQUIDITY, decodeSlot0, virtualDepth, liquidityActivity, INITIALIZE, INIT_BLOCK, TICKET_MINTED, RECEIVER_705B, distributionMatches, distributionWatch, isMiningBuy, miningBuyReceipt, miningFundingWatch, poolKey, decodeReserves, indexedHolders, x9ReceiptBurn, aggregateCandidates } from './evidence.mjs';
+import { LENS, STATE_VIEW, MODIFY_LIQUIDITY, decodeSlot0, virtualDepth, liquidityActivity, INITIALIZE, INIT_BLOCK, TICKET_MINTED, RECEIVER_705B, distributionMatches, distributionWatch, isMiningBuy, isRoutedMiningBuy, miningBuyReceipt, miningFundingWatch, routedMiningCredit, routedMiningWatch, poolKey, decodeReserves, indexedHolders, x9ReceiptBurn, aggregateCandidates } from './evidence.mjs';
 import monitoring from '../monitoring.js';
 
 const DATA = path.join(path.resolve(process.cwd()), "data");
@@ -283,6 +283,7 @@ export async function collect() {
       direct_transfer: { dory: null, txs: null }, pending_burn: { dory: null, txs: null }, other: { dory: null, txs: null } } },
     x9c_dead_burn: { total_dory: null, transactions: null, total_7d: null, transactions_7d: null, absorption_24h_pct: null },
     mining_funding: null,
+    mining_routed: null,
     distribution_705b: {address: RECEIVER_705B, balance_dory: null, day: null, week: null},
     pool_candidates: { candidate_pools: null, candidate_usdc: null, transactions: null, max_usdc: null,
       rule: "BUY near 5000 USDC integer multiples ±8%; candidate_pools counts amount-size units, not mining positions or users. Participation has no minimum amount; this filter is not total mining capital." },
@@ -434,14 +435,20 @@ export async function collect() {
     let buy = 0, sell = 0, poolUsdc = 0, poolDory = 0;
     for (const log of logs) {
       const { dory, usdc } = decodeSwap(log, poolResponse.identity);
-      const aggregate = byTx.get(log.transactionHash) || { dory: 0, usdc: 0, buy_usdc: 0, sell_usdc: 0, buy_dory_raw: 0n, block_hash: log.blockHash.toLowerCase() };
+      const aggregate = byTx.get(log.transactionHash) || { dory: 0, usdc: 0, buy_usdc: 0, sell_usdc: 0, buy_dory_raw: 0n, sell_dory_raw: 0n, buy_usdc_raw: 0n, sell_usdc_raw: 0n, block_hash: log.blockHash.toLowerCase() };
       aggregate.dory += dory; aggregate.usdc += usdc; byTx.set(log.transactionHash, aggregate);
       poolUsdc -= usdc; poolDory -= dory;
+      const doryIndex = poolResponse.identity.currency0 === DORY ? 2 : 66;
+      const usdcIndex = doryIndex === 2 ? 66 : 2;
       if (dory > 0 && usdc < 0) {
         const paid = -usdc; buy += paid; aggregate.buy_usdc += paid;
-        const doryIndex = poolResponse.identity.currency0 === DORY ? 2 : 66;
         aggregate.buy_dory_raw += signedWord(log.data.slice(doryIndex, doryIndex + 64));
-      } else if (dory < 0 && usdc > 0) { sell += usdc; aggregate.sell_usdc += usdc; }
+        aggregate.buy_usdc_raw -= signedWord(log.data.slice(usdcIndex, usdcIndex + 64));
+      } else if (dory < 0 && usdc > 0) {
+        sell += usdc; aggregate.sell_usdc += usdc;
+        aggregate.sell_dory_raw -= signedWord(log.data.slice(doryIndex, doryIndex + 64));
+        aggregate.sell_usdc_raw += signedWord(log.data.slice(usdcIndex, usdcIndex + 64));
+      }
     }
     result.market.buy_usdc = buy; result.market.sell_usdc = sell; result.market.sell_buy_amount_ratio = buy > 0 ? sell / buy : null;
     result.pool.swap_net_usdc = poolUsdc; result.pool.swap_net_dory = poolDory;
@@ -542,6 +549,18 @@ export async function collect() {
       result.distribution_705b.balance_dory = Number(BigInt(await pinnedCall(DORY, data, window.latestBlock))) / 1e18;
     })
   ]);
+  let routedBurnIds = new Set();
+  if (window && swapByTx && miningBurns) await component('mining_routed', async () => {
+    const candidates = miningBurns.length ? [...swapByTx].filter(([, swap]) => isRoutedMiningBuy(swap)) : [];
+    const credits = (await mapLimit(candidates, 4, async ([hash, swap]) => {
+      const receipt = await rpc('eth_getTransactionReceipt', [hash]);
+      return routedMiningCredit(miningBuyReceipt(hash, swap, receipt), swap, receipt);
+    })).filter(Boolean);
+    const {totals, burnIds} = routedMiningWatch(credits, miningBurns);
+    result.mining_routed = totals;
+    routedBurnIds = burnIds;
+  });
+  else result.sources.mining_routed = {status: 'unverified', reason: 'Complete Swap and 90/10 Transfer windows are required'};
   if (window && swapByTx && miningBurns) await component('mining_funding', async () => {
     const burnsByWallet = new Set(miningBurns.map(entry => entry.wallet));
     const candidates = burnsByWallet.size ? [...swapByTx].filter(([, swap]) => isMiningBuy(swap)) : [];
@@ -556,7 +575,7 @@ export async function collect() {
         throw Error('Mining inbound Transfer outside requested window');
       inbound.push(...logs);
     }
-    result.mining_funding = miningFundingWatch(buyCredits, inbound, miningBurns, swapByTx);
+    result.mining_funding = miningFundingWatch(buyCredits, inbound, miningBurns.filter(burn => !routedBurnIds.has(burn.id)), swapByTx);
   });
   else result.sources.mining_funding = {status: 'unverified', reason: 'Complete Swap and 90/10 Transfer windows are required'};
   if (result.supply.minted_24h > 0 && result.x9c_dead_burn.total_dory !== null)
@@ -575,12 +594,12 @@ export async function collect() {
     if (after.hash !== window.latestBlock.hash) {
       result.market.buy_usdc = result.market.sell_usdc = result.market.sell_buy_amount_ratio = null;
       result.pool = {liquidity_usd: result.pool.liquidity_usd}; result.supply = {}; result.zero_burn = {};
-      result.x9c_dead_burn = {}; result.pool_candidates = {}; result.distribution_705b = {}; result.mining_funding = null;
+      result.x9c_dead_burn = {}; result.pool_candidates = {}; result.distribution_705b = {}; result.mining_funding = null; result.mining_routed = null;
       throw Error('Chain snapshot reorganized during collection; onchain values discarded');
     }
   });
   const core = ["market", "pool_identity", "chain_window", "swaps", "supply", 'supply_24h', 'supply_7d', 'holders', 'pool_key',
-    'pool_reserves', 'pool_reserves_24h', 'pool_state', 'lp_activity', "zero_burn", "zero_burn_categories", "x9c_mint", 'mint_emissions', 'supply_event_reconciliation', 'chain_consistency', 'distribution_705b', 'distribution_705b_balance', 'mining_funding'];
+    'pool_reserves', 'pool_reserves_24h', 'pool_state', 'lp_activity', "zero_burn", "zero_burn_categories", "x9c_mint", 'mint_emissions', 'supply_event_reconciliation', 'chain_consistency', 'distribution_705b', 'distribution_705b_balance', 'mining_funding', 'mining_routed'];
   const complete = core.every(name => result.sources[name]?.status === "ok");
   const hasEvidence = ["market", "supply", "zero_burn", "x9c_mint"].some(name => result.sources[name]?.status === "ok");
   result.status = complete ? "ok" : hasEvidence ? "partial" : "evidence_insufficient";
