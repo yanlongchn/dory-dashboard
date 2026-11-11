@@ -68,8 +68,6 @@ const poolTopic = addressTopic(PM);
 const appDistribution = addressTopic('0xa51afafe0263b40edaef0df8781ea9aa03e381a3');
 const appFee = addressTopic('0x5af3b5bca2b49478f75aa8d3f8320e326337f22f');
 const protocolTopics = new Set([ZERO, DEAD, poolTopic, appDistribution, appFee, addressTopic(RECEIVER_705B)]);
-const miningTargets = [5020, 5040];
-const withinMiningRange = value => miningTargets.some(target => Math.abs(value - target) <= target * .08);
 const beforeTransfer = (a, b) => a.block < b.block || a.block === b.block && a.index < b.index;
 const byWallet = (map, wallet, value) => {
   const entries = map.get(wallet) || [];
@@ -84,13 +82,8 @@ function tokenTransfer(log, token = DORY) {
       !/^0x[0-9a-f]{64}$/i.test(log.transactionHash || '') || !/^0x[0-9a-f]{64}$/i.test(log.blockHash || '') ||
       !/^0x[0-9a-f]+$/i.test(log.logIndex || '') || !/^0x[0-9a-f]+$/i.test(log.blockNumber || ''))
     throw Error('Invalid mining Transfer identity');
-  const hash = log.transactionHash.toLowerCase(), index = Number(BigInt(log.logIndex));
-  return {id: hash + ':' + index, hash, index, block: Number(BigInt(log.blockNumber)),
+  return {index: Number(BigInt(log.logIndex)), block: Number(BigInt(log.blockNumber)),
     from: log.topics[1].toLowerCase(), wallet: log.topics[2].toLowerCase(), amount: words(log.data, 1)[0]};
-}
-
-export function isMiningBuy(swap) {
-  return swap.sell_usdc === 0 && swap.buy_dory_raw > 0n && withinMiningRange(swap.buy_usdc);
 }
 
 export function miningBuyReceipt(hash, swap, receipt) {
@@ -109,7 +102,7 @@ export function miningBuyReceipt(hash, swap, receipt) {
     credit = forwarded[0];
   }
   if (protocolTopics.has(credit.wallet)) return null;
-  return {...credit, usdc: swap.buy_usdc, poolAmount: swap.buy_dory_raw};
+  return {...credit, poolAmount: swap.buy_dory_raw};
 }
 
 const routedTargets = {tier_5000: 2520, tier_10000: 5040};
@@ -154,76 +147,16 @@ export function routedMiningWatch(credits, burns) {
   const usage = new Map();
   for (const candidate of candidates) for (const burn of candidate.burns)
     usage.set(burn.id, (usage.get(burn.id) || 0) + 1);
-  const groups = {tier_5000: [], tier_10000: []}, burnIds = new Set();
+  const groups = {tier_5000: [], tier_10000: []};
   for (const {credit, burns: matches} of candidates) {
     if (matches.length !== 1 || usage.get(matches[0].id) !== 1) continue;
-    burnIds.add(matches[0].id);
     groups[credit.tier].push(credit);
   }
-  return {burnIds, totals: Object.fromEntries(Object.entries(groups).map(([tier, entries]) => [tier, {
+  return Object.fromEntries(Object.entries(groups).map(([tier, entries]) => [tier, {
     matches: entries.length,
     wallets: new Set(entries.map(entry => entry.wallet)).size,
     cash_usdc: entries.reduce((total, entry) => total + entry.cashUsdc, 0),
     dory_proceeds_usdc: entries.reduce((total, entry) => total + entry.doryUsdc, 0),
-  }]))};
-}
-
-export function miningFundingWatch(buys, deposits, burns, swaps) {
-  const depositsByWallet = new Map(), burnsByWallet = new Map();
-  const wallets = new Set(buys.map(buy => buy.wallet));
-  for (const entry of burns) if (wallets.has(entry.wallet)) byWallet(burnsByWallet, entry.wallet, entry);
-  const seenDeposits = new Map();
-  for (const log of deposits) {
-    const entry = tokenTransfer(log);
-    if (!wallets.has(entry.wallet)) throw Error('Mining inbound Transfer outside wallet filter');
-    const fingerprint = [log.blockHash, entry.from, entry.wallet, entry.amount].join(':');
-    if (seenDeposits.has(entry.id)) {
-      if (seenDeposits.get(entry.id) !== fingerprint) throw Error('Conflicting mining inbound Transfer');
-      continue;
-    }
-    seenDeposits.set(entry.id, fingerprint);
-    if (entry.amount > 0n && entry.from !== entry.wallet && !protocolTopics.has(entry.from))
-      byWallet(depositsByWallet, entry.wallet, entry);
-  }
-
-  const matches = [];
-  for (const buy of buys) {
-    const walletBurns = burnsByWallet.get(buy.wallet) || [];
-    if (!walletBurns.length) continue;
-    for (const deposit of depositsByWallet.get(buy.wallet) || []) {
-      if (deposit.id === buy.id || swaps.has(deposit.hash) && deposit.hash !== buy.hash) continue;
-      const transferValue = Number(deposit.amount) / Number(buy.poolAmount) * buy.usdc;
-      if (!withinMiningRange(transferValue)) continue;
-      const combined = walletBurns.filter(burn => burn.amount === buy.amount + deposit.amount &&
-        beforeTransfer(buy, burn) && beforeTransfer(deposit, burn));
-      const purchaseBurns = walletBurns.filter(burn => burn.amount === buy.amount && beforeTransfer(buy, burn));
-      const depositBurns = walletBurns.filter(burn => burn.amount === deposit.amount && beforeTransfer(deposit, burn));
-      const evidence = new Map(combined.map(burn => [burn.id, [burn.id]]));
-      for (const purchaseBurn of purchaseBurns) for (const depositBurn of depositBurns) {
-        if (purchaseBurn.id === depositBurn.id) continue;
-        const ids = [purchaseBurn.id, depositBurn.id].sort();
-        evidence.set(ids.join('|'), ids);
-      }
-      for (const ids of evidence.values()) matches.push({buy, transferValue, ids: [buy.id, deposit.id, ...ids]});
-    }
-  }
-  const usage = new Map();
-  for (const match of matches) for (const id of match.ids) usage.set(id, (usage.get(id) || 0) + 1);
-  const groups = {tier_5000: [], tier_10000: [], unclassified: []};
-  for (const match of matches) {
-    if (match.ids.some(id => usage.get(id) !== 1)) continue;
-    // The two targets differ by 20U. Classify only when both legs favor the same target.
-    const midpoint = (miningTargets[0] + miningTargets[1]) / 2;
-    const side = value => Math.abs(value - midpoint) < 1e-6 ? 0 : Math.sign(value - midpoint);
-    const buySide = side(match.buy.usdc), transferSide = side(match.transferValue);
-    const tier = buySide && buySide === transferSide ? (buySide < 0 ? 'tier_5000' : 'tier_10000') : 'unclassified';
-    groups[tier].push(match);
-  }
-  return Object.fromEntries(Object.entries(groups).map(([tier, entries]) => [tier, {
-    matches: entries.length,
-    wallets: new Set(entries.map(match => match.buy.wallet)).size,
-    buy_usdc: entries.reduce((sum, match) => sum + match.buy.usdc, 0),
-    transfer_usdc_estimate: entries.reduce((sum, match) => sum + match.transferValue, 0),
   }]));
 }
 

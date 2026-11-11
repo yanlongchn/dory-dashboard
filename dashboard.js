@@ -10,7 +10,7 @@ const signed=(n,d=2,suffix='')=>known(n)?(n>0?'+':'')+fmt(n,d)+suffix:'暂无数
 let chartGeometry=null, chartHoverIndex=null, chartSelectedIndex=null;
 let candlesAll=[], chartRange='all', history=[], snapshot=null;
 let liveMarket=null, liveCandles=[], lastMarketAttempt=null, marketRefreshTimer;
-const sourceNames={pool_state:'官方StateView池状态',lp_activity:'24h LP加减事件',market:'官方池行情',pool_identity:'池币种与精度',chain_window:'24h / 7日区块窗口',holders:'持币地址索引',pool_key:'初始化参数与Pool ID',pool_reserves:'当前两侧本金',pool_reserves_24h:'24h本金变化',ohlcv:'真实日K',ohlcv_history:'日K历史覆盖',swaps:'24h买卖资金',supply:'当前供应',supply_24h:'24h历史供应',supply_7d:'7日历史供应',zero_burn:'24h / 7日Zero Transfer',zero_burn_categories:'24h销毁分类',x9c_mint:'24h / 7日原始X9C认购',mint_emissions:'24h / 7日新增发行',supply_event_reconciliation:'供应与事件窗口对账',chain_consistency:'采集区块一致性',distribution_705b:'705B流入与同笔分流',distribution_705b_balance:'705B快照DORY余额',mining_funding:'开矿双腿资金与销毁',mining_routed:'X9 合并买回与销毁'};
+const sourceNames={pool_state:'官方StateView池状态',lp_activity:'24h LP加减事件',market:'官方池行情',pool_identity:'池币种与精度',chain_window:'24h / 7日区块窗口',holders:'持币地址索引',pool_key:'初始化参数与Pool ID',pool_reserves:'当前两侧本金',pool_reserves_24h:'24h本金变化',ohlcv:'真实日K',ohlcv_history:'日K历史覆盖',swaps:'24h买卖资金',supply:'当前供应',supply_24h:'24h历史供应',supply_7d:'7日历史供应',zero_burn:'24h / 7日Zero Transfer',zero_burn_categories:'24h销毁分类',x9c_mint:'24h / 7日原始X9C认购',mint_emissions:'24h / 7日新增发行',supply_event_reconciliation:'供应与事件窗口对账',chain_consistency:'采集区块一致性',distribution_705b:'705B流入与同笔分流',distribution_705b_balance:'705B快照DORY余额',mining_routed:'X9 合并买回与销毁'};
 function tableRow(values){const tr=document.createElement('tr');tr.replaceChildren(...values.map(value=>{const td=document.createElement('td');td.textContent=value;return td}));return tr}
 function historyMetric(d,key,value,decimals=2){
  const source=d.sources?.[key];
@@ -46,26 +46,18 @@ function asOf(ts){return ts?new Date(ts).toLocaleString('zh-CN',{timeZone:'Asia/
 async function getJSON(url){const r=await fetch(url,{cache:'no-store',signal:AbortSignal.timeout(20000)});if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 function ratio(buy,sell){return known(buy)&&known(sell)?buy>0?sell/buy:sell>0?Infinity:null:null}
 function sourceKnown(name){return snapshot?.sources?.[name]?.status==='ok'}
-const miningTiers=[['5000U 档','tier_5000'],['10000U 档','tier_10000'],['临界或跨档','unclassified']];
-function miningResult(d,key,source='mining_funding'){
- return d.sources?.[source]?.status==='ok'&&d.sources?.chain_consistency?.status==='ok'
-   ?d[source]?.[key]:null;
+const miningTiers=[['5000U 档','tier_5000'],['10000U 档','tier_10000']];
+function miningResult(d,key){
+ return d.sources?.mining_routed?.status==='ok'&&d.sources?.chain_consistency?.status==='ok'
+   ?d.mining_routed?.[key]:null;
 }
 function renderRoutedMining(d){
- $('miningRoutedRows').replaceChildren(...miningTiers.slice(0,2).map(([label,key])=>{
-   const tier=miningResult(d,key,'mining_routed');
+ $('miningRoutedRows').replaceChildren(...miningTiers.map(([label,key])=>{
+   const tier=miningResult(d,key);
    return tableRow([label,fmt(tier?.matches,0),fmt(tier?.wallets,0),fmt(tier?.cash_usdc,2),fmt(tier?.dory_proceeds_usdc,2)]);
  }));
- $('miningRoutedStatus').textContent=miningResult(d,'tier_5000','mining_routed')?'滚动 24h · X9 路由候选'
+ $('miningRoutedStatus').textContent=miningResult(d,'tier_5000')?'滚动 24h · X9 路由候选'
    :d.sources?.mining_routed?.status==='failed'?'采集失败':'暂无数据';
-}
-function renderMiningFunding(d){
- $('miningFundingRows').replaceChildren(...miningTiers.map(([label,key])=>{
-   const tier=miningResult(d,key);
-   return tableRow([label,fmt(tier?.matches,0),fmt(tier?.wallets,0),fmt(tier?.buy_usdc,2),fmt(tier?.transfer_usdc_estimate,2)]);
- }));
- $('miningFundingStatus').textContent=miningResult(d,'tier_5000')?'滚动 24h · 链上双腿候选'
-   :d.sources?.mining_funding?.status==='failed'?'采集失败':'暂无数据';
 }
 function renderMonitoring(d){
  const model=DoryMonitoring.build(d),day=model.flow.day,week=model.flow.week,usable=day.status==='ok';
@@ -158,7 +150,6 @@ function renderSnapshot(d){snapshot=d;const m=d.market||{}, p=d.pool||{}, s=d.su
  $('reportDate').textContent=(d.date_bj||bjDate(d.generated_at||Date.now())).replace(/-/g,' / ')+' · 每日数据观察';
  evidencePanels(d);
  renderMonitoring(d);
- renderMiningFunding(d);
  renderRoutedMining(d);
  useCandles([...candleRows(d.ohlcv),...liveCandles]);
 }
@@ -245,7 +236,7 @@ function renderCandleReading(index,tooltip=false){const g=chartGeometry,z=g?.can
  const tip=$('chartTooltip');tip.hidden=!tooltip;if(tooltip){tip.textContent=candleDate(z.t)+' · USD\n开 '+fmt(z.o,3)+' · 收 '+fmt(z.c,3)+'\n高 '+fmt(z.h,3)+' · 低 '+fmt(z.l,3)+'\n成交额 '+money(z.v);tip.style.left=Math.max(12,Math.min(g.px(index)+20,g.W-235))+'px';tip.style.top='22px'}
 }
 function renderHistoryPicker(){const select=$('historyDate'),chosen=select.value;select.replaceChildren(...history.slice().reverse().map(h=>{const o=document.createElement('option');o.value=h.date;o.textContent=h.date;return o}));if(!history.length){select.disabled=true;$('historySummary').textContent='尚无每日留档；不生成替代记录。';return}select.disabled=false;select.value=history.some(h=>h.date===chosen)?chosen:history.at(-1).date;showHistoryDay(select.value)}
-function showHistoryDay(date){const d=history.find(h=>h.date===date);if(!d)return;const failures=['x9c_mint','holders','mining_funding','mining_routed'].filter(key=>d.sources?.[key]?.status==='failed').map(key=>sourceNames[key]+'：'+d.sources[key].error);$('historySummary').textContent=date+' · USDC本金 '+money(d.pool?.usdc_reserve)+'，24h净供应 '+signed(d.supply?.change_24h,2,' DORY')+'，Zero Transfer '+fmt(d.zero_burn?.total_dory)+' DORY。采集于 '+asOf(d.generated_at)+'。X9 路由销毁 · '+miningTiers.slice(0,2).map(([label,key])=>label+' '+fmt(miningResult(d,key,'mining_routed')?.matches,0)).join(' / ')+'。开矿双腿候选 · '+miningTiers.map(([label,key])=>label+' '+fmt(miningResult(d,key)?.matches,0)).join(' / ')+'。'+(failures.length?' 当日缺口：'+failures.join('；')+'。未采集不等于0，不用其他日期补填。':'');document.querySelectorAll('#historyRows tr').forEach(row=>row.classList.toggle('selected',row.cells[0].textContent===date))}
+function showHistoryDay(date){const d=history.find(h=>h.date===date);if(!d)return;const failures=['x9c_mint','holders','mining_routed'].filter(key=>d.sources?.[key]?.status==='failed').map(key=>sourceNames[key]+'：'+d.sources[key].error);$('historySummary').textContent=date+' · USDC本金 '+money(d.pool?.usdc_reserve)+'，24h净供应 '+signed(d.supply?.change_24h,2,' DORY')+'，Zero Transfer '+fmt(d.zero_burn?.total_dory)+' DORY。采集于 '+asOf(d.generated_at)+'。X9 路由销毁 · '+miningTiers.map(([label,key])=>label+' '+fmt(miningResult(d,key)?.matches,0)).join(' / ')+'。'+(failures.length?' 当日缺口：'+failures.join('；')+'。未采集不等于0，不用其他日期补填。':'');document.querySelectorAll('#historyRows tr').forEach(row=>row.classList.toggle('selected',row.cells[0].textContent===date))}
 function initEditorial(){
  if(typeof DoryTheme!=='undefined'){DoryTheme.syncButton();$('themeToggle').addEventListener?.('click',()=>DoryTheme.toggle());DoryTheme.subscribe(()=>{if(candlesAll.length)drawChart()})}
  const cv=$('chart');

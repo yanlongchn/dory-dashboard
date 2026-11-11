@@ -17080,26 +17080,6 @@
         "absorption_24h_pct": 0,
         "verification": "original TicketMinted + matching ERC721 mint + exact payer→dEaD transfer; splits excluded"
       },
-      "mining_funding": {
-        "tier_5000": {
-          "matches": 0,
-          "wallets": 0,
-          "buy_usdc": 0,
-          "transfer_usdc_estimate": 0
-        },
-        "tier_10000": {
-          "matches": 0,
-          "wallets": 0,
-          "buy_usdc": 0,
-          "transfer_usdc_estimate": 0
-        },
-        "unclassified": {
-          "matches": 0,
-          "wallets": 0,
-          "buy_usdc": 0,
-          "transfer_usdc_estimate": 0
-        }
-      },
       "distribution_705b": {
         "address": "0x0135f06fbb34cad4a4c0a321efe964b38d2c705b",
         "balance_dory": 3707.125418661603,
@@ -17223,10 +17203,6 @@
         "distribution_705b": {
           "status": "ok",
           "collected_at": "2026-11-09T07:46:21.083Z"
-        },
-        "mining_funding": {
-          "status": "ok",
-          "collected_at": "2026-11-09T07:46:23.154Z"
         },
         "supply_event_reconciliation": {
           "status": "ok",
@@ -17590,26 +17566,6 @@
         "absorption_24h_pct": 0,
         "verification": "original TicketMinted + matching ERC721 mint + exact payer→dEaD transfer; splits excluded"
       },
-      "mining_funding": {
-        "tier_5000": {
-          "matches": 0,
-          "wallets": 0,
-          "buy_usdc": 0,
-          "transfer_usdc_estimate": 0
-        },
-        "tier_10000": {
-          "matches": 0,
-          "wallets": 0,
-          "buy_usdc": 0,
-          "transfer_usdc_estimate": 0
-        },
-        "unclassified": {
-          "matches": 0,
-          "wallets": 0,
-          "buy_usdc": 0,
-          "transfer_usdc_estimate": 0
-        }
-      },
       "mining_routed": {
         "tier_5000": {
           "matches": 57,
@@ -17751,10 +17707,6 @@
         "mining_routed": {
           "status": "ok",
           "collected_at": "2026-11-10T09:28:48.585Z"
-        },
-        "mining_funding": {
-          "status": "ok",
-          "collected_at": "2026-11-10T09:28:51.189Z"
         },
         "supply_event_reconciliation": {
           "status": "ok",
@@ -18123,26 +18075,6 @@
         "absorption_24h_pct": 0,
         "verification": "original TicketMinted + matching ERC721 mint + exact payer→dEaD transfer; splits excluded"
       },
-      "mining_funding": {
-        "tier_5000": {
-          "matches": 0,
-          "wallets": 0,
-          "buy_usdc": 0,
-          "transfer_usdc_estimate": 0
-        },
-        "tier_10000": {
-          "matches": 0,
-          "wallets": 0,
-          "buy_usdc": 0,
-          "transfer_usdc_estimate": 0
-        },
-        "unclassified": {
-          "matches": 0,
-          "wallets": 0,
-          "buy_usdc": 0,
-          "transfer_usdc_estimate": 0
-        }
-      },
       "mining_routed": {
         "tier_5000": {
           "matches": 38,
@@ -18284,10 +18216,6 @@
         "mining_routed": {
           "status": "ok",
           "collected_at": "2026-11-10T20:45:14.716Z"
-        },
-        "mining_funding": {
-          "status": "ok",
-          "collected_at": "2026-11-10T20:45:16.627Z"
         },
         "supply_event_reconciliation": {
           "status": "ok",

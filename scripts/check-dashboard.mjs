@@ -108,13 +108,13 @@ assert.equal(nodes.get('lpActivity').textContent,'暂无数据');
 console.log('PASS: Pool and LP metrics require consistent sources. Current X9 rules appear without a price threshold.');
 
 
-const miningTier={matches:2,wallets:1,buy_usdc:10040,transfer_usdc_estimate:10040};
-const miningSources={mining_funding:{status:'ok'},chain_consistency:{status:'ok'}};
-run({...fresh,mining_funding:{tier_5000:miningTier,tier_10000:{matches:0}},sources:miningSources});
-assert.equal(nodes.get('miningFundingRows').children[0].children[1].textContent,'2');
-assert.equal(nodes.get('miningFundingRows').children[1].children[1].textContent,'0');
-run({...fresh,mining_funding:{tier_5000:miningTier},sources:{...miningSources,chain_consistency:{status:'failed'}}});
-assert.equal(nodes.get('miningFundingRows').children[0].children[1].textContent,'暂无数据');
+const miningTier={matches:2,wallets:1,cash_usdc:5040,dory_proceeds_usdc:5000};
+const miningSources={mining_routed:{status:'ok'},chain_consistency:{status:'ok'}};
+run({...fresh,mining_routed:{tier_5000:miningTier,tier_10000:{matches:0}},sources:miningSources});
+assert.equal(nodes.get('miningRoutedRows').children[0].children[1].textContent,'2');
+assert.equal(nodes.get('miningRoutedRows').children[1].children[1].textContent,'0');
+run({...fresh,mining_routed:{tier_5000:miningTier},sources:{...miningSources,chain_consistency:{status:'failed'}}});
+assert.equal(nodes.get('miningRoutedRows').children[0].children[1].textContent,'暂无数据');
 
 let nextRefresh;
 context.window.clearTimeout=()=>{};

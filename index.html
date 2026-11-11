@@ -415,16 +415,6 @@ select, .scenario-inputs input {
     <p class="small mechanism-note">X9 路由先将账户的 DORY 卖为 USDC，再和该账户支付的 USDC 合并买回 DORY。按两条资金腿的合计投入分为约 5000U 和 10000U 两档，之后须匹配同址 90% Zero / 10% 分流。链上候选与 App 矿单分开统计。</p>
   </div>
 </details>
-<details class="detail" id="miningFunding">
-  <summary><div>双笔 DORY 到账（旧口径参考）<span id="miningFundingStatus">暂无数据</span></div></summary>
-  <div class="detail-body">
-    <div class="table-scroll"><table>
-      <thead><tr><th scope="col">档位</th><th scope="col">双腿匹配组</th><th scope="col">去重地址</th><th scope="col">买入 USDC</th><th scope="col">转入 DORY 估值 · U</th></tr></thead>
-      <tbody id="miningFundingRows"></tbody>
-    </table></div>
-    <p class="small mechanism-note">同一地址收到转入 DORY 和链上买入的 DORY，两条腿的币量须与随后 90% 销毁及 10% 分流对上。5000U 档每腿参考 5020U，10000U 档每腿参考 5040U。转入腿按对应买入成交价估值，临界或跨档单列。这里统计链上候选，App 矿单单独记录。</p>
-  </div>
-</details>
 <details class="detail" id="receiverWatch"><summary><div>705B收款与90% / 10%分流观察<span id="receiverStatus">等待完整窗口分流证据</span></div></summary><div class="detail-body">
 <p class="rule-label">收款地址 · <a href="https://arbiscan.io/address/0x0135f06fbb34cad4a4c0a321efe964b38d2c705b" target="_blank" rel="noopener" style="overflow-wrap:anywhere">0x0135f06fbb34cad4a4c0a321efe964b38d2c705b</a></p>
 <div class="row"><span>快照DORY余额</span><strong id="receiverBalance">暂无数据</strong></div><p id="miningFingerprint" class="mechanism-note">新开矿/复投指纹候选：暂无数据</p>
@@ -458,7 +448,7 @@ select, .scenario-inputs input {
 <div class="detail-block"><h3>X9C → dEaD · 原始认购</h3><div class="big" id="x9burn">暂无数据</div><div class="row"><span>已验证 Mint 交易</span><strong id="x9mintTx">暂无数据</strong></div><div class="row"><span>7日认购销毁</span><strong id="x9burn7">暂无数据</strong></div><div class="row"><span>24h / 新增发行</span><strong id="x9Absorption">暂无数据</strong></div><p class="small">原始 TicketMinted、对应凭证、付款人 → dEaD 金额须一致，剔除拆分。比率分母为实际链上新增发行；仅作流通转出参考，不抵扣totalSupply，不代表NFT分红或全部应用销毁。</p></div>
 </div></details>
 <details class="detail"><summary><div>候选交易与估算情景<span>候选、理论估算与已验证数据分别标识</span></div></summary><div class="detail-body detail-grid">
-<div class="detail-block"><h3>辅助指标 · BUY 金额筛选</h3><div class="big" id="pools">暂无数据</div><div class="row"><span>筛选 BUY 交易</span><strong id="poolTxs">暂无数据</strong></div><div class="row"><span>筛选 BUY 金额</span><strong id="poolCapital">暂无数据</strong></div><div class="row"><span>最大单笔</span><strong id="poolMax">暂无数据</strong></div><div class="row"><span>剔除同笔往返</span><strong id="poolRoundtrip">暂无数据</strong></div><p class="small">按整笔交易归并 BUY，筛选5000U整数倍 ±8%，每5000U计一份金额单位。最新资料明确参与金额不限；此筛选不代表开矿门槛、矿池数量或全量参与本金。此表仅按买入金额统计，开矿双腿监测见「计产与机制」。</p></div>
+<div class="detail-block"><h3>辅助指标 · BUY 金额筛选</h3><div class="big" id="pools">暂无数据</div><div class="row"><span>筛选 BUY 交易</span><strong id="poolTxs">暂无数据</strong></div><div class="row"><span>筛选 BUY 金额</span><strong id="poolCapital">暂无数据</strong></div><div class="row"><span>最大单笔</span><strong id="poolMax">暂无数据</strong></div><div class="row"><span>剔除同笔往返</span><strong id="poolRoundtrip">暂无数据</strong></div><p class="small">按整笔交易归并 BUY，筛选5000U整数倍 ±8%，每5000U计一份金额单位。最新资料明确参与金额不限；此筛选不代表开矿门槛、矿池数量或全量参与本金。此表仅按买入金额统计，X9 开矿路由监测见「计产与机制」。</p></div>
 <div class="detail-block"><h3>全网矿工卖压</h3><div class="big" id="minerPressure">暂无数据</div><div class="row"><span>示例本金 E</span><strong>5,000 USD</strong></div><div class="row"><span>示例日计产额度</span><strong id="exampleDailyUsd">42.50 USD</strong></div><div class="row"><span>示例每次计产额度</span><strong id="exampleSettlementUsd">0.44270833… USD</strong></div><p class="small">示例仅按本金 × 0.85%计产，不是实际日产DORY或卖出所得。币数需逐次按当时币价换算后合计；缺少活跃本金、结算价格和实际卖出比例，全网卖压保持未知。社区加速不默认计入全体矿工产出。</p></div>
 <div class="detail-block"><h3>池LP费用 · 情景估算</h3><div class="big" id="feeRange">暂无数据</div><p class="small">行情成交额 × 快照StateView的LP费率，仅情景估算；估算范围仅含池 LP 费用。</p></div>
 </div></details>
@@ -476,5 +466,5 @@ select, .scenario-inputs input {
 <details class="detail"><summary><div>逐项核对数据来源<span>采集状态、时间与失败原因</span></div></summary><div class="detail-body table-scroll"><table><thead><tr><th scope="col">来源 / 项目</th><th scope="col">采集结果</th><th scope="col">证据与范围</th></tr></thead><tbody id="sourceRows"></tbody></table></div></details><p class="stateline" id="scanStatus" style="margin-top:20px">等待真实每日快照</p>
 </section>
 <footer class="foot"><div class="foot-top"><span>DORY / MARKET TERMINAL</span><span>北京时间 22:00 计划采集 · 网页行情每 30 分钟刷新</span></div><p>DORY 0x33b49f2264e85bB124d2730DC180182717D436Ae · Pool ID 0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb · PoolManager 0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32 · X9C 0xecdDa172D2E8aa8efF55500fD28Da828CFfbc5B0</p><p>接口失败时保留已有快照与采集时间，不以虚构数据替代。</p></footer>
-</main><script src="./monitoring.js?v=20261109-terminal"></script><script src="./dashboard.js?v=20261110-mining"></script>
+</main><script src="./monitoring.js?v=20261109-terminal"></script><script src="./dashboard.js?v=20261111-mining"></script>
 </body></html>
