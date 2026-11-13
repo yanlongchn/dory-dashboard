@@ -1,42 +1,42 @@
 {
   "schema_version": 2,
-  "generated_at": "2026-11-13T01:22:27.899Z",
-  "date_bj": "2026-11-13",
+  "generated_at": "2026-11-13T20:48:26.333Z",
+  "date_bj": "2026-11-14",
   "status": "ok",
   "blocks": {
-    "from": 523433138,
-    "to": 523721026,
-    "from_ts": "2026-11-12T01:18:26.000Z",
-    "to_ts": "2026-11-13T01:18:26.000Z",
-    "requested_from_ts": "2026-11-12T01:18:26.000Z",
-    "hash": "0xb8e0d23ee7b90b7287e604b9c720d07df1b04bb94c63d20e8a65041fa9362ba6",
-    "from_7d": 521647542,
-    "baseline_24h": 523433137,
-    "baseline_7d": 521647541,
-    "baseline_24h_ts": "2026-11-12T01:18:25.000Z",
-    "baseline_7d_ts": "2026-11-06T01:18:25.000Z"
+    "from": 523670246,
+    "to": 523967727,
+    "from_ts": "2026-11-12T20:44:49.000Z",
+    "to_ts": "2026-11-13T20:44:49.000Z",
+    "requested_from_ts": "2026-11-12T20:44:49.000Z",
+    "hash": "0x80e9a6c2fcbc2e44c362d866b7831886e340d43449bcbcf66a135a6820770a6d",
+    "from_7d": 521896848,
+    "baseline_24h": 523670245,
+    "baseline_7d": 521896847,
+    "baseline_24h_ts": "2026-11-12T20:44:48.000Z",
+    "baseline_7d_ts": "2026-11-06T20:44:48.000Z"
   },
   "market": {
-    "price_usd": 632.4082063304887,
-    "price_usdc": 632.4082063304887,
-    "change_24h_pct": 7.9538428059649835,
-    "change_7d_pct": 158.96334884465313,
-    "volume_24h": 669401.080329,
-    "liquidity_usd": 8550327.555227712,
-    "buys": 187,
-    "sells": 190,
+    "price_usd": 676.1131718987597,
+    "price_usdc": 676.1131718987597,
+    "change_24h_pct": 7.008962575975142,
+    "change_7d_pct": 144.24949285081166,
+    "volume_24h": 574399.965171,
+    "liquidity_usd": 8815514.70446197,
+    "buys": 179,
+    "sells": 186,
     "buyers": null,
     "sellers": null,
-    "buy_usdc": 442194.462138,
-    "sell_usdc": 227206.61819099993,
-    "sell_buy_amount_ratio": 0.5138160642999942
+    "buy_usdc": 381547.8514229998,
+    "sell_usdc": 192852.113748,
+    "sell_buy_amount_ratio": 0.5054467297581402
   },
   "pool": {
-    "liquidity_usd": 8550327.555227712,
-    "usdc_reserve": 4592251.083451,
-    "dory_reserve": 6258.736733894106,
-    "swap_net_usdc": 214987.8439470001,
-    "swap_net_dory": -342.38929908211367,
+    "liquidity_usd": 8815514.70446197,
+    "usdc_reserve": 4731928.002294,
+    "dory_reserve": 6039.797584034409,
+    "swap_net_usdc": 188695.73767500016,
+    "swap_net_dory": -279.8110382854957,
     "key": {
       "currency0": "0x33b49f2264e85bb124d2730dc180182717d436ae",
       "currency1": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
@@ -48,87 +48,87 @@
       "block": 377333322
     },
     "state_view": {
-      "sqrt_price_x96": "1992408253704518596209913",
-      "tick": -211826,
+      "sqrt_price_x96": "2060104648954391423362316",
+      "tick": -211158,
       "protocol_fee": 0,
       "lp_fee": 10000,
-      "price_usdc_per_dory": 632.4082063304887,
-      "active_liquidity": "211776216368438434",
-      "virtual_dory": 8421.286378380453,
-      "virtual_usdc": 5325690.61354696,
-      "virtual_equivalent_tvl_usdc": 10651381.22709392,
+      "price_usdc_per_dory": 676.1131718987596,
+      "active_liquidity": "238507566404655058",
+      "virtual_dory": 9172.600159696087,
+      "virtual_usdc": 6201715.788531191,
+      "virtual_equivalent_tvl_usdc": 12403431.577062381,
       "virtual_semantics": "Local constant-active-L virtual reserves, not fee-excluded principal, withdrawable funds or treasury backing; crossing ticks requires a new liquidity curve.",
       "address": "0x76fd297e2d437cd7f76d50f01afe6160f86e9990",
-      "block": 523721026,
-      "block_hash": "0xb8e0d23ee7b90b7287e604b9c720d07df1b04bb94c63d20e8a65041fa9362ba6"
+      "block": 523967727,
+      "block_hash": "0x80e9a6c2fcbc2e44c362d866b7831886e340d43449bcbcf66a135a6820770a6d"
     },
     "lp_activity": {
-      "add_events": 11,
-      "remove_events": 0,
+      "add_events": 6,
+      "remove_events": 7,
       "zero_delta_events": 1,
-      "total_events": 12,
-      "transactions": 2,
-      "position_manager_events": 12,
+      "total_events": 14,
+      "transactions": 4,
+      "position_manager_events": 14,
       "single_withdrawal_pct": null,
       "lp_owner": null,
       "automation_status": "unverified",
       "note": "Event sender is a routing contract, not proof of NFT ownership or automated operation; no withdrawal value percentage inferred from liquidityDelta."
     },
     "core_principal": {
-      "dory_reserve": 6258.736733894106,
-      "usdc_reserve": 4592251.083451,
+      "dory_reserve": 6039.797584034409,
+      "usdc_reserve": 4731928.002294,
       "has_custom_accounting": false,
       "hook_stats_status": 1,
       "semantics": "fee-excluded core liquidity principal; excludes fees, donations and hook-held assets",
-      "block": 523721026,
-      "block_hash": "0xb8e0d23ee7b90b7287e604b9c720d07df1b04bb94c63d20e8a65041fa9362ba6",
-      "lens_l1_block": 26402699,
+      "block": 523967727,
+      "block_hash": "0x80e9a6c2fcbc2e44c362d866b7831886e340d43449bcbcf66a135a6820770a6d",
+      "lens_l1_block": 26408516,
       "lens": "0x0000001b173c3bbf3984d417d8614e3eed34865b"
     },
-    "usdc_change_24h": 210565.89913100004,
-    "dory_change_24h": -305.2367934676813,
+    "usdc_change_24h": 142118.2229249999,
+    "dory_change_24h": -222.8012497941354,
     "baseline_24h": {
-      "dory_reserve": 6563.973527361787,
-      "usdc_reserve": 4381685.18432,
+      "dory_reserve": 6262.598833828544,
+      "usdc_reserve": 4589809.779369,
       "has_custom_accounting": false,
       "hook_stats_status": 1,
       "semantics": "fee-excluded core liquidity principal; excludes fees, donations and hook-held assets",
-      "block": 523433137,
-      "block_hash": "0x08d98a17a4eccec9d65a8182c41abe21bf29e0d6b2051c9f475a30960452ff58",
-      "lens_l1_block": 26395522,
+      "block": 523670245,
+      "block_hash": "0x010727e85be8342a89daf315d73352a3bb821c896f90887a1c6a9646fc5d3723",
+      "lens_l1_block": 26401336,
       "lens": "0x0000001b173c3bbf3984d417d8614e3eed34865b"
     }
   },
   "supply": {
-    "total_supply": 556436.853662123,
-    "change_24h": -7179.463816338784,
-    "change_7d": -73278.76381872359,
-    "minted_24h": 593.2212312102336,
-    "minted_7d": 7707.812166894406,
-    "baseline_7d": 629715.6174808466,
-    "baseline_24h": 563616.3174784618,
-    "event_discrepancy_24h": -2.7284841053187847e-12,
-    "event_discrepancy_7d": -1.1641532182693481e-10
+    "total_supply": 551625.765026103,
+    "change_24h": -5130.46209316483,
+    "change_7d": -71869.33488510211,
+    "minted_24h": 710.5884751700522,
+    "minted_7d": 7104.951059583542,
+    "baseline_7d": 623495.099911205,
+    "baseline_24h": 556756.2271192678,
+    "event_discrepancy_24h": -6.366462912410498e-12,
+    "event_discrepancy_7d": 1.4551915228366852e-11
   },
   "holders": {
-    "count": 40051,
+    "count": 40252,
     "status": "indexed",
-    "as_of": "2026-11-13T01:18:31.325Z",
+    "as_of": "2026-11-13T20:44:55.549Z",
     "source": "https://arbitrum.blockscout.com/api/v2/tokens/0x33b49f2264e85bb124d2730dc180182717d436ae",
     "timing": "retrieval time; indexer does not expose an exact indexed block or update timestamp",
     "retrieval_source": "https://api.blockscout.com/42161/api/v2/tokens/0x33b49f2264e85bb124d2730dc180182717d436ae"
   },
   "zero_burn": {
-    "total_dory": 7772.685047549021,
-    "transactions": 566,
+    "total_dory": 5841.050568334888,
+    "transactions": 465,
     "categories": {
       "sell_swap": {
-        "dory": 1.5673569396993141,
-        "txs": 7
+        "dory": 5.299122750901468,
+        "txs": 4
       },
       "buy_swap": {
-        "dory": 13.8668053067163,
-        "txs": 9
+        "dory": 39.91360769165649,
+        "txs": 11
       },
       "direct_transfer": {
         "dory": 0,
@@ -139,16 +139,16 @@
         "txs": 0
       },
       "other": {
-        "dory": 7757.250885302606,
-        "txs": 550
+        "dory": 5795.837837892332,
+        "txs": 450
       },
       "pending_burn": {
         "dory": null,
         "txs": null
       }
     },
-    "total_7d": 80986.57598561811,
-    "transactions_7d": 5395
+    "total_7d": 78974.28594468565,
+    "transactions_7d": 5124
   },
   "x9c_dead_burn": {
     "total_dory": 0,
@@ -160,43 +160,43 @@
   },
   "mining_routed": {
     "tier_5000": {
-      "matches": 29,
-      "wallets": 29,
-      "cash_usdc": 73084.532625,
-      "dory_proceeds_usdc": 72074.12399000001
+      "matches": 25,
+      "wallets": 25,
+      "cash_usdc": 63229.398168,
+      "dory_proceeds_usdc": 62349.560399
     },
     "tier_10000": {
-      "matches": 5,
-      "wallets": 5,
-      "cash_usdc": 25224,
-      "dory_proceeds_usdc": 24862.838811999998
+      "matches": 2,
+      "wallets": 2,
+      "cash_usdc": 10148,
+      "dory_proceeds_usdc": 10002.714892
     }
   },
   "distribution_705b": {
     "address": "0x0135f06fbb34cad4a4c0a321efe964b38d2c705b",
-    "balance_dory": 1928.904059137951,
+    "balance_dory": 2129.372013100731,
     "day": {
-      "incoming_dory": 863.6316719498908,
-      "matched_pairs": 566,
-      "matched_transactions": 566,
-      "matched_wallets": 552,
-      "matched_zero_dory": 7772.685047549017,
-      "matched_receiver_dory": 863.6316719498908,
-      "matched_total_dory": 8636.31671949891,
+      "incoming_dory": 649.0056187038756,
+      "matched_pairs": 465,
+      "matched_transactions": 465,
+      "matched_wallets": 457,
+      "matched_zero_dory": 5841.05056833488,
+      "matched_receiver_dory": 649.0056187038756,
+      "matched_total_dory": 6490.0561870387555,
       "unmatched_incoming_dory": 0
     },
     "week": {
-      "incoming_dory": 8998.508442846442,
-      "matched_pairs": 5395,
-      "matched_transactions": 5395,
-      "matched_wallets": 5200,
-      "matched_zero_dory": 80986.57598561796,
-      "matched_receiver_dory": 8998.508442846442,
-      "matched_total_dory": 89985.08442846441,
+      "incoming_dory": 8774.920660520631,
+      "matched_pairs": 5124,
+      "matched_transactions": 5124,
+      "matched_wallets": 4935,
+      "matched_zero_dory": 78974.28594468567,
+      "matched_receiver_dory": 8774.920660520631,
+      "matched_total_dory": 87749.20660520632,
       "unmatched_incoming_dory": 0
     },
-    "block": 523721026,
-    "block_hash": "0xb8e0d23ee7b90b7287e604b9c720d07df1b04bb94c63d20e8a65041fa9362ba6",
+    "block": 523967727,
+    "block_hash": "0x80e9a6c2fcbc2e44c362d866b7831886e340d43449bcbcf66a135a6820770a6d",
     "semantics": "DORY Transfer inflows; one Zero and one 705B leg in the same transaction from the same sender, 90/10 with integer rounding. Overlay only; not mining/NFT attribution or full Pending detection."
   },
   "pool_candidates": {
@@ -204,7 +204,7 @@
     "candidate_usdc": 0,
     "transactions": 0,
     "max_usdc": 0,
-    "same_tx_roundtrips_excluded": 186,
+    "same_tx_roundtrips_excluded": 176,
     "examples": [],
     "rule": "Aggregate BUY per transaction; exclude same-transaction BUY+SELL; 5000 USDC multiples ±8%. candidate_pools counts amount-size units, not mining positions or users. Participation has no minimum amount; this filter is not total mining capital."
   },
@@ -1946,107 +1946,107 @@
     },
     "market_day": {
       "status": "ok",
-      "from": "2026-11-12T01:20:00.000Z",
-      "to": "2026-11-13T01:10:00.000Z",
+      "from": "2026-11-12T20:50:00.000Z",
+      "to": "2026-11-13T20:40:00.000Z",
       "points": 144,
       "change_window": {
-        "from": "2026-11-12T01:20:00.000Z",
-        "to": "2026-11-13T01:10:00.000Z"
+        "from": "2026-11-12T20:50:00.000Z",
+        "to": "2026-11-13T20:40:00.000Z"
       }
     },
     "market_week": {
       "status": "ok",
-      "from": "2026-11-06T02:00:00.000Z",
-      "to": "2026-11-13T01:00:00.000Z",
+      "from": "2026-11-06T21:00:00.000Z",
+      "to": "2026-11-13T20:00:00.000Z",
       "points": 168,
       "change_window": {
-        "from": "2026-11-06T02:00:00.000Z",
-        "to": "2026-11-13T01:00:00.000Z"
+        "from": "2026-11-06T21:00:00.000Z",
+        "to": "2026-11-13T20:00:00.000Z"
       }
     },
     "market": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:27.447Z"
+      "collected_at": "2026-11-13T20:44:50.832Z"
     },
     "chain_window": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:31.078Z"
+      "collected_at": "2026-11-13T20:44:54.985Z"
     },
     "holders": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:31.325Z"
+      "collected_at": "2026-11-13T20:44:55.549Z"
     },
     "pool_key": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:32.205Z"
+      "collected_at": "2026-11-13T20:44:56.310Z"
     },
     "pool_state": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:32.589Z"
+      "collected_at": "2026-11-13T20:44:56.700Z"
     },
     "lp_activity": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:34.112Z"
+      "collected_at": "2026-11-13T20:44:58.119Z"
     },
     "pool_reserves": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:34.517Z"
+      "collected_at": "2026-11-13T20:44:58.543Z"
     },
     "pool_reserves_24h": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:35.054Z"
+      "collected_at": "2026-11-13T20:44:59.126Z"
     },
     "swaps": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:51.992Z"
+      "collected_at": "2026-11-13T20:45:16.929Z"
     },
     "supply_7d": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:52.558Z"
+      "collected_at": "2026-11-13T20:45:17.567Z"
     },
     "supply_24h": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:52.558Z"
+      "collected_at": "2026-11-13T20:45:17.630Z"
     },
     "supply": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:18:52.558Z"
+      "collected_at": "2026-11-13T20:45:17.630Z"
     },
     "x9c_mint": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:19:46.773Z"
+      "collected_at": "2026-11-13T20:46:10.194Z"
     },
     "zero_burn_categories": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:20:13.609Z"
+      "collected_at": "2026-11-13T20:46:27.763Z"
     },
     "zero_burn": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:20:13.609Z"
+      "collected_at": "2026-11-13T20:46:27.763Z"
     },
     "mint_emissions": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:21:43.940Z"
+      "collected_at": "2026-11-13T20:47:59.211Z"
     },
     "distribution_705b_balance": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:21:44.117Z"
+      "collected_at": "2026-11-13T20:47:59.422Z"
     },
     "distribution_705b": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:22:26.973Z"
+      "collected_at": "2026-11-13T20:48:25.516Z"
     },
     "mining_routed": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:22:27.822Z"
+      "collected_at": "2026-11-13T20:48:26.251Z"
     },
     "supply_event_reconciliation": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:22:27.823Z"
+      "collected_at": "2026-11-13T20:48:26.251Z"
     },
     "chain_consistency": {
       "status": "ok",
-      "collected_at": "2026-11-13T01:22:27.899Z"
+      "collected_at": "2026-11-13T20:48:26.333Z"
     }
   },
   "errors": [],
@@ -2062,11 +2062,11 @@
   "market_source": {
     "provider": "Uniswap",
     "source_url": "https://app.uniswap.org/explore/pools/arbitrum/0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb?chart=price",
-    "generated_at": "2026-11-13T01:18:27.447Z"
+    "generated_at": "2026-11-13T20:44:50.832Z"
   },
   "monitoring": {
     "rules_version": "2026-11-09-x9-terminal",
-    "generated_at": "2026-11-13T01:22:27.899Z",
+    "generated_at": "2026-11-13T20:48:26.333Z",
     "fresh": true,
     "chain_flow_status": "ok",
     "business_status": "evidence_incomplete",
@@ -2080,52 +2080,52 @@
     "flow": {
       "day": {
         "status": "ok",
-        "minted": 593.2212312102336,
-        "zero_transfer": 7772.685047549021,
-        "event_net": -7179.463816338787,
-        "supply_change": -7179.463816338784,
-        "zero_cover_pct": 1310.250651631589,
-        "discrepancy": -2.7284841053187847e-12
+        "minted": 710.5884751700522,
+        "zero_transfer": 5841.050568334888,
+        "event_net": -5130.462093164836,
+        "supply_change": -5130.46209316483,
+        "zero_cover_pct": 822.0018720310734,
+        "discrepancy": -6.366462912410498e-12
       },
       "week": {
         "status": "ok",
-        "minted": 7707.812166894406,
-        "zero_transfer": 80986.57598561811,
-        "event_net": -73278.7638187237,
-        "supply_change": -73278.76381872359,
-        "zero_cover_pct": 1050.707700603566,
-        "discrepancy": -1.1641532182693481e-10
+        "minted": 7104.951059583542,
+        "zero_transfer": 78974.28594468565,
+        "event_net": -71869.3348851021,
+        "supply_change": -71869.33488510211,
+        "zero_cover_pct": 1111.5387746149336,
+        "discrepancy": 1.4551915228366852e-11
       },
       "x9c_dead_24h": 0,
-      "unknown_burn_24h": 7757.250885302606,
-      "unknown_burn_pct": 99.80143075202459
+      "unknown_burn_24h": 5795.837837892332,
+      "unknown_burn_pct": 99.22594865574933
     },
     "distribution": {
       "address": "0x0135f06fbb34cad4a4c0a321efe964b38d2c705b",
-      "balance_dory": 1928.904059137951,
+      "balance_dory": 2129.372013100731,
       "day": {
-        "incoming_dory": 863.6316719498908,
-        "matched_pairs": 566,
-        "matched_transactions": 566,
-        "matched_wallets": 552,
-        "matched_zero_dory": 7772.685047549017,
-        "matched_receiver_dory": 863.6316719498908,
-        "matched_total_dory": 8636.31671949891,
+        "incoming_dory": 649.0056187038756,
+        "matched_pairs": 465,
+        "matched_transactions": 465,
+        "matched_wallets": 457,
+        "matched_zero_dory": 5841.05056833488,
+        "matched_receiver_dory": 649.0056187038756,
+        "matched_total_dory": 6490.0561870387555,
         "unmatched_incoming_dory": 0,
         "status": "ok",
-        "zero_share_pct": 99.99999999999996
+        "zero_share_pct": 99.99999999999986
       },
       "week": {
-        "incoming_dory": 8998.508442846442,
-        "matched_pairs": 5395,
-        "matched_transactions": 5395,
-        "matched_wallets": 5200,
-        "matched_zero_dory": 80986.57598561796,
-        "matched_receiver_dory": 8998.508442846442,
-        "matched_total_dory": 89985.08442846441,
+        "incoming_dory": 8774.920660520631,
+        "matched_pairs": 5124,
+        "matched_transactions": 5124,
+        "matched_wallets": 4935,
+        "matched_zero_dory": 78974.28594468567,
+        "matched_receiver_dory": 8774.920660520631,
+        "matched_total_dory": 87749.20660520632,
         "unmatched_incoming_dory": 0,
         "status": "ok",
-        "zero_share_pct": 99.99999999999983
+        "zero_share_pct": 100.00000000000004
       }
     },
     "required_evidence": [
@@ -2211,29 +2211,29 @@
     ]
   },
   "diagnostics": {
-    "requests": 574,
+    "requests": 552,
     "max_requests": 2400,
     "rpc_provider": "configured RPC",
     "pinned_reads": [
       {
         "provider": "configured RPC",
-        "block": 523721026,
-        "hash": "0xb8e0d23ee7b90b7287e604b9c720d07df1b04bb94c63d20e8a65041fa9362ba6"
+        "block": 523967727,
+        "hash": "0x80e9a6c2fcbc2e44c362d866b7831886e340d43449bcbcf66a135a6820770a6d"
       },
       {
         "provider": "arbitrum-one-rpc.publicnode.com",
-        "block": 523721026,
-        "hash": "0xb8e0d23ee7b90b7287e604b9c720d07df1b04bb94c63d20e8a65041fa9362ba6"
+        "block": 523967727,
+        "hash": "0x80e9a6c2fcbc2e44c362d866b7831886e340d43449bcbcf66a135a6820770a6d"
       },
       {
         "provider": "arbitrum-one.public.blastapi.io",
-        "block": 523433137,
-        "hash": "0x08d98a17a4eccec9d65a8182c41abe21bf29e0d6b2051c9f475a30960452ff58"
+        "block": 523670245,
+        "hash": "0x010727e85be8342a89daf315d73352a3bb821c896f90887a1c6a9646fc5d3723"
       },
       {
         "provider": "arbitrum-one.public.blastapi.io",
-        "block": 521647541,
-        "hash": "0x74af45b1acc38765cef9d048e8c455c2404b919d8dc62164e00ccb3ea731aaa4"
+        "block": 521896847,
+        "hash": "0xbd757861c82195a99bda8a540065d58e5a1c4862e629cd22a660224b855168df"
       }
     ]
   }
