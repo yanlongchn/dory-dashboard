@@ -11,6 +11,10 @@ on:
   schedule:
     - cron: "0 22 * * *"
       timezone: Asia/Shanghai
+    - cron: "0,30 0-21,23 * * *"
+      timezone: Asia/Shanghai
+    - cron: "30 22 * * *"
+      timezone: Asia/Shanghai
 
 permissions:
   contents: write
@@ -37,13 +41,19 @@ jobs:
           node --check theme.js
           node --check scripts/update-data.mjs
           node --check scripts/evidence.mjs
+          node --check scripts/update-market.mjs
+          node --check scripts/uniswap-market.mjs
           node scripts/check-dashboard.mjs
           node scripts/verify-theme.mjs
           node scripts/verify-data.mjs
+          node scripts/verify-uniswap-market.mjs
           node scripts/verify-evidence.mjs
           node scripts/verify-monitoring.mjs
           node scripts/verify-distribution.mjs
+      - name: Collect Uniswap market
+        run: node scripts/update-market.mjs
       - name: Collect DORY data
+        if: github.event_name != 'schedule' || github.event.schedule == '0 22 * * *'
         env:
           ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
           BLOCKSCOUT_API_KEY: ${{ secrets.BLOCKSCOUT_API_KEY }}
@@ -53,7 +63,7 @@ jobs:
         run: |
           git config user.name "dory-dashboard-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/latest.json data/history.json
+          git add data/market.json data/latest.json data/history.json
           git diff --cached --quiet || git commit -m "data: daily DORY snapshot"
           git push
 
@@ -74,7 +84,7 @@ jobs:
           mkdir -p _site/data _site/docs
           cp index.html dashboard.js monitoring.js theme.js .nojekyll _site/
           cp docs/monitoring-rules.md docs/mining-rules.md _site/docs/
-          cp data/latest.json data/history.json _site/data/
+          cp data/latest.json data/history.json data/market.json _site/data/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

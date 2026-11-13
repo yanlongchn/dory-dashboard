@@ -1,9 +1,10 @@
 import test from "node:test";
+import {validateUniswapPool} from "./uniswap-market.mjs";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { finiteNumber, beijingDay, blockscoutRequest, validatePool, decodeSwap, isX9Mint, isDirectZeroTransfer, getLogs, collect, saveResult } from "./update-data.mjs";
+import { finiteNumber, beijingDay, blockscoutRequest, decodeSwap, isX9Mint, isDirectZeroTransfer, getLogs, collect, saveResult } from "./update-data.mjs";
 
 const DORY = "0x33b49f2264e85bb124d2730dc180182717d436ae";
 const USDC = "0xaf88d065e77c8cc2239327c5edb3a432268e5831";
@@ -36,22 +37,21 @@ test('restricted Blockscout reads require configuration and never expose API key
   });
 });
 function poolResponse() {
-  return { data: { id: `arbitrum_${POOL}`, attributes: { address: POOL }, relationships: {
-    base_token: { data: { id: `arbitrum_${USDC}` } }, quote_token: { data: { id: `arbitrum_${DORY}` } },
-    dex: { data: { id: "uniswap-v4-arbitrum" } } } }, included: [DORY, USDC].map(address =>
-    ({ id: `arbitrum_${address}`, attributes: { address, decimals: address === DORY ? 18 : 6 } })) };
+  return {pool: {poolIdentifier: POOL, chainId: 42161, protocolVersion: 'V4', token0Address: DORY,
+    token1Address: USDC, token0Metadata: {decimals: 18}, token1Metadata: {decimals: 6}, feeTier: 10000,
+    token0PriceUsd: '100', token1PriceUsd: '1', tvlUsd: 100000, volumeUsd1d: 0}};
 }
 test("missing numeric data remains unverified while a real zero survives", () => {
   for (const missing of [null, undefined, "", "not a number"]) assert.equal(finiteNumber(missing), null);
   assert.equal(finiteNumber("0"), 0);
 });
-test("verified token order remains correct when API base/quote is reversed", () => {
-  const response = poolResponse(), identity = validatePool(response);
-  assert.equal(identity.currency0, DORY); assert.equal(identity.currency1, USDC); assert.equal(identity.dory_is_base, false);
+test("Uniswap pool identity preserves Swap token order", () => {
+  const response = poolResponse(), {identity} = validateUniswapPool(response);
+  assert.equal(identity.currency0, DORY); assert.equal(identity.currency1, USDC);
   const delta = decodeSwap({ address: PM, topics: [SWAP, POOL], data: "0x" + word(2n * 10n ** 18n) + word(-5000n * 10n ** 6n) }, identity);
   assert.deepEqual(delta, { dory: 2, usdc: -5000 });
-  response.data.relationships.base_token.data.id = "arbitrum_0x0000000000000000000000000000000000000001";
-  assert.throws(() => validatePool(response), /not DORY\/USDC/);
+  response.pool.token0Address = USDC;
+  assert.throws(() => validateUniswapPool(response), /different pool/);
 });
 test("X9 arbitrary logs are not ERC721 Mints", () => {
   const mint = { address: X9, topics: [TRANSFER, ZERO, "0x" + "0".repeat(24) + DORY.slice(2), "0x" + word(1)], data: "0x" };

@@ -10,6 +10,12 @@
 - 持币分档展示历史基线。Blockscout 总持币数使用独立索引，连续两天都有同源索引才计算日变化。
 - 完整快照每日北京时间 22:00 计划采集。看板打开时获取行情，保持可见时每 30 分钟刷新。
 
+## Uniswap 行情
+
+官方池页面为 https://app.uniswap.org/explore/pools/arbitrum/0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb?chart=price 。后台调用该页面使用的 Uniswap GetPool 与 GetPoolHistoryPrice 服务，每半小时更新 market.json。完整链上采集于北京时间 22:00 执行。GitHub 定时运行可能排队，页面显示实际采集时间。
+
+GetPool 的 token0PriceUsd 用于美元报价，价格曲线采用 priceToken0InToken1 原始 DORY/USDC 历史点。24h / 7 日涨幅使用对应历史窗口中的最近基线，实际比较时间随快照记录。历史接口失败时保留上次成功曲线，并记录该曲线的采集时间。BUY / SELL 笔数标明每日快照时间。
+
 ## X9 合并买回与销毁
 
 从同笔回执核对账户的 DORY 到池、池向 X9 路由支付 USDC、账户另付 USDC、费用与路由的合并回购。买回 DORY 的原始币量须等于账户到账与路由手续费之和。只有该账户随后出现原始币量匹配的 90% Zero / 10% 705B 分流才计为候选。配对接受扣费前或扣费后币量，分别使用链上原始整数比对。无法唯一配对的流水跳过。

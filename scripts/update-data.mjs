@@ -2,12 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { LENS, STATE_VIEW, MODIFY_LIQUIDITY, decodeSlot0, virtualDepth, liquidityActivity, INITIALIZE, INIT_BLOCK, TICKET_MINTED, RECEIVER_705B, distributionMatches, distributionWatch, isRoutedMiningBuy, miningBuyReceipt, routedMiningCredit, routedMiningWatch, poolKey, decodeReserves, indexedHolders, x9ReceiptBurn, aggregateCandidates } from './evidence.mjs';
+import {collectUniswapMarket} from './uniswap-market.mjs';
 import monitoring from '../monitoring.js';
 
 const DATA = path.join(path.resolve(process.cwd()), "data");
 const RPC = process.env.DORY_RPC_URL || process.env.ARBITRUM_RPC_URL || "https://arb1.arbitrum.io/rpc";
 const POOL = "0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb";
-const GT = `https://api.geckoterminal.com/api/v2/networks/arbitrum/pools/${POOL}`;
 const DORY = "0x33b49f2264e85bb124d2730dc180182717d436ae";
 const USDC = "0xaf88d065e77c8cc2239327c5edb3a432268e5831";
 const PM = "0x360e68faccca8ca495c1b759fd9eee466db9fb32";
@@ -16,7 +16,6 @@ const ZERO_TOPIC = "0x" + "0".repeat(64);
 const TRANSFER = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 // keccak256("Swap(bytes32,address,int128,int128,uint160,uint128,int24,uint24)"), verified with web3_sha3.
 const SWAP = "0x40e9cecb9f5f1f1c5b9c97dec2917b7ee92e57ba5563708daca94dd84ad7112f";
-const START_DATE = Date.parse("2025-09-09T00:00:00Z");
 const hex = n => "0x" + BigInt(n).toString(16);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const budgetValue = (name, fallback, min, max) => {
@@ -50,26 +49,6 @@ export async function blockscoutRequest(request, endpoint, label, key = process.
       : '; Blockscout public API restricted; configure BLOCKSCOUT_API_KEY in Actions secrets';
     throw new Error(message);
   }
-}
-export function validatePool(response) {
-  const p = response?.data;
-  if (p?.id?.toLowerCase() !== `arbitrum_${POOL}` || p?.attributes?.address?.toLowerCase() !== POOL)
-    throw new Error("GeckoTerminal response does not identify the configured pool");
-  if (p?.relationships?.dex?.data?.id !== "uniswap-v4-arbitrum")
-    throw new Error("Configured pool is not identified as Uniswap v4 on Arbitrum");
-  const relation = name => p.relationships?.[name]?.data?.id?.toLowerCase();
-  const base = relation("base_token"), quote = relation("quote_token");
-  if (![base, quote].includes(`arbitrum_${DORY}`) || ![base, quote].includes(`arbitrum_${USDC}`))
-    throw new Error("Configured pool token relations are not DORY/USDC");
-  for (const [address, decimals] of [[DORY, 18], [USDC, 6]]) {
-    const token = response.included?.find(x => x.id?.toLowerCase() === `arbitrum_${address}`);
-    if (token?.attributes?.address?.toLowerCase() !== address || token?.attributes?.decimals !== decimals)
-      throw new Error("Configured token address/decimals could not be verified");
-  }
-  // v4 requires currency0 < currency1 by address, regardless of GT base/quote presentation.
-  const currencies = [DORY, USDC].sort((a, b) => BigInt(a) < BigInt(b) ? -1 : 1);
-  return { currency0: currencies[0], currency1: currencies[1], dory_is_base: base === `arbitrum_${DORY}`,
-    evidence: "GeckoTerminal token relations and included decimals; Uniswap v4 address ordering" };
 }
 function signedWord(word) {
   if (!/^[0-9a-f]{64}$/i.test(word)) throw new Error("Invalid ABI integer word");
@@ -286,7 +265,7 @@ export async function collect() {
     distribution_705b: {address: RECEIVER_705B, balance_dory: null, day: null, week: null},
     pool_candidates: { candidate_pools: null, candidate_usdc: null, transactions: null, max_usdc: null,
       rule: "BUY near 5000 USDC integer multiples ±8%; candidate_pools counts amount-size units, not mining positions or users. Participation has no minimum amount; this filter is not total mining capital." },
-    ohlcv: [], sources: {}, errors: [],
+    ohlcv: [], price_history: [], sources: {}, errors: [],
     notes: ["Zero Address DORY Transfer and X9C Mint→dEaD are separate metrics.",
       "Zero Address Transfer alone does not prove an equal reduction in totalSupply; no supply reconciliation is inferred.",
       "Pool reserves are fee-excluded core liquidity principal, not PoolManager balances or TVL/2.",
@@ -307,19 +286,18 @@ export async function collect() {
   }
   const [poolResponse, window] = await Promise.all([
     component("market", async () => {
-      const response = await request(`${GT}?include=base_token,quote_token`, {}, "GeckoTerminal");
-      const identity = validatePool(response); result.sources.pool_identity = { status: "ok", ...identity };
-      const a = response.data.attributes, tx = a.transactions?.h24 || {}, prefix = identity.dory_is_base ? "base" : "quote";
-      result.market.price_usd = finiteNumber(a[`${prefix}_token_price_usd`]);
-      result.market.price_usdc = finiteNumber(a[identity.dory_is_base ? "base_token_price_quote_token" : "quote_token_price_base_token"]);
-      result.market.change_24h_pct = identity.dory_is_base ? finiteNumber(a.price_change_percentage?.h24) : null;
-      result.market.volume_24h = finiteNumber(a.volume_usd?.h24);
-      result.market.liquidity_usd = result.pool.liquidity_usd = finiteNumber(a.reserve_in_usd);
-      for (const [key, reversed] of [['buys','sells'],['sells','buys'],['buyers','sellers'],['sellers','buyers']])
-        result.market[key] = finiteNumber(tx[identity.dory_is_base ? key : reversed]);
-      if (result.market.price_usd === null || result.market.volume_24h === null || result.market.liquidity_usd === null)
-        throw new Error("GeckoTerminal market response is missing required numeric fields");
-      return { response, identity };
+      const official = await collectUniswapMarket(request);
+      const identity = official.identity;
+      result.sources.pool_identity = {status: 'ok', ...identity};
+      Object.assign(result.market, official.market);
+      result.market_source = {provider: official.provider, source_url: official.source_url, generated_at: official.generated_at};
+      result.pool.liquidity_usd = official.market.liquidity_usd;
+      result.price_history = official.price_history;
+      result.sources.price_history = official.sources.MAX;
+      result.sources.market_day = official.sources.DAY;
+      result.sources.market_week = official.sources.WEEK;
+      for (const error of official.errors) result.errors.push({source: 'price_history_' + error.source, message: error.message});
+      return {identity};
     }),
     component("chain_window", async () => {
       if (BigInt(await rpc('eth_chainId', [])) !== 42161n) throw Error('RPC is not Arbitrum One');
@@ -385,53 +363,11 @@ export async function collect() {
       });
     }
   }
-  if (poolResponse) await component("ohlcv", async () => {
-    const url = `${GT}/ohlcv/day?aggregate=1&limit=1000&currency=usd&token=${DORY}`;
-    const response = await request(url, {}, "GeckoTerminal OHLCV");
-    const candles = response?.data?.attributes?.ohlcv_list;
-    if (!Array.isArray(candles)) throw new Error("OHLCV response is missing its candle list");
-    const normalize = candles => candles.map(x => ({ t: finiteNumber(x[0]) === null ? null : Number(x[0]) * 1000,
-      o: finiteNumber(x[1]), h: finiteNumber(x[2]), l: finiteNumber(x[3]), c: finiteNumber(x[4]), v: finiteNumber(x[5]) }))
-      .filter(x => Object.values(x).every(v => v !== null) && x.t >= START_DATE && x.l >= 0 &&
-        x.h >= Math.max(x.o, x.c) && x.l <= Math.min(x.o, x.c) && x.v >= 0).sort((a, b) => a.t - b.t);
-    const byTime = new Map();
-    if (fs.existsSync(path.join(DATA, 'latest.json'))) {
-      try {
-        const cached = JSON.parse(fs.readFileSync(path.join(DATA, 'latest.json'), 'utf8'));
-        if (cached.sources?.pool_identity?.status === 'ok' && cached.sources.pool_identity.currency0 === DORY && cached.sources.pool_identity.currency1 === USDC)
-          for (const c of normalize((cached.ohlcv || []).map(c => [c.t / 1000, c.o, c.h, c.l, c.c, c.v]))) byTime.set(c.t, c);
-      } catch { /* A broken optional cache never prevents collecting the current official series. */ }
-    }
-    const fresh = normalize(candles);
-    if (!fresh.length) throw Error('Official pool returned no valid current DORY daily candles');
-    for (const c of fresh) byTime.set(c.t, c);
-    let boundary = '';
-    for (let page = 0; page < 4; page++) {
-      const earliest = Math.min(...byTime.keys());
-      if (earliest <= START_DATE) break;
-      try {
-        const older = await request(url + '&before_timestamp=' + (Math.floor(earliest / 1000) - 1), {}, 'GeckoTerminal history');
-        const list = older?.data?.attributes?.ohlcv_list;
-        if (!Array.isArray(list)) throw Error('Historical candle list missing');
-        const valid = normalize(list).filter(c => c.t < earliest);
-        if (!valid.length) { boundary = '历史接口未返回更早的有效日K'; break; }
-        for (const c of valid) byTime.set(c.t, c);
-      } catch (e) { boundary = /HTTP 401|HTTP 403/.test(e.message) ? '更早历史需要数据商授权（HTTP 401/403）' : '更早历史请求失败，保留已取得日K'; break; }
-    }
-    result.ohlcv = [...byTime.values()].sort((a, b) => a.t - b.t);
-    if (!result.ohlcv.length) throw new Error("Official pool returned no valid DORY daily candles");
-    const last = result.ohlcv.at(-1), previous = result.ohlcv.filter(x => x.t <= last.t - 7 * 86400000).at(-1);
-    result.market.change_7d_pct = previous?.c > 0 ? (last.c / previous.c - 1) * 100 : null;
-    result.ohlcv_coverage = {requested_from: new Date(START_DATE).toISOString(), actual_from: new Date(result.ohlcv[0].t).toISOString(),
-      actual_to: new Date(last.t).toISOString(), candles: result.ohlcv.length, complete: result.ohlcv[0].t <= START_DATE, reason: boundary || '已取得的真实范围'};
-    result.sources.ohlcv_history = {status: result.ohlcv_coverage.complete ? 'ok' : 'partial', reason: result.ohlcv_coverage.reason};
-  });
-  else result.sources.ohlcv = { status: "unverified", reason: "Pool token relations were not verified" };
   let swapByTx = null;
   if (window && poolResponse) swapByTx = await component("swaps", async () => {
     const logs = await getLogs(rpc, PM, window.start, window.latest, [SWAP, POOL]);
     const byTx = new Map();
-    let buy = 0, sell = 0, poolUsdc = 0, poolDory = 0;
+    let buy = 0, sell = 0, poolUsdc = 0, poolDory = 0, buys = 0, sells = 0;
     for (const log of logs) {
       const { dory, usdc } = decodeSwap(log, poolResponse.identity);
       const aggregate = byTx.get(log.transactionHash) || { dory: 0, usdc: 0, buy_usdc: 0, sell_usdc: 0, buy_dory_raw: 0n, sell_dory_raw: 0n, buy_usdc_raw: 0n, sell_usdc_raw: 0n, block_hash: log.blockHash.toLowerCase() };
@@ -440,15 +376,16 @@ export async function collect() {
       const doryIndex = poolResponse.identity.currency0 === DORY ? 2 : 66;
       const usdcIndex = doryIndex === 2 ? 66 : 2;
       if (dory > 0 && usdc < 0) {
-        const paid = -usdc; buy += paid; aggregate.buy_usdc += paid;
+        buys++; const paid = -usdc; buy += paid; aggregate.buy_usdc += paid;
         aggregate.buy_dory_raw += signedWord(log.data.slice(doryIndex, doryIndex + 64));
         aggregate.buy_usdc_raw -= signedWord(log.data.slice(usdcIndex, usdcIndex + 64));
       } else if (dory < 0 && usdc > 0) {
-        sell += usdc; aggregate.sell_usdc += usdc;
+        sells++; sell += usdc; aggregate.sell_usdc += usdc;
         aggregate.sell_dory_raw -= signedWord(log.data.slice(doryIndex, doryIndex + 64));
         aggregate.sell_usdc_raw += signedWord(log.data.slice(usdcIndex, usdcIndex + 64));
       }
     }
+    result.market.buys = buys; result.market.sells = sells;
     result.market.buy_usdc = buy; result.market.sell_usdc = sell; result.market.sell_buy_amount_ratio = buy > 0 ? sell / buy : null;
     result.pool.swap_net_usdc = poolUsdc; result.pool.swap_net_dory = poolDory;
     result.pool_candidates = aggregateCandidates(byTx);
@@ -577,7 +514,7 @@ export async function collect() {
       throw Error('Chain snapshot reorganized during collection; onchain values discarded');
     }
   });
-  const core = ["market", "pool_identity", "chain_window", "swaps", "supply", 'supply_24h', 'supply_7d', 'holders', 'pool_key',
+  const core = ["market", "market_day", "market_week", "price_history", "pool_identity", "chain_window", "swaps", "supply", 'supply_24h', 'supply_7d', 'holders', 'pool_key',
     'pool_reserves', 'pool_reserves_24h', 'pool_state', 'lp_activity', "zero_burn", "zero_burn_categories", "x9c_mint", 'mint_emissions', 'supply_event_reconciliation', 'chain_consistency', 'distribution_705b', 'distribution_705b_balance', 'mining_routed'];
   const complete = core.every(name => result.sources[name]?.status === "ok");
   const hasEvidence = ["market", "supply", "zero_burn", "x9c_mint"].some(name => result.sources[name]?.status === "ok");
@@ -598,7 +535,7 @@ export function saveResult(result, directory = DATA) {
   const history = fs.existsSync(historyPath) ? JSON.parse(fs.readFileSync(historyPath, "utf8")) : { schema_version: 1, snapshots: [] };
   if (!Array.isArray(history.snapshots)) throw new Error("History snapshots must be an array; history was preserved");
   const date = beijingDay(new Date(result.generated_at));
-  const { ohlcv, ...daily } = result; // Keep the candle series once in latest.json, rather than duplicating it every day.
+  const { ohlcv, price_history, ...daily } = result; // Store the full price series once in latest.json.
   history.snapshots = history.snapshots.filter(row => row.date !== date); history.snapshots.push({ date, ...daily });
   history.snapshots.sort((a, b) => a.date.localeCompare(b.date));
   // Older snapshots may retain per-transaction examples. Keep their metrics/timestamps,

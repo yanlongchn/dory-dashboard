@@ -1,6 +1,6 @@
 # DORY 每日监控 Dashboard
 
-看板展示 GitHub Actions 每日快照，并支持手动刷新链上行情。空缺指标按采集结果显示。界面提供日间与夜间主题，价格、资金、供应和成交指标按屏幕宽度重排。
+看板展示 GitHub Actions 每日快照，并支持读取最新 Uniswap 行情。空缺指标按采集结果显示。界面提供日间与夜间主题，价格、资金、供应和成交指标按屏幕宽度重排。
 
 ## 发布地址
 
@@ -43,9 +43,15 @@ X9 路由可以在同一笔交易先卖 DORY，再用卖出净额与账户支付
 - 社区/SVIP加速最高70%，替换早期约30%的机制表述；不是全体矿工统一奖励，不擅自叠加到基础日产出。六项收益为个人、邀请、社区、级别、合伙人、办公室；邀请不改变200%本金公式，Claim由钱包自行签名。
 - 课程中的直推、小区档位和级差按历史资料展示。链上供应以 totalSupply 与 Mint−Zero 对账为准。
 
+## Uniswap 官方行情
+
+行情使用用户指定池页面背后的官方服务。GetPool 返回美元报价、24h 成交额、TVL 及币种信息；GetPoolHistoryPrice 提供 DORY/USDC 历史价格点。采集端校验 Arbitrum、Pool ID、V4、两侧代币地址与精度。价格图展示原始历史点，并在滑杆中提供时间和 USDC/DORY 读数。
+
+服务仅允许 Uniswap 网页跨域访问，因此由 GitHub Actions 采集为同站 JSON。首次打开、手动刷新和每 30 分钟自动刷新均读取该文件。接口失败保留上次成功文件及原采集时间，超过 90 分钟显示更新延迟。完整链上快照中的 BUY / SELL 来自池 Swap 事件。
+
 ## 每日更新与部署
 
-工作流 `.github/workflows/dory-daily.yml` 每天北京时间 22:00 计划运行，也支持手动运行和代码推送触发。GitHub 的定时任务可能延迟，页面始终显示实际快照时间。看板打开时读取行情，保持可见时每 30 分钟刷新；切回页面时若已间隔 30 分钟，会立即补刷。行情和每日快照分别标注更新时间。
+工作流 `.github/workflows/dory-daily.yml` 每天北京时间 22:00 计划运行，也支持手动运行和代码推送触发。GitHub 的定时任务可能延迟，页面始终显示实际快照时间。看板打开时读取行情，保持可见时每 30 分钟刷新；切回页面时若已间隔 30 分钟，会立即补刷。行情和每日快照分别标注更新时间。后台在每小时整点与半点采集 Uniswap 官方行情服务，保存到 data/market.json 并部署。22:00 的运行另执行完整链上采集。
 
 流程：验证脚本 → 行情及链上24h/7日采集 → 保存 `data/latest.json` → 按北京时间日期更新 `data/history.json` → 提交快照 → 部署 GitHub Pages。重复运行覆盖同一天快照；部分采集失败以状态和错误记录保留，不填虚假零值。超过36小时的快照显示过期并关闭风险灯颜色。
 
@@ -65,8 +71,10 @@ node --check monitoring.js
 node --check scripts/update-data.mjs
 node scripts/check-dashboard.mjs
 node scripts/verify-data.mjs
+node scripts/verify-uniswap-market.mjs
 node scripts/verify-evidence.mjs
 node scripts/verify-monitoring.mjs
+node scripts/update-market.mjs
 node scripts/update-data.mjs
 python3 -m http.server 8080
 ```
@@ -75,11 +83,11 @@ python3 -m http.server 8080
 
 采集范围限于可归类的链上事件与窗口。显式processPendingBurn仅在直接调用参数与Zero Transfer账户匹配时单列。采集完成不会自动判定结构安全。
 
-观察灯阈值：USDC本金与供应按增减方向；价格24h超过±3%；SELL/BUY超过1.1为红、低于0.9为绿；X9C/新增发行仅作中性流通转出参考，不以20%/100%阈值判定经营安全。无分母、无证据或过期保持灰色。本金减少、供应增加、SELL/BUY>1.1中至少两项出现时提示资金/供应承压，其余情况显示资金与供应快照或采集状态。K线仅显示取得的真实官方池 OHLCV，实际覆盖范围与当日未收盘提示在图下展示。
+观察灯阈值：USDC本金与供应按增减方向；价格24h超过±3%；SELL/BUY超过1.1为红、低于0.9为绿；X9C/新增发行仅作中性流通转出参考，不以20%/100%阈值判定经营安全。无分母、无证据或过期保持灰色。本金减少、供应增加、SELL/BUY>1.1中至少两项出现时提示资金/供应承压，其余情况显示资金与供应快照或采集状态。价格曲线使用 Uniswap 官方历史价格点，区间与采集时间在图下展示。
 
 依据：[Uniswap v4储备口径](https://developers.uniswap.org/docs/protocols/v4/guides/reading-pool-reserves)、[X9C已验证源码](https://arbitrum.blockscout.com/address/0xecdda172d2e8aa8eff55500fd28da828cffbc5b0?tab=contract)、[Blockscout索引](https://arbitrum.blockscout.com/api/v2/tokens/0x33b49f2264e85bb124d2730dc180182717d436ae)。
 
-供应与事件对账分别读取真实totalSupply变化，再对照同窗口Mint与Zero Transfer净额（1e-6 DORY容差）；不以事件净额替代供应调用。对账不一致时记录差额、保留原始证据并关闭观察灯。日K按before_timestamp分页回溯并缓存已取得历史，数据商401/403权限边界明确显示，不能补造缺失K线。
+供应与事件对账分别读取真实totalSupply变化，再对照同窗口Mint与Zero Transfer净额（1e-6 DORY容差）；不以事件净额替代供应调用。对账不一致时记录差额、保留原始证据并关闭观察灯。历史价格使用 Uniswap GetPoolHistoryPrice，24h / 7 日涨幅用该接口对应窗口的历史点计算，快照记录实际比较起止时间。
 
 ## 课程补充后的每日机制监控
 
@@ -91,7 +99,7 @@ python3 -m http.server 8080
 - 705B 收款与 X9 Charter 原始认购分开统计。X9C→dEaD不抵扣totalSupply，也不冒充平台收入。
 - 会议付费销毁、直播质押、打赏转账、持仓准入各自追踪；不以未分类销毁或历史宣传用户数填充应用指标。
 - 额度演算恢复为本金U、剩余U额度两项输入，基础日额E×0.0085 U，每次日额/96按当次币价换币；仅基础计产假设天数，不计算未取得参数的Atlas个人收益。剩余额度0与无效输入明确提示。
-- 页面新增脚本与公开口径文档由Pages工作流一并发布；保留核心表格与真实日K。
+- 页面新增脚本与公开口径文档由Pages工作流一并发布；保留核心表格与历史价格曲线。
 
 ### 705B链上观察
 
@@ -101,7 +109,7 @@ python3 -m http.server 8080
 
 ### 日间 / 夜间配色
 
-页首按钮切换配色，文字、K线、表格、状态灯和表单同步适配。首次跟随系统，手动选择保存在本机浏览器localStorage（dory-color-theme），刷新后保留，其他同站标签页同步；存储受限时仍可切换。主题脚本在首次绘制前应用选择，切换只重绘图表，不重新采集数据。手机端导航单独成行，打印使用日间配色。
+页首按钮切换配色，文字、价格图、表格、状态灯和表单同步适配。首次跟随系统，手动选择保存在本机浏览器localStorage（dory-color-theme），刷新后保留，其他同站标签页同步；存储受限时仍可切换。主题脚本在首次绘制前应用选择，切换只重绘图表，不重新采集数据。手机端导航单独成行，打印使用日间配色。
 
 ## 2026-10-18资料更新验收范围
 
