@@ -213,7 +213,7 @@ function drawChart(){
  cv.width=W*dpr;cv.height=H*dpr;
  const x=cv.getContext('2d');x.scale(dpr,dpr);
  const low=Math.min(...points.map(point=>point.p)),high=Math.max(...points.map(point=>point.p));
- const padding=Math.max((high-low)*.05,high*.005),min=low-padding,max=high+padding;
+ const padding=Math.max((high-low)*.05,high*.005),min=Math.max(0,low-padding),max=high+padding;
  const first=points[0],last=points.at(-1),span=Math.max(1,last.t-first.t);
  const px=i=>points.length===1?(L+W-R)/2:L+(points[i].t-first.t)/span*(W-L-R);
  const py=p=>T+(max-p)/(max-min)*PH;
@@ -229,7 +229,11 @@ function drawChart(){
  x.lineTo(px(points.length-1),T+PH);x.lineTo(px(0),T+PH);x.closePath();x.fillStyle=color;x.globalAlpha=.09;x.fill();x.globalAlpha=1;
  x.fillStyle=themeColor('--chart-label','#4d617d');
  const step=Math.max(1,Math.ceil(points.length/(W<500?4:8)));
- for(let i=0;i<points.length;i+=step){const date=new Date(points[i].t);x.fillText((date.getUTCMonth()+1)+'/'+date.getUTCDate(),px(i)-11,H-7)}
+ for(let i=0;i<points.length;i+=step){
+   const date=new Date(points[i].t);
+   const label=span>365*86400000?String(date.getUTCFullYear()).slice(2)+'/'+(date.getUTCMonth()+1):(date.getUTCMonth()+1)+'/'+date.getUTCDate();
+   x.fillText(label,px(i)-11,H-7);
+ }
  $('chartMeta').textContent='最新 '+fmt(last.p,3)+' · 区间高 '+fmt(high,2)+' · 低 '+fmt(low,2)+' · '+points.length+' 个价格点';
  $('chartNote').textContent='Uniswap 官方历史价格 · DORY/USDC · '+priceDate(first.t)+' 至 '+priceDate(last.t)+'。'+(historyCollectedAt?' 采集于 '+asOf(historyCollectedAt)+'。':'');
  const slider=$('chartScrubber');slider.disabled=false;slider.max=points.length-1;

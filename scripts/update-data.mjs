@@ -508,6 +508,7 @@ export async function collect() {
   if (window) await component('chain_consistency', async () => {
     const after = await rpc('eth_getBlockByNumber', [hex(window.latest), false]);
     if (after.hash !== window.latestBlock.hash) {
+      result.market.buys = result.market.sells = null;
       result.market.buy_usdc = result.market.sell_usdc = result.market.sell_buy_amount_ratio = null;
       result.pool = {liquidity_usd: result.pool.liquidity_usd}; result.supply = {}; result.zero_burn = {};
       result.x9c_dead_burn = {}; result.pool_candidates = {}; result.distribution_705b = {}; result.mining_routed = null;
