@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-18T08:51:46.802Z",
+  "generated_at": "2026-11-18T17:46:47.427Z",
   "chain_id": 42161,
   "pool_id": "0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb",
   "provider": "Uniswap",
   "source_url": "https://app.uniswap.org/explore/pools/arbitrum/0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb?chart=price",
   "status": "ok",
   "market": {
-    "price_usd": 755.1976457186659,
-    "price_usdc": 755.1976457186659,
-    "liquidity_usd": 9222256.81345021,
-    "volume_24h": 72204.640492,
-    "change_24h_pct": 0.5922436652556318,
-    "change_7d_pct": 35.616283622304955
+    "price_usd": 762.2327748840677,
+    "price_usdc": 762.2327748840677,
+    "liquidity_usd": 9261776.318221953,
+    "volume_24h": 201775.116993,
+    "change_24h_pct": 1.2349834801161252,
+    "change_7d_pct": 30.454006650215405
   },
   "price_history": [
     {
@@ -1760,24 +1760,24 @@
     "pool": {
       "status": "ok"
     },
-    "DAY": {
-      "status": "ok",
-      "from": "2026-11-17T09:00:00.000Z",
-      "to": "2026-11-18T08:50:00.000Z",
-      "points": 144,
-      "change_window": {
-        "from": "2026-11-17T09:00:00.000Z",
-        "to": "2026-11-18T08:50:00.000Z"
-      }
-    },
     "WEEK": {
       "status": "ok",
-      "from": "2026-11-11T09:00:00.000Z",
-      "to": "2026-11-18T08:00:00.000Z",
+      "from": "2026-11-11T18:00:00.000Z",
+      "to": "2026-11-18T17:00:00.000Z",
       "points": 168,
       "change_window": {
-        "from": "2026-11-11T09:00:00.000Z",
-        "to": "2026-11-18T08:00:00.000Z"
+        "from": "2026-11-11T18:00:00.000Z",
+        "to": "2026-11-18T17:00:00.000Z"
+      }
+    },
+    "DAY": {
+      "status": "ok",
+      "from": "2026-11-17T17:50:00.000Z",
+      "to": "2026-11-18T17:40:00.000Z",
+      "points": 144,
+      "change_window": {
+        "from": "2026-11-17T17:50:00.000Z",
+        "to": "2026-11-18T17:40:00.000Z"
       }
     },
     "MAX": {
