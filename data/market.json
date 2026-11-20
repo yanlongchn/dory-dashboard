@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-20T21:40:09.654Z",
+  "generated_at": "2026-11-20T21:53:24.005Z",
   "chain_id": 42161,
   "pool_id": "0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb",
   "provider": "Uniswap",
@@ -10,7 +10,7 @@
     "price_usd": 674.0538124502809,
     "price_usdc": 674.0538124502809,
     "liquidity_usd": 8614951.953867951,
-    "volume_24h": 63946.084496,
+    "volume_24h": 63856.084496,
     "change_24h_pct": 0.8728599408935445,
     "change_7d_pct": -0.3047786920399642
   },
