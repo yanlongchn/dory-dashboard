@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-21T20:36:45.104Z",
+  "generated_at": "2026-11-21T22:00:26.230Z",
   "chain_id": 42161,
   "pool_id": "0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb",
   "provider": "Uniswap",
   "source_url": "https://app.uniswap.org/explore/pools/arbitrum/0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb?chart=price",
   "status": "ok",
   "market": {
-    "price_usd": 678.5215762933556,
-    "price_usdc": 678.5215762933556,
-    "liquidity_usd": 8641940.843895048,
+    "price_usd": 678.6024850965547,
+    "price_usdc": 678.6024850965547,
+    "liquidity_usd": 8642428.600775927,
     "volume_24h": 56216.852563,
-    "change_24h_pct": 0.6628200539113616,
-    "change_7d_pct": -6.483499343398458
+    "change_24h_pct": 0.6748233690332173,
+    "change_7d_pct": -6.472348175312037
   },
   "price_history": [
     {
@@ -1774,22 +1774,12 @@
     },
     "DAY": {
       "status": "ok",
-      "from": "2026-11-20T20:30:00.000Z",
-      "to": "2026-11-21T20:20:00.000Z",
+      "from": "2026-11-20T22:10:00.000Z",
+      "to": "2026-11-21T22:00:00.000Z",
       "points": 144,
       "change_window": {
-        "from": "2026-11-20T20:30:00.000Z",
-        "to": "2026-11-21T20:20:00.000Z"
-      }
-    },
-    "WEEK": {
-      "status": "ok",
-      "from": "2026-11-14T21:00:00.000Z",
-      "to": "2026-11-21T20:00:00.000Z",
-      "points": 168,
-      "change_window": {
-        "from": "2026-11-14T21:00:00.000Z",
-        "to": "2026-11-21T20:00:00.000Z"
+        "from": "2026-11-20T22:10:00.000Z",
+        "to": "2026-11-21T22:00:00.000Z"
       }
     },
     "MAX": {
@@ -1797,6 +1787,16 @@
       "from": "2025-09-10T00:00:00.000Z",
       "to": "2026-11-21T00:00:00.000Z",
       "points": 438
+    },
+    "WEEK": {
+      "status": "ok",
+      "from": "2026-11-14T23:00:00.000Z",
+      "to": "2026-11-21T22:00:00.000Z",
+      "points": 168,
+      "change_window": {
+        "from": "2026-11-14T23:00:00.000Z",
+        "to": "2026-11-21T22:00:00.000Z"
+      }
     }
   },
   "errors": [],
