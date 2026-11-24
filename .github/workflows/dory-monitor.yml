@@ -1,0 +1,35 @@
+name: DORY deployment monitor
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [DORY daily data and Pages]
+    types: [completed]
+    branches: [main]
+  schedule:
+    - cron: "17,47 * * * *"
+      timezone: Asia/Shanghai
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: dory-deployment-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Check website and recover failed deployment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const {monitorDeployment} = await import(`${process.env.GITHUB_WORKSPACE}/scripts/monitor-deployment.mjs`);
+            await monitorDeployment({github, core, context});

@@ -1,7 +1,18 @@
 name: DORY daily data and Pages
+run-name: ${{ inputs.recovery && 'DORY automatic recovery' || 'DORY data and Pages' }}
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Run collection and deploy, or deploy the stored data
+        type: choice
+        default: collect_and_deploy
+        options: [collect_and_deploy, deploy_only]
+      recovery:
+        description: Automatic recovery requested by the deployment monitor
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths-ignore:
@@ -43,23 +54,29 @@ jobs:
           node --check scripts/evidence.mjs
           node --check scripts/update-market.mjs
           node --check scripts/uniswap-market.mjs
+          node --check scripts/deploy-pages.mjs
+          node --check scripts/site-health.mjs
+          node --check scripts/monitor-deployment.mjs
           node scripts/check-dashboard.mjs
           node scripts/verify-theme.mjs
           node scripts/verify-data.mjs
           node scripts/verify-uniswap-market.mjs
+          node scripts/verify-deployment.mjs
           node scripts/verify-evidence.mjs
           node scripts/verify-monitoring.mjs
           node scripts/verify-distribution.mjs
       - name: Collect Uniswap market
+        if: inputs.mode != 'deploy_only'
         run: node scripts/update-market.mjs
       - name: Collect DORY data
-        if: github.event_name != 'schedule' || github.event.schedule == '0 22 * * *'
+        if: inputs.mode != 'deploy_only' && (github.event_name != 'schedule' || github.event.schedule == '0 22 * * *')
         env:
           ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
           BLOCKSCOUT_API_KEY: ${{ secrets.BLOCKSCOUT_API_KEY }}
           DORY_PROGRESS: "1"
         run: node scripts/update-data.mjs
       - name: Commit daily snapshot
+        if: inputs.mode != 'deploy_only'
         run: |
           git config user.name "dory-dashboard-bot"
           git config user.email "actions@users.noreply.github.com"
@@ -69,6 +86,7 @@ jobs:
 
   deploy:
     needs: collect
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -79,16 +97,29 @@ jobs:
           ref: ${{ github.ref }}
       - name: Pull latest snapshot commit
         run: git pull --ff-only
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - name: Prepare static site
         run: |
           mkdir -p _site/data _site/docs
           cp index.html dashboard.js monitoring.js theme.js .nojekyll _site/
           cp docs/monitoring-rules.md docs/mining-rules.md _site/docs/
           cp data/latest.json data/history.json data/market.json _site/data/
+          SITE_COMMIT="$(git rev-parse HEAD)" node --input-type=module -e "import {writeManifest} from './scripts/deploy-pages.mjs'; writeManifest('_site');"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
+        id: upload
         with:
           path: "_site"
       - name: Deploy GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/github-script@v8
+        env:
+          PAGES_ARTIFACT_ID: ${{ steps.upload.outputs.artifact_id }}
+        with:
+          script: |
+            const fs = require('node:fs');
+            const {deployPages} = await import(`${process.env.GITHUB_WORKSPACE}/scripts/deploy-pages.mjs`);
+            await deployPages({github, core, context, artifactId: process.env.PAGES_ARTIFACT_ID,
+              expected: JSON.parse(fs.readFileSync('_site/deployment.json', 'utf8'))});
