@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {checkSite, verifyPublishedSite} from './site-health.mjs';
 import {deployPages, writeManifest} from './deploy-pages.mjs';
-import {monitorDeployment} from './monitor-deployment.mjs';
+import {monitorDeployment, overdueCollection} from './monitor-deployment.mjs';
+import {runWatchdog} from './local-watchdog.mjs';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -120,7 +121,9 @@ test('monitor republishes fresh stored data but collects again when repository d
   assert.equal(offline.actions[0].inputs.mode, 'deploy_only');
   const stale = {...market, generated_at: new Date(now - 120 * 60000).toISOString()};
   const refresh = monitorMock({runs: [{...run, conclusion: 'failure'}], storedMarket: stale, failure: 'stale'});
-  await refresh.run(); assert.equal(refresh.actions[0].inputs.mode, 'collect_and_deploy');
+  await refresh.run(); assert.equal(refresh.actions[0].inputs.mode, 'market_only');
+  const missedDaily = monitorMock({runs: [run], storedDaily: {...daily, generated_at: '2026-11-24T13:00:00Z'}});
+  await missedDaily.run(); assert.equal(missedDaily.actions[0].inputs.mode, 'collect_and_deploy');
   const collectionFailed = monitorMock({runs: [{...run, conclusion: 'failure'}], storedMarket: stale,
     jobs: [{name: 'collect', conclusion: 'failure'}]});
   await collectionFailed.run(); assert.equal(collectionFailed.actions[0].type, 'rerun');
@@ -132,4 +135,39 @@ test('monitor catches data collected but missing online and bounds successive re
   const recoveries = Array.from({length: 3}, () => ({...run, event: 'workflow_dispatch', display_title: 'DORY automatic recovery'}));
   const capped = monitorMock({runs: [...recoveries, run], failure: 'offline'});
   await assert.rejects(capped.run(), /3 deployment recoveries/); assert.equal(capped.actions.length, 0);
+});
+
+
+test('the daily slot is overdue only after its Beijing 22:25 grace period', () => {
+  const times = {market: '2026-11-25T14:15:00Z', daily: '2026-11-24T14:05:00Z'};
+  assert.equal(overdueCollection(times, Date.parse('2026-11-25T14:24:00Z')), null);
+  assert.equal(overdueCollection(times, Date.parse('2026-11-25T14:25:00Z')), 'collect_and_deploy');
+  assert.equal(overdueCollection({...times, daily: '2026-11-25T14:03:00Z'}, Date.parse('2026-11-25T14:26:00Z')), null);
+});
+
+test('a healthy Mac watchdog is read-only and stale data triggers the monitor once when idle', async () => {
+  const check = async () => ({market_generated_at: timestamp, daily_generated_at: timestamp});
+  assert.equal((await runWatchdog({now, check, gh() {assert.fail('healthy watchdog should not call GitHub');}})).action, 'healthy');
+  const stale = async () => ({market_generated_at: new Date(now - 46 * 60000).toISOString(), daily_generated_at: timestamp});
+  const calls = [];
+  const gh = args => {
+    calls.push(args);
+    if (args[0] === 'run') return '[]';
+    assert.deepEqual(args, ['workflow', 'run', 'dory-monitor.yml', '--ref', 'main']);
+    return 'https://github.com/example/run/45';
+  };
+  assert.equal((await runWatchdog({now, check: stale, gh})).action, 'monitor_dispatched');
+  assert.equal(calls.length, 3);
+  const statusGh = args => {
+    assert.equal(args[0], 'run');
+    return args.includes('dory-monitor.yml') ? JSON.stringify([{databaseId: 45, status: 'completed', createdAt: new Date(now - 60_000).toISOString()}]) : '[]';
+  };
+  assert.equal((await runWatchdog({now, check: stale, gh: statusGh})).action, 'wait');
+});
+
+test('earlier successful automatic recoveries do not stop a later missed market slot', async () => {
+  const repairs = Array.from({length: 3}, () => ({...run, event: 'workflow_dispatch', display_title: 'DORY automatic recovery'}));
+  const next = monitorMock({runs: repairs, storedMarket: {...market, generated_at: '2026-11-24T22:55:00Z'}});
+  assert.equal((await next.run()).action, 'dispatch_deployment');
+  assert.equal(next.actions[0].inputs.mode, 'market_only');
 });

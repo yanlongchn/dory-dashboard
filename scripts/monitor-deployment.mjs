@@ -1,7 +1,21 @@
 import {checkSite} from './site-health.mjs';
 
 const WORKFLOW = 'dory-daily.yml';
-const runningStatuses = new Set(['queued', 'in_progress', 'requested', 'pending', 'waiting']);
+export const runningStatuses = new Set(['queued', 'in_progress', 'requested', 'pending', 'waiting']);
+
+const minute = 60_000;
+
+export function overdueCollection({market, daily}, now) {
+  const marketTime = Date.parse(market), dailyTime = Date.parse(daily);
+  // Beijing 22:00 is 14:00 UTC year-round. Give the scheduled run 25 minutes to finish.
+  const graceTime = now - 25 * minute;
+  const todayCutoff = new Date(graceTime).setUTCHours(14, 0, 0, 0);
+  const cutoff = graceTime < todayCutoff ? todayCutoff - 24 * 60 * minute : todayCutoff;
+  const invalidTime = time => !Number.isFinite(time) || time > now + 5 * minute;
+  if (invalidTime(dailyTime) || dailyTime < cutoff) return 'collect_and_deploy';
+  if (invalidTime(marketTime) || marketTime < now - 45 * minute) return 'market_only';
+  return null;
+}
 
 export async function monitorDeployment({github, core, context, check = checkSite, now = Date.now()}) {
   const {owner, repo} = context.repo;
@@ -14,12 +28,12 @@ export async function monitorDeployment({github, core, context, check = checkSit
     const {data: content} = await github.rest.repos.getContent({owner, repo, path: 'data/' + name + '.json', ref: 'main'});
     return JSON.parse(Buffer.from(content.content, 'base64').toString());
   }));
-  const ages = stored.map(item => (now - Date.parse(item.generated_at)) / 60000);
-  const needsCollection = ages.some((age, index) => !Number.isFinite(age) || age < -5 || age > [90, 36 * 60][index]);
-  if (needsCollection) error = 'Repository data needs a fresh collection';
+  const [market, daily] = stored;
+  const mode = overdueCollection({market: market.generated_at, daily: daily.generated_at}, now);
+  if (mode) error = mode === 'market_only' ? 'Uniswap quote is over 45 minutes old or invalid' : 'The expected 22:00 Beijing daily snapshot is missing';
   else if (health && stored.some((item, index) =>
     Date.parse(item.generated_at) > Date.parse(health[index ? 'daily_generated_at' : 'market_generated_at']) &&
-      ages[index] > 15)) error = 'Collected data is newer than the online deployment';
+      now - Date.parse(item.generated_at) > 15 * minute)) error = 'Collected data is newer than the online deployment';
   const active = data.workflow_runs.find(run => runningStatuses.has(run.status));
   if (active) {
     core.info('DORY workflow ' + active.id + ' is already running');
@@ -34,7 +48,7 @@ export async function monitorDeployment({github, core, context, check = checkSit
     if ((latest.run_attempt || 1) >= 3) throw Error('DORY workflow failed after 3 attempts. ' + (error || latest.html_url));
     const {data: jobs} = await github.rest.actions.listJobsForWorkflowRun({owner, repo, run_id: latest.id, filter: 'latest'});
     const failedCollection = jobs.jobs.some(job => job.name === 'collect' && job.conclusion === 'failure');
-    if (!needsCollection || failedCollection) {
+    if (!mode || (mode === 'market_only' && failedCollection)) {
       await github.rest.actions.reRunWorkflowFailedJobs({owner, repo, run_id: latest.id});
       await report('Recovery started', 'Retried failed jobs in ' + latest.html_url);
       return {action: 'rerun_failed_jobs', run_id: latest.id, error};
@@ -42,11 +56,12 @@ export async function monitorDeployment({github, core, context, check = checkSit
   }
   if (error) {
     const consecutiveRepairs = data.workflow_runs.findIndex(run =>
-      !(run.event === 'workflow_dispatch' && run.display_title === 'DORY automatic recovery'));
+      !(run.event === 'workflow_dispatch' && run.display_title === 'DORY automatic recovery' &&
+        (!mode || run.conclusion !== 'success')));
     if (consecutiveRepairs >= 3 || consecutiveRepairs === -1)
       throw Error('Site remains unhealthy after 3 deployment recoveries. ' + error);
-    await github.rest.actions.createWorkflowDispatch({owner, repo, workflow_id: WORKFLOW, ref: 'main', inputs: {mode: needsCollection ? 'collect_and_deploy' : 'deploy_only', recovery: 'true'}});
-    await report('Recovery started', (needsCollection ? 'Requested fresh collection and deployment. ' : 'Requested deployment of the latest collected data. ') + error);
+    await github.rest.actions.createWorkflowDispatch({owner, repo, workflow_id: WORKFLOW, ref: 'main', inputs: {mode: mode || 'deploy_only', recovery: 'true'}});
+    await report('Recovery started', (mode ? 'Requested ' + mode + '. ' : 'Requested deployment of the latest collected data. ') + error);
     return {action: 'dispatch_deployment', error};
   }
   throw Error('Latest DORY workflow ended with ' + latest.conclusion);

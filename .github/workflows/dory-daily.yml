@@ -5,10 +5,10 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: Run collection and deploy, or deploy the stored data
+        description: Collect full data, refresh only the market, or deploy the stored data
         type: choice
         default: collect_and_deploy
-        options: [collect_and_deploy, deploy_only]
+        options: [collect_and_deploy, market_only, deploy_only]
       recovery:
         description: Automatic recovery requested by the deployment monitor
         type: boolean
@@ -22,9 +22,9 @@ on:
   schedule:
     - cron: "0 22 * * *"
       timezone: Asia/Shanghai
-    - cron: "0,30 0-21,23 * * *"
+    - cron: "7,37 0-21,23 * * *"
       timezone: Asia/Shanghai
-    - cron: "30 22 * * *"
+    - cron: "37 22 * * *"
       timezone: Asia/Shanghai
 
 permissions:
@@ -69,7 +69,7 @@ jobs:
         if: inputs.mode != 'deploy_only'
         run: node scripts/update-market.mjs
       - name: Collect DORY data
-        if: inputs.mode != 'deploy_only' && (github.event_name != 'schedule' || github.event.schedule == '0 22 * * *')
+        if: inputs.mode != 'deploy_only' && inputs.mode != 'market_only' && (github.event_name != 'schedule' || github.event.schedule == '0 22 * * *')
         env:
           ARBITRUM_RPC_URL: ${{ secrets.ARBITRUM_RPC_URL }}
           BLOCKSCOUT_API_KEY: ${{ secrets.BLOCKSCOUT_API_KEY }}
