@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "generated_at": "2026-11-27T14:16:19.554Z",
+  "generated_at": "2026-11-27T14:32:27.421Z",
   "chain_id": 42161,
   "pool_id": "0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb",
   "provider": "Uniswap",
   "source_url": "https://app.uniswap.org/explore/pools/arbitrum/0xec6e37b2d66aa5ef5a9fc296b4da3474b121f512428dd425a51c6424955fc5eb?chart=price",
   "status": "ok",
   "market": {
-    "price_usd": 728.952103693977,
-    "price_usdc": 728.952103693977,
-    "liquidity_usd": 8969677.462404892,
+    "price_usd": 728.6913526714121,
+    "price_usdc": 728.6913526714121,
+    "liquidity_usd": 8968166.615677549,
     "volume_24h": 115900.875158,
     "change_24h_pct": -0.028586948333075846,
     "change_7d_pct": 8.197835282888267
